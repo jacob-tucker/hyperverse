@@ -3,12 +3,25 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "../IHyperverseModule.sol";
-import "../node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Must derive from IHyperverseModule to be a Hyperverse Module
-contract MorganToken is IHyperverseModule, ERC20 {
-    mapping(address => ERC20) tenants;
+// This is the "MASTER CONTRACT"
+contract MorganToken is IHyperverseModule, IERC20 {
 
+    mapping(address => uint256) private _balances;
+
+    mapping(address => mapping(address => uint256)) private _allowances;
+
+    uint256 private _totalSupply;
+
+    string private _name;
+    string private _symbol;
+
+    // MorganToken deployed -> MorganTokenFactory deployed -> Call createMorganToken in Factory -> 
+    // that calls the init in this contract with msg.sender == address of factory contract
+    address private _factoryContract;
+    
     constructor()
         IHyperverseModule(
             "SampleModule",
@@ -22,36 +35,43 @@ contract MorganToken is IHyperverseModule, ERC20 {
             new bytes[](0)
         )
     {}
-
-    function instance(address tenant) external {
-        tenants[tenant] = new ERC20("MorganToken", "MGT");
+    
+    // Checks to see if the caller is the factory contract
+    modifier isFactory() {
+        require(msg.sender == _factoryContract, "The msgsender must be the factory contract");
+        _;
     }
+    
+    // Used for debugging
+    function getFactory() external view returns (address) {
+        return _factoryContract;
+    }
+
+    // use this function instead of the constructor
+    // since creation will be done using createClone() function
+    function init() external override {
+        // The msg.sender should be the Factory contract because 
+        // it called the Proxy which delegate called this contract.
+        _factoryContract = msg.sender;
+    }
+
+    /**
+     * Stuff from the IERC20 standard
+     */
 
     /**
      * @dev Returns the name of the token.
      */
-    function name(address tenant)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
-        return tenants[tenant]._name;
+    function name() public view virtual returns (string memory) {
+        return _name;
     }
 
     /**
      * @dev Returns the symbol of the token, usually a shorter version of the
      * name.
      */
-    function symbol(address tenant)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
-        return tenants[tenant]._symbol;
+    function symbol() public view virtual returns (string memory) {
+        return _symbol;
     }
 
     /**
@@ -67,34 +87,22 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() public view virtual override returns (uint8) {
+    function decimals() public view virtual returns (uint8) {
         return 18;
     }
 
     /**
      * @dev See {IERC20-totalSupply}.
      */
-    function totalSupply(address tenant)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return tenants[tenant]._totalSupply;
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply;
     }
 
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address tenant, address account)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return tenants[tenant]._balances[account];
+    function balanceOf(address account) public view virtual override returns (uint256) {
+        return _balances[account];
     }
 
     /**
@@ -105,24 +113,16 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(
-        address tenant,
-        address recipient,
-        uint256 amount
-    ) public virtual override returns (bool) {
-        tenants[tenant]._transfer(_msgSender(), recipient, amount);
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(msg.sender, recipient, amount);
         return true;
     }
 
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(
-        address tenant,
-        address owner,
-        address spender
-    ) public view virtual override returns (uint256) {
-        return tenants[tenant]._allowances[owner][spender];
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+        return _allowances[owner][spender];
     }
 
     /**
@@ -132,12 +132,8 @@ contract MorganToken is IHyperverseModule, ERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(
-        address tenant,
-        address spender,
-        uint256 amount
-    ) public virtual override returns (bool) {
-        tenants[tenant]._approve(_msgSender(), spender, amount);
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+        _approve(msg.sender, spender, amount);
         return true;
     }
 
@@ -155,26 +151,16 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * `amount`.
      */
     function transferFrom(
-        address tenant,
         address sender,
         address recipient,
         uint256 amount
     ) public virtual override returns (bool) {
-        tenants[tenant]._transfer(sender, recipient, amount);
+        _transfer(sender, recipient, amount);
 
-        uint256 currentAllowance = tenants[tenant]._allowances[sender][
-            _msgSender()
-        ];
-        require(
-            currentAllowance >= amount,
-            "ERC20: transfer amount exceeds allowance"
-        );
+        uint256 currentAllowance = _allowances[sender][msg.sender];
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
         unchecked {
-            tenants[tenant]._approve(
-                sender,
-                _msgSender(),
-                currentAllowance - amount
-            );
+            _approve(sender, msg.sender, currentAllowance - amount);
         }
 
         return true;
@@ -192,16 +178,8 @@ contract MorganToken is IHyperverseModule, ERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(
-        address tenant,
-        address spender,
-        uint256 addedValue
-    ) public virtual returns (bool) {
-        _approve(
-            _msgSender(),
-            spender,
-            tenants[tenant]._allowances[_msgSender()][spender] + addedValue
-        );
+    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+        _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
         return true;
     }
 
@@ -219,24 +197,11 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(
-        address tenant,
-        address spender,
-        uint256 subtractedValue
-    ) public virtual returns (bool) {
-        uint256 currentAllowance = tenants[tenant]._allowances[_msgSender()][
-            spender
-        ];
-        require(
-            currentAllowance >= subtractedValue,
-            "ERC20: decreased allowance below zero"
-        );
+    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+        uint256 currentAllowance = _allowances[msg.sender][spender];
+        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         unchecked {
-            tenants[tenant]._approve(
-                _msgSender(),
-                spender,
-                currentAllowance - subtractedValue
-            );
+            _approve(msg.sender, spender, currentAllowance - subtractedValue);
         }
 
         return true;
@@ -257,7 +222,6 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * - `sender` must have a balance of at least `amount`.
      */
     function _transfer(
-        address tenant,
         address sender,
         address recipient,
         uint256 amount
@@ -265,21 +229,18 @@ contract MorganToken is IHyperverseModule, ERC20 {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        tenants[tenant]._beforeTokenTransfer(sender, recipient, amount);
+        _beforeTokenTransfer(sender, recipient, amount);
 
-        uint256 senderBalance = tenants[tenant]._balances[sender];
-        require(
-            senderBalance >= amount,
-            "ERC20: transfer amount exceeds balance"
-        );
+        uint256 senderBalance = _balances[sender];
+        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
-            tenants[tenant]._balances[sender] = senderBalance - amount;
+            _balances[sender] = senderBalance - amount;
         }
-        tenants[tenant]._balances[recipient] += amount;
+        _balances[recipient] += amount;
 
         emit Transfer(sender, recipient, amount);
 
-        tenants[tenant]._afterTokenTransfer(sender, recipient, amount);
+        _afterTokenTransfer(sender, recipient, amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -291,20 +252,16 @@ contract MorganToken is IHyperverseModule, ERC20 {
      *
      * - `account` cannot be the zero address.
      */
-    function _mint(
-        address tenant,
-        address account,
-        uint256 amount
-    ) internal virtual {
+    function mint(address account, uint256 amount) public virtual isFactory {
         require(account != address(0), "ERC20: mint to the zero address");
 
-        tenants[tenant]._beforeTokenTransfer(address(0), account, amount);
+        _beforeTokenTransfer(address(0), account, amount);
 
-        tenants[tenant]._totalSupply += amount;
-        tenants[tenant]._balances[account] += amount;
+        _totalSupply += amount;
+        _balances[account] += amount;
         emit Transfer(address(0), account, amount);
 
-        tenants[tenant]._afterTokenTransfer(address(0), account, amount);
+        _afterTokenTransfer(address(0), account, amount);
     }
 
     /**
@@ -318,25 +275,21 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(
-        address tenant,
-        address account,
-        uint256 amount
-    ) internal virtual {
+    function _burn(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: burn from the zero address");
 
-        tenants[tenant]._beforeTokenTransfer(account, address(0), amount);
+        _beforeTokenTransfer(account, address(0), amount);
 
-        uint256 accountBalance = tenants[tenant]._balances[account];
+        uint256 accountBalance = _balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
         unchecked {
-            tenants[tenant]._balances[account] = accountBalance - amount;
+            _balances[account] = accountBalance - amount;
         }
-        tenants[tenant]._totalSupply -= amount;
+        _totalSupply -= amount;
 
         emit Transfer(account, address(0), amount);
 
-        tenants[tenant]._afterTokenTransfer(account, address(0), amount);
+        _afterTokenTransfer(account, address(0), amount);
     }
 
     /**
@@ -353,7 +306,6 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * - `spender` cannot be the zero address.
      */
     function _approve(
-        address tenant,
         address owner,
         address spender,
         uint256 amount
@@ -361,7 +313,7 @@ contract MorganToken is IHyperverseModule, ERC20 {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
-        tenants[tenant]._allowances[owner][spender] = amount;
+        _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
@@ -380,7 +332,6 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _beforeTokenTransfer(
-        address tenant,
         address from,
         address to,
         uint256 amount
@@ -401,7 +352,6 @@ contract MorganToken is IHyperverseModule, ERC20 {
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _afterTokenTransfer(
-        address tenant,
         address from,
         address to,
         uint256 amount

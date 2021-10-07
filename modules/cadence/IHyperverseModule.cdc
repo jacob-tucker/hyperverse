@@ -1,36 +1,54 @@
 /**
 
-## The Decentology Smart Module standard on Flow
+## The Decentology Smart Module standard on Ethereum
 
-## `IHyperverseModule` contract interface
+## `IHyperverseModule` interface
 
-The interface that all smart modules should conform to.
-If a user wants to deploy a new smart module to the Hyperverse, 
-their module would need to implement this contract interface.
-This is a requirement for a primary exported contract, but also
-can be used to create secondary exports as well.
-
-Their contract would have to follow all the rules and naming
-that the interface specifies.
-
-## `metadata` HyperverseModule.ModuleMetadata
-
-The metadata associated with this module. You can find the
-definition for this metadata inside the `HyperverseModule` contract.
+In essense, this contract serves the equivalent of two purposes
+in respect to Cadence:
+1) Enforces the `metadata` variable (same as IHyperverseModule.cdc)
+2) Defines what a ModuleMetadata is (sam as HyperverseModule.cdc)
 
 */
 
-// A module is something that has primary and secondary exports.
+// SPDX-License-Identifier: UNLICENSED
 
-// The primary exported file has everything you need in it. All the functionality, all the metadata you need.
-// It imports all of the contracts in the module into the primary export and that's the main module.
+pragma solidity >=0.7.0 <0.9.0;
 
-// On the side, there can be secondary exports that still implement the HyperverseModuleInterface.  
-// They can all be exported just the same as modules, but they will only contain portions of the primary 
-// export functionality.
+abstract contract IHyperverseModule {
+    ModuleMetadata public metadata;
 
-import HyperverseModule from "./HyperverseModule.cdc"
+    constructor(
+        bytes memory _title,
+        Author memory _author,
+        bytes memory _version, // 0.1.1
+        uint64 _publishedAt,
+        bytes memory _externalLink,
+        bytes[] memory _secondaryModules
+    ) {
+        metadata.title = _title;
+        metadata.authors.push(_author);
+        metadata.version = _version;
+        metadata.publishedAt = _publishedAt;
+        metadata.externalLink = _externalLink;
+        metadata.secondaryModules = _secondaryModules;
+    }
 
-pub contract interface IHyperverseModule {
-    access(contract) let metadata: HyperverseModule.ModuleMetadata
+    struct ModuleMetadata {
+        bytes title; // <-- `pub var title: String` in Cadence
+        Author[] authors;
+        bytes version;
+        uint64 publishedAt;
+        bytes externalLink; // <-- can't be "external" in Solidity because it's a keyword
+        bytes[] secondaryModules;
+    }
+
+    struct Author {
+        address authorAddress; // <-- can't be "address" in Solidity because it's a keyword
+        string externalLink;
+    }
+
+    // Think through this because people might want to pass
+    // parameters and then there's a problem.
+    function init() external virtual;
 }

@@ -47,4 +47,6 @@ abstract contract IHyperverseModule {
         address authorAddress; // <-- can't be "address" in Solidity because it's a keyword
         string externalLink;
     }
+
+    function init() external virtual;
 }
