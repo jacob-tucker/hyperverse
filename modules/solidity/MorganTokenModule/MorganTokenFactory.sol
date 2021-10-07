@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
-import './CloneFactory.sol';
-import './MorganToken.sol';
+import "../CloneFactory.sol";
+import "./MorganToken.sol";
 
 // A factory contract that produced MorganTokens without copying their logic
 // This contract creates "Proxy" contracts on line __. Those Proxy contracts
-// belong to a Tenant. 
+// belong to a Tenant.
 //
 // What happens is the Proxy gets stored under a Tenant -> if a Tenant wants
 // to do something with it, they execute something on that Proxy -> the Proxy
@@ -19,35 +19,47 @@ contract MorganTokenFactory is CloneFactory {
     }
 
     mapping(address => Tenant) public tenants;
-     
+
     // The address of the MorganToken contract
     address masterContract;
 
-    constructor(address _masterContract){
+    constructor(address _masterContract) {
         masterContract = _masterContract;
     }
 
     // Checks to see if the caller is an owner of a tenant
     modifier isOwner(address tenant) {
-        require(tenants[tenant].owner == msg.sender, "The calling address is not an owner of a tenant");
+        require(
+            tenants[tenant].owner == msg.sender,
+            "The calling address is not an owner of a tenant"
+        );
         _;
     }
 
     // Checks to see if the caller is an admin for the specified tenant
     modifier isAdmin(address tenant) {
-        require(tenants[tenant].admins[msg.sender], "The calling address is not an admin");
+        require(
+            tenants[tenant].admins[msg.sender],
+            "The calling address is not an admin"
+        );
         _;
     }
 
-    function addAdmin(address tenant, address newAdmin) external isOwner(tenant) {
+    function addAdmin(address tenant, address newAdmin)
+        external
+        isOwner(tenant)
+    {
         tenants[tenant].admins[newAdmin] = true;
     }
 
-    function removeAdmin(address tenant, address newAdmin) external isOwner(tenant) {
+    function removeAdmin(address tenant, address newAdmin)
+        external
+        isOwner(tenant)
+    {
         tenants[tenant].admins[newAdmin] = false;
     }
 
-    function createMorganToken(address tenant) external{
+    function createMorganToken(address tenant) external {
         // The system looks like this:
         // Alice --[calls]--> MorganTokenFactory --[calls]--> Proxy Contract (cloned here and stored in `tenants`) --[delegate calls]--> MorganToken
         // You can see that the `msg.sender` inside MorganToken will be the MorganTokenFactory
@@ -75,15 +87,23 @@ contract MorganTokenFactory is CloneFactory {
     function getProxy(address tenant) private view returns (MorganToken) {
         return tenants[tenant].morganToken;
     }
-     
-    function mint(address tenant, address account, uint256 amount) public isAdmin(tenant) {
+
+    function mint(
+        address tenant,
+        address account,
+        uint256 amount
+    ) public isAdmin(tenant) {
         getProxy(tenant).mint(account, amount);
     }
-    
-    function balanceOf(address tenant, address account) public view returns (uint256) {
+
+    function balanceOf(address tenant, address account)
+        public
+        view
+        returns (uint256)
+    {
         return getProxy(tenant).balanceOf(account);
     }
-    
+
     function getFactory(address tenant) external view returns (address) {
         return getProxy(tenant).getFactory();
     }

@@ -8,7 +8,6 @@ import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Must derive from IHyperverseModule to be a Hyperverse Module
 // This is the "MASTER CONTRACT"
 contract MorganToken is IHyperverseModule, IERC20 {
-
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -18,13 +17,13 @@ contract MorganToken is IHyperverseModule, IERC20 {
     string private _name;
     string private _symbol;
 
-    // MorganToken deployed -> MorganTokenFactory deployed -> Call createMorganToken in Factory -> 
+    // MorganToken deployed -> MorganTokenFactory deployed -> Call createMorganToken in Factory ->
     // that calls the init in this contract with msg.sender == address of factory contract
     address private _factoryContract;
-    
+
     constructor()
         IHyperverseModule(
-            "SampleModule",
+            "Morgan Token",
             Author(
                 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4,
                 "https://externallink.net"
@@ -35,13 +34,16 @@ contract MorganToken is IHyperverseModule, IERC20 {
             new bytes[](0)
         )
     {}
-    
+
     // Checks to see if the caller is the factory contract
     modifier isFactory() {
-        require(msg.sender == _factoryContract, "The msgsender must be the factory contract");
+        require(
+            msg.sender == _factoryContract,
+            "The msgsender must be the factory contract"
+        );
         _;
     }
-    
+
     // Used for debugging
     function getFactory() external view returns (address) {
         return _factoryContract;
@@ -50,7 +52,7 @@ contract MorganToken is IHyperverseModule, IERC20 {
     // use this function instead of the constructor
     // since creation will be done using createClone() function
     function init() external override {
-        // The msg.sender should be the Factory contract because 
+        // The msg.sender should be the Factory contract because
         // it called the Proxy which delegate called this contract.
         _factoryContract = msg.sender;
     }
@@ -101,7 +103,13 @@ contract MorganToken is IHyperverseModule, IERC20 {
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account) public view virtual override returns (uint256) {
+    function balanceOf(address account)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return _balances[account];
     }
 
@@ -113,7 +121,12 @@ contract MorganToken is IHyperverseModule, IERC20 {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        override
+        returns (bool)
+    {
         _transfer(msg.sender, recipient, amount);
         return true;
     }
@@ -121,7 +134,13 @@ contract MorganToken is IHyperverseModule, IERC20 {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+    function allowance(address owner, address spender)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return _allowances[owner][spender];
     }
 
@@ -132,7 +151,12 @@ contract MorganToken is IHyperverseModule, IERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+    function approve(address spender, uint256 amount)
+        public
+        virtual
+        override
+        returns (bool)
+    {
         _approve(msg.sender, spender, amount);
         return true;
     }
@@ -158,7 +182,10 @@ contract MorganToken is IHyperverseModule, IERC20 {
         _transfer(sender, recipient, amount);
 
         uint256 currentAllowance = _allowances[sender][msg.sender];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        require(
+            currentAllowance >= amount,
+            "ERC20: transfer amount exceeds allowance"
+        );
         unchecked {
             _approve(sender, msg.sender, currentAllowance - amount);
         }
@@ -178,8 +205,16 @@ contract MorganToken is IHyperverseModule, IERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
+    function increaseAllowance(address spender, uint256 addedValue)
+        public
+        virtual
+        returns (bool)
+    {
+        _approve(
+            msg.sender,
+            spender,
+            _allowances[msg.sender][spender] + addedValue
+        );
         return true;
     }
 
@@ -197,9 +232,16 @@ contract MorganToken is IHyperverseModule, IERC20 {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
+        virtual
+        returns (bool)
+    {
         uint256 currentAllowance = _allowances[msg.sender][spender];
-        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+        require(
+            currentAllowance >= subtractedValue,
+            "ERC20: decreased allowance below zero"
+        );
         unchecked {
             _approve(msg.sender, spender, currentAllowance - subtractedValue);
         }
@@ -232,7 +274,10 @@ contract MorganToken is IHyperverseModule, IERC20 {
         _beforeTokenTransfer(sender, recipient, amount);
 
         uint256 senderBalance = _balances[sender];
-        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+        require(
+            senderBalance >= amount,
+            "ERC20: transfer amount exceeds balance"
+        );
         unchecked {
             _balances[sender] = senderBalance - amount;
         }
