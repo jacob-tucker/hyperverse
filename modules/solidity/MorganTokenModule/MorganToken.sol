@@ -29,7 +29,7 @@ contract MorganToken is IHyperverseModule, IERC20 {
                 "https://externallink.net"
             ),
             "0.0.1",
-            101,
+            3479831479814,
             "https://externalLink.net",
             new bytes[](0)
         )
@@ -320,7 +320,7 @@ contract MorganToken is IHyperverseModule, IERC20 {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 amount) internal virtual {
+    function burn(address account, uint256 amount) public virtual isFactory {
         require(account != address(0), "ERC20: burn from the zero address");
 
         _beforeTokenTransfer(account, address(0), amount);

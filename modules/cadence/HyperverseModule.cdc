@@ -38,10 +38,10 @@ pub contract HyperverseModule {
         // process.
         //
         // Maybe this is external
-        pub var external: String
+        pub var externalLink: String
 
         // nil or the names of the .cdc files
-        pub var secondaryModules: [String]?
+        pub var secondaryModules: [{Address: String}]?
 
         init(
             _title: String, 
@@ -49,15 +49,15 @@ pub contract HyperverseModule {
             _version: String, 
             _publishedAt: UInt64,
             _tenantStoragePath: StoragePath,
-            _external: String,
-            _secondaryModules: [String]?,
+            _externalLink: String,
+            _secondaryModules: [{Address: String}]?,
         ) {
             self.title = _title
             self.authors = _authors
             self.version = _version
             self.publishedAt = _publishedAt
             self.tenantStoragePath = _tenantStoragePath
-            self.external = _external
+            self.externalLink = _externalLink
             self.secondaryModules = _secondaryModules
         }
     }
@@ -70,11 +70,11 @@ pub contract HyperverseModule {
         // required
         // All other chain addresses + any other metadata.
         // addresses on other chains
-        pub var external: String
+        pub var externalLink: String
 
-        init(_address: Address, _external: String) {
+        init(_address: Address, _externalLink: String) {
             self.address = _address
-            self.external = _external
+            self.externalLink = _externalLink
         }
     }
 }

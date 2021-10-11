@@ -175,11 +175,11 @@ pub contract MorganToken: IHyperverseModule, IHyperverseComposable {
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "Morgan Token", 
-            _authors: [HyperverseModule.Author(_address: 0x1, _external: "https://localhost:5000/externalMetadata")], 
+            _authors: [HyperverseModule.Author(_address: 0x1, _externalLink: "https://localhost:5000/externalMetadata")], 
             _version: "0.0.1", 
             _publishedAt: 1632887513,
             _tenantStoragePath: /storage/MorganTokenTenant,
-            _external: "https://externalLink.net/1234567890",
+            _externalLink: "https://externalLink.net/1234567890",
             _secondaryModules: nil
         )
     }
