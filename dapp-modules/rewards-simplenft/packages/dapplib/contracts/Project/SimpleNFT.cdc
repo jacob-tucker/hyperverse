@@ -1,6 +1,6 @@
-import IHyperverseComposable from "../IHyperverseComposable.cdc"
-import IHyperverseModule from "../IHyperverseModule.cdc"
-import HyperverseModule from "../HyperverseModule.cdc"
+import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
+import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
+import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 
 pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
