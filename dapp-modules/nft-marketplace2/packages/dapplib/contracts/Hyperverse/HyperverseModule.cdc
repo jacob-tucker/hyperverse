@@ -20,7 +20,7 @@ pub contract HyperverseModule {
         pub var version: String
 
         // unix timestamp (ms)
-        pub var publishedAt: UFix64
+        pub var publishedAt: UInt64
 
         // Enforce a schema for how you create a storage
         // path.
@@ -49,7 +49,7 @@ pub contract HyperverseModule {
             _title: String, 
             _authors: [Author], 
             _version: String, 
-            _publishedAt: UFix64,
+            _publishedAt: UInt64,
             _tenantStoragePath: StoragePath,
             _tenantPublicPath: PublicPath,
             _externalURI: String,

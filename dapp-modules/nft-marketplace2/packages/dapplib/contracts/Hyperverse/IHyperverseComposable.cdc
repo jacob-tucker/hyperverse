@@ -43,6 +43,9 @@ pub contract interface IHyperverseComposable {
 
     pub var totalTenants: UInt64
 
+    pub let TenantCollectionStoragePath: StoragePath
+    pub let TenantCollectionPublicPath: PublicPath
+
     // Maps an address (of the customer/DappContract) to the amount
     // of tenants they have for a specific HyperverseContract.
     access(contract) var clientTenants: {Address: UInt64}
@@ -53,6 +56,25 @@ pub contract interface IHyperverseComposable {
 
     pub resource Tenant: ITenantID {
         pub let id: UInt64
+    }
+
+    pub resource interface ITenantCollectionPublic {
+        pub fun deposit(tenant: @Tenant)
+
+        pub fun getTenantIDs(): [UInt64]
+    }
+
+    pub resource TenantCollection: ITenantCollectionPublic {
+        // dictionary of Tenant conforming tenants
+        pub var ownedTenants: @{UInt64: Tenant}
+
+        // deposit takes a Tenant and adds it to the ownedTenants dictionary
+        // and adds the tenantID to the key
+        pub fun deposit(tenant: @Tenant)
+
+        pub fun getTenantIDs(): [UInt64]
+
+        pub fun borrowTenant(tenantID: UInt64): &Tenant
     }
 
     // instance
