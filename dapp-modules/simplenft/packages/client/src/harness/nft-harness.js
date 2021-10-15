@@ -11,8 +11,8 @@ import "../components/dictionary-widget.js"
 import DappLib from "@decentology/dappstarter-dapplib";
 import { LitElement, html, customElement, property } from "lit-element";
 
-@customElement('nft-rewards-harness')
-export default class NFTRewardsHarness extends LitElement {
+@customElement('nft-harness')
+export default class NFTHarness extends LitElement {
   @property()
   title;
   @property()
@@ -50,16 +50,18 @@ export default class NFTRewardsHarness extends LitElement {
           </account-widget>
         </action-card>
       
-        <action-card title="SimpleNFT - User Setup" description="User Setup" action="SimpleNFTUserSetup" method="post"
-          fields="signer tenant">
+        <action-card title="SimpleNFT - User Setup"
+          description="User Setup (Receiving a SimpleNFT.Collection). ** 'Recipient' MUST have a SimpleNFT.Package **"
+          action="SimpleNFTUserSetup" method="post" fields="signer tenant">
           <account-widget field="tenant" label="Tenant">
           </account-widget>
           <account-widget field="signer" label="Recipient">
           </account-widget>
         </action-card>
       
-        <action-card title="SimpleNFT - Give Minter" description="Give Minter" action="SimpleNFTGiveMinter" method="post"
-          fields="signer recipient">
+        <action-card title="SimpleNFT - Give Minter"
+          description="Give Minter (Receiving a SimpleNFT.NFTMinter). ** 'Recipient' MUST have a SimpleNFT.Package **"
+          action="SimpleNFTGiveMinter" method="post" fields="signer recipient">
           <account-widget field="signer" label="Tenant">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
@@ -79,7 +81,9 @@ export default class NFTRewardsHarness extends LitElement {
         </action-card>
       
         <action-card title="SimpleNFT - Transfer NFT" description="Transfer NFT" action="SimpleNFTTransferNFT" method="post"
-          fields="signer recipient withdrawID">
+          fields="tenant signer recipient withdrawID">
+          <account-widget field="tenant" label="Tenant">
+          </account-widget>
           <account-widget field="signer" label="Signer">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
@@ -93,41 +97,6 @@ export default class NFTRewardsHarness extends LitElement {
           <account-widget field="tenant" label="Tenant">
           </account-widget>
           <account-widget field="account" label="Account">
-          </account-widget>
-        </action-card>
-      
-        <action-card title="Rewards - Instance" description="Instance" action="RewardsInstance" method="post" fields="signer">
-          <account-widget field="signer" label="Signer">
-          </account-widget>
-        </action-card>
-      
-        <action-card title="Rewards - Has Tenant" description="Has Rewards Tenant" action="RewardsHasTenant" method="get"
-          fields="account">
-          <account-widget field="account" label="Account">
-          </account-widget>
-        </action-card>
-      
-        <action-card title="Rewards - User Setup" description="User Setup" action="RewardsUserSetup" method="post"
-          fields="tenant signer">
-          <account-widget field="tenant" label="Tenant">
-          </account-widget>
-          <account-widget field="signer" label="Signer">
-          </account-widget>
-        </action-card>
-      
-        <action-card title="Rewards - Mint NFT" description="Mint NFT" action="RewardsMintNFT" method="post"
-          fields="signer recipient">
-          <account-widget field="signer" label="Tenant">
-          </account-widget>
-          <account-widget field="recipient" label="Recipient">
-          </account-widget>
-        </action-card>
-      
-        <action-card title="Rewards - Give Reward" description="Give Reward" action="RewardsGiveReward" method="post"
-          fields="tenant signer">
-          <account-widget field="tenant" label="Tenant">
-          </account-widget>
-          <account-widget field="signer" label="Signer">
           </account-widget>
         </action-card>
       

@@ -38,11 +38,11 @@ export default class HarnessPage extends LitElement {
   getPages() {
     return[
     {
-        "name": "core-nft_rewards",
-        "title": "Hyperverse NFT Rewards Module",
+        "name": "core-nft",
+        "title": "Hyperverse SimpleNFT Module",
         "description": ":)",
         "category": "Hyperverse",
-        "route": "/core-nft_rewards"
+        "route": "/core-nft"
     }
 ]; 
   }

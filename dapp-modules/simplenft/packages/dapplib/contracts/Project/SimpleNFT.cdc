@@ -69,8 +69,6 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub let collections: @{UInt64: Collection}
         pub let minters: @{UInt64: NFTMinter}
 
-        // Maybe have a map of tenantID: Capability<&Tenant{IState}> ??????
-
         pub fun depositCollection(Collection: @Collection) {
             self.collections[Collection.tenantID] <-! Collection
         }
@@ -84,9 +82,6 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun borrowCollectionPublic(tenantID: UInt64): &Collection{CollectionPublic} {
-            pre {
-                self.collections[tenantID] != nil: "It's nil."
-            }
             return &self.collections[tenantID] as &Collection
         }
 

@@ -123,7 +123,8 @@ module.exports = class DappLib {
       'simple_nft_transfer_nft',
       {
         recipient: { value: data.recipient, type: t.Address },
-        withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 }
+        withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 },
+        tenant: { value: data.tenant, type: t.Address }
       }
     );
 
@@ -173,113 +174,6 @@ module.exports = class DappLib {
       label: 'NFT IDs in Account Collection',
       result: result.callData
     }
-  }
-
-  /****** Rewards ******/
-
-  static async RewardsInstance(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'rewards_instance'
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async RewardsHasTenant(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'rewards_has_tenant',
-      {
-        account: { value: data.account, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'Has Rewards Tenant',
-      result: result.callData
-    }
-  }
-
-  static async RewardsUserSetup(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'rewards_user_setup',
-      {
-        tenant: { value: data.tenant, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async RewardsMintNFT(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'rewards_mint_nft',
-      {
-        recipient: { value: data.recipient, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async RewardsGiveReward(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'rewards_give_reward',
-      {
-        tenant: { value: data.tenant, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
   }
 
   /****** Helpers ******/

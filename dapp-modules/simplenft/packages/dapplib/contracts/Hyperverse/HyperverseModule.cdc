@@ -6,10 +6,6 @@
 
 pub contract HyperverseModule {
     
-    // Has to exist with every exposed part of this module.
-    // - Primary export (exactly one)
-    // - Secondary exports (0 or more)
-    // - ...
     pub struct ModuleMetadata {
         pub var title: String
         
