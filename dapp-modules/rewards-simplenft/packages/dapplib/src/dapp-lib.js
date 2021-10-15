@@ -123,7 +123,8 @@ module.exports = class DappLib {
       'simple_nft_transfer_nft',
       {
         recipient: { value: data.recipient, type: t.Address },
-        withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 }
+        withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 },
+        tenant: { value: data.tenant, type: t.Address }
       }
     );
 
