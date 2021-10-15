@@ -4,6 +4,8 @@ import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 
 pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
+    /**************************************** METADATA ****************************************/
+
     // ** MUST be access(contract) **
     access(contract) let metadata: HyperverseModule.ModuleMetadata
     pub fun getMetadata(): HyperverseModule.ModuleMetadata {
@@ -18,12 +20,15 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         return self.clientTenants
     }
 
+    /**************************************** TENANT ****************************************/
+
     // All of the getters and setters.
     // ** Setters MUST be access(contract) or access(account) **
     pub resource interface IState {
         pub let id: UInt64
         pub var totalSupply: UInt64
         access(contract) fun updateTotalSupply()
+        pub fun createCollection(): @Collection
     }
     pub resource Tenant: IHyperverseComposable.ITenantID, IState {
         pub let id: UInt64
@@ -31,8 +36,10 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub fun updateTotalSupply() {
             self.totalSupply = self.totalSupply + (1 as UInt64)
         }
+        pub fun createCollection(): @Collection {
+            return <- create Collection(_tenantID: self.id)
+        }
 
-        // Store Tenant in account storage first, then do this.
         pub fun createNewMinter(): @NFTMinter {
             return <- create NFTMinter(_tenantID: self.id)
         }
@@ -50,7 +57,65 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         return <- create Tenant(_tenantID: tenantID)
     }
 
-    /* Functionality of the SimpleNFT Module */
+    /**************************************** PACKAGE ****************************************/
+
+    // Named Paths
+    //
+    pub let PackageStoragePath: StoragePath
+    pub let PackagePublicPath: PublicPath
+    // Any things that should be linked to the public
+    pub resource interface PackagePublic {
+        pub fun borrowCollectionPublic(tenantID: UInt64): &Collection{CollectionPublic}
+    }
+    // A Package is so that you can sort all the resources you WILL or MAY recieve 
+    // as a part of you interacting with this contract by tenantID.
+    //
+    // This also removes the need to have a tenantID in every single resource.
+    pub resource Package: PackagePublic {
+        pub let collections: @{UInt64: Collection}
+        pub let minters: @{UInt64: NFTMinter}
+
+        // Maybe have a map of tenantID: Capability<&Tenant{IState}> ??????
+
+        pub fun depositCollection(Collection: @Collection) {
+            self.collections[Collection.tenantID] <-! Collection
+        }
+
+        pub fun depositMinter(NFTMinter: @NFTMinter) {
+            self.minters[NFTMinter.tenantID] <-! NFTMinter
+        }
+
+        pub fun borrowCollection(tenantID: UInt64): &Collection {
+            return &self.collections[tenantID] as &Collection
+        }
+
+        pub fun borrowCollectionPublic(tenantID: UInt64): &Collection{CollectionPublic} {
+            pre {
+                self.collections[tenantID] != nil: "It's nil."
+            }
+            return &self.collections[tenantID] as &Collection
+        }
+
+        pub fun borrowMinter(tenantID: UInt64): &NFTMinter {
+            return &self.minters[tenantID] as &NFTMinter
+        }
+
+        init() {
+            self.collections <- {}
+            self.minters <- {}
+        }
+
+        destroy() {
+            destroy self.collections
+            destroy self.minters
+        }
+    }
+
+    pub fun getPackage(): @Package {
+        return <- create Package()
+    }
+
+    /**************************************** FUNCTIONALITY ****************************************/
 
     // Events
     //
@@ -58,14 +123,10 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
 
-    // Named Paths
-    //
-    pub let CollectionStoragePath: StoragePath
-    pub let CollectionPublicPath: PublicPath
-
     pub resource NFT {
-        pub let id: UInt64
         pub let tenantID: UInt64
+
+        pub let id: UInt64
         pub let name: String
     
         init(_tenant: &Tenant{IState}, _name: String) {
@@ -78,20 +139,19 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     }
 
     pub resource interface CollectionPublic {
+        pub let tenantID: UInt64
         pub fun deposit(token: @NFT)
         pub fun getIDs(): [UInt64]
-        pub let tenantID: UInt64
     }
 
     pub resource Collection: CollectionPublic {
-        pub var ownedNFTs: @{UInt64: NFT}
         pub let tenantID: UInt64
+        pub var ownedNFTs: @{UInt64: NFT}
 
         pub fun deposit(token: @NFT) {
-            if self.tenantID != token.tenantID {
-                panic("This token is from another Tenant and cannot be stored in this collection")
+            pre {
+                self.tenantID == token.tenantID: "This token belongs to a different Tenant."
             }
-
             let id: UInt64 = token.id
             let oldToken <- self.ownedNFTs[id] <- token
             emit Deposit(id: id, to: self.owner?.address)
@@ -117,18 +177,17 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
 
         init (_tenantID: UInt64) {
-            self.ownedNFTs <- {}
             self.tenantID = _tenantID
+            self.ownedNFTs <- {}
         }
-    }
-
-    pub fun createEmptyCollection(tenantID: UInt64): @Collection {
-        return <- create Collection(_tenantID: tenantID)
     }
 
     pub resource NFTMinter {
         pub let tenantID: UInt64
         pub fun mintNFT(tenant: &Tenant{IState}, name: String): @NFT {
+            pre {
+                self.tenantID == tenant.id: "Trying to mint an NFT from a different Tenant."
+            }
             return <- create NFT(_tenant: tenant, _name: name)
         }
 
@@ -142,8 +201,8 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         self.clientTenants = {}
 
          // Set our named paths
-        self.CollectionStoragePath = /storage/SimpleNFTCollection
-        self.CollectionPublicPath = /public/SimpleNFTCollection
+        self.PackageStoragePath = /storage/SimpleNFTPackage
+        self.PackagePublicPath = /public/SimpleNFTPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "SimpleNFT", 

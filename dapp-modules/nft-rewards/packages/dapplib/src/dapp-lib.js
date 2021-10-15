@@ -30,7 +30,8 @@ module.exports = class DappLib {
 
   }
 
-  static async SimpleNFTGetNFTCollection(data) {
+  // Run by a user (like someone who wants a collection)
+  static async SimpleNFTGetPackage(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -38,9 +39,28 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'simple_nft_get_nft_collection',
+      'simple_nft_get_package'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async SimpleNFTUserSetup(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'simple_nft_user_setup',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenant: { value: data.tenant, type: t.Address }
       }
     );
 
@@ -128,7 +148,7 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BOOLEAN,
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
       label: 'Has SimpleNFT Tenant',
       result: result.callData
     }
@@ -143,7 +163,8 @@ module.exports = class DappLib {
     },
       'simple_nft_get_nft_ids',
       {
-        account: { value: data.account, type: t.Address }
+        account: { value: data.account, type: t.Address },
+        tenant: { value: data.tenant, type: t.Address }
       }
     );
 
@@ -155,47 +176,6 @@ module.exports = class DappLib {
   }
 
   /****** Rewards ******/
-
-  static async RewardsInstance(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'rewards_instance'
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async RewardsGiveReward(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'rewards_give_reward',
-      {
-        tenant: { value: data.tenant, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
 
   static async RewardsInstance(data) {
 
@@ -230,10 +210,76 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BOOLEAN,
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
       label: 'Has Rewards Tenant',
       result: result.callData
     }
+  }
+
+  static async RewardsUserSetup(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'rewards_user_setup',
+      {
+        tenant: { value: data.tenant, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async RewardsMintNFT(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'rewards_mint_nft',
+      {
+        recipient: { value: data.recipient, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async RewardsGiveReward(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'rewards_give_reward',
+      {
+        tenant: { value: data.tenant, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
   }
 
   /****** Helpers ******/

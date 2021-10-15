@@ -22,6 +22,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     // All of the getters and setters.
     // ** Setters MUST be access(contract) or access(account) **
     pub resource interface IState {
+       pub let id: UInt64
        pub fun simpleNFTRef(): &SimpleNFT.Tenant{SimpleNFT.IState}
        pub fun giveReward(nftCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic})
     }
@@ -30,22 +31,26 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         pub let id: UInt64 
 
         pub let simpleNFT: @SimpleNFT.Tenant
+        pub let simpleNFTMinter: @SimpleNFT.NFTMinter
 
         pub fun simpleNFTRef(): &SimpleNFT.Tenant{SimpleNFT.IState} {
             return &self.simpleNFT as &SimpleNFT.Tenant{SimpleNFT.IState}
         }
 
+        pub fun mintNFT(collection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}) {
+            collection.deposit(token: <- self.simpleNFTMinter.mintNFT(tenant: self.simpleNFTRef(), name: "Base Reward"))
+        }
+
         pub fun giveReward( 
             nftCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
         ) {
-            pre {
-                nftCollection.tenantID == self.simpleNFT.id: 
-                    "This collection belongs to a separate Tenant."
-            }
+            // Note: You don't need to check if the nftCollection.tenantID == self.simpleNFT.id,
+            // that is done implicitly below.
+            
             let ids = nftCollection.getIDs()
             if ids.length > 2 {
                 let nftMinter <- self.simpleNFT.createNewMinter()
-                nftCollection.deposit(token: <- nftMinter.mintNFT(tenant: self.simpleNFTRef(), name: "Reward"))
+                nftCollection.deposit(token: <- nftMinter.mintNFT(tenant: self.simpleNFTRef(), name: "Super Legendary Reward"))
                 destroy nftMinter
             } else {
                 panic("Sorry! You are not cool enough. Need more NFTs!!!")
@@ -55,10 +60,12 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         init(_tenantID: UInt64) {
             self.id = _tenantID
             self.simpleNFT <- SimpleNFT.instance()
+            self.simpleNFTMinter <- self.simpleNFT.createNewMinter()
         }
 
         destroy() {
             destroy self.simpleNFT
+            destroy self.simpleNFTMinter
         }
     }
 

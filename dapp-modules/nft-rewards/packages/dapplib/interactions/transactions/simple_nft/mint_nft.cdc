@@ -8,16 +8,19 @@ transaction(recipient: Address, tenant: Address, name: String) {
     prepare(signer: AuthAccount) {
         self.SimpleNFTTenant = getAccount(tenant).getCapability(SimpleNFT.getMetadata().tenantPublicPath)
                                     .borrow<&SimpleNFT.Tenant{SimpleNFT.IState}>()!
-        self.SimpleNFTMinter = signer.borrow<&SimpleNFT.NFTMinter>(from: /storage/SimpleNFTMinter)
-                                    ?? panic("Could not borrow the SimpleNFT.NFTMinter.")
 
-        self.RecipientCollection = getAccount(recipient).getCapability(SimpleNFT.CollectionPublicPath)
-                                        .borrow<&SimpleNFT.Collection{SimpleNFT.CollectionPublic}>()
-                                        ?? panic("Could not borrow the recipient's public SimpleNFT Collection")
+        let SignerSimpleNFTPackage = signer.borrow<&SimpleNFT.Package>(from: /storage/SimpleNFTPackage)
+                                    ?? panic("Could not borrow the signer's SimpleNFT.Package.")
+        self.SimpleNFTMinter = SignerSimpleNFTPackage.borrowMinter(tenantID: self.SimpleNFTTenant.id)
+
+        let RecipientSimpleNFTPackage = getAccount(recipient).getCapability(/public/SimpleNFTPackage)
+                                            .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()
+                                            ?? panic("Could not borrow the recipient's SimpleNFT.Package.")
+        self.RecipientCollection = RecipientSimpleNFTPackage.borrowCollectionPublic(tenantID: self.SimpleNFTTenant.id)
     }
 
     execute {
-        let nft <- self.SimpleNFTMinter.mintNFT(tenant: self.SimpleNFTTenant, name: name)
+        let nft <- self.SimpleNFTMinter.mintNFT(tenant: self.SimpleNFTTenant, name: name) 
         self.RecipientCollection.deposit(token: <-nft)
         log("Minted a SimpleNFT into the recipient's SimpleNFT Collection.")
     }
