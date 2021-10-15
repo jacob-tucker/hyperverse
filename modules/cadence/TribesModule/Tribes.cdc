@@ -1,111 +1,171 @@
-import HyperverseService from "../HyperverseService.cdc"
 import IHyperverseComposable from "../IHyperverseComposable.cdc"
 import IHyperverseModule from "../IHyperverseModule.cdc"
 import HyperverseModule from "../HyperverseModule.cdc"
 
-// THIS DOES IMPLEMENT IHyperverseModule BECAUSE IT IS A SECONDARY EXPORT (aka Module).
-// IT DOES IMPLEMENT IHyperverseComposable BECAUSE IT'S A SMART COMPOSABLE CONTRACT.
-pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
+pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
-    // must be access(contract) because dictionaries can be
-    // changed if they're pub
+     /**************************************** METADATA ****************************************/
+
+    // ** MUST be access(contract) **
     access(contract) let metadata: HyperverseModule.ModuleMetadata
-    
-    /* Requirements for the IHyperverseComposable */
+    pub fun getMetadata(): HyperverseModule.ModuleMetadata {
+        return self.metadata
+    }
 
-    // the total number of tenants that have been created
     pub var totalTenants: UInt64
 
-    // All of the client Tenants (represented by Addresses) that 
-    // have an instance of an Tenant and how many they have. 
+    // ** MUST be access(contract) **
     access(contract) var clientTenants: {Address: UInt64}
+    pub fun getTenants(): {Address: UInt64} {
+        return self.clientTenants
+    }
 
-    pub resource interface ITenantPublic {
-        access(contract) fun addParticipant(participant: Address, tribe: String?)
-        access(contract) var participants: {Address: String?}
+    /**************************************** TENANT ****************************************/
+
+    pub resource interface IState {
+        pub let id: UInt64
+        access(contract) var participants: {Address: Bool}
         access(contract) var tribes: {String: TribeData}
+        pub fun createIdentity(package: &Package)
+        pub fun joinTribe(identity: &Identity, tribe: String)
+        pub fun leaveTribe(identity: &Identity)
     }
     
-    pub resource Tenant: IHyperverseComposable.ITenant, ITenantPublic {
+    pub resource Tenant: IHyperverseComposable.ITenantID, IState {
         pub let id: UInt64 
 
-        pub let authNFT: Capability<&HyperverseService.AuthNFT>
-
-        // an array of tribe names
+        /************ STATE ************/
         pub var tribes: {String: TribeData}
+        pub var participants: {Address: Bool}
+
+        /************ SETTERS ************/
 
         pub fun addTribe(tribeName: String) {
             self.tribes[tribeName] = TribeData()
         }
 
-        // maps an address (of a user) to the tribe they are a part of
-        pub var participants: {Address: String?}
-
-        pub fun addParticipant(participant: Address, tribe: String?) {
-            self.participants[participant] = tribe
-            self.tribes[tribe!]!.addMember(member: participant)
+        /************ PUB FUNCTIONS ************/
+        pub fun createIdentity(package: &Package) {
+            pre {
+                self.participants[package.owner!.address] == nil: "This user already has an Identity"
+            }
+            self.participants[package.owner!.address] = true
+            package.depositIdentity(Identity: <- create Identity(_tenantID: self.id, _address: package.owner!.address))
         }
 
-        init(_authNFT: Capability<&HyperverseService.AuthNFT>) {
-            /* For Composability */
-            self.id = NFTMarketplace.totalTenants
-            NFTMarketplace.totalTenants = NFTMarketplace.totalTenants + (1 as UInt64)
-            self.authNFT = _authNFT
+        pub fun joinTribe(identity: &Identity, tribe: String) {
+            pre {
+                self.participants[identity.address] != nil: "Identity isn't registered for some reason."
+                self.participants[identity.address] == false: "Participant is already in a Tribe!"
+                self.tribes.containsKey(tribe): "Tribe does not exist!"
+            }
+            identity.addTribe(newTribe: <- create Tribe(_name: tribe))
+            self.tribes[tribe]!.addMember(member: identity.address)
+        }
 
+        pub fun leaveTribe(identity: &Identity) {
+            pre {
+                self.participants[identity.address] != nil: "Identity isn't registered for some reason."
+                self.participants[identity.address] == true: "Participant isn't in a tribe."
+                identity.currentTribe != nil: "This identity isn't part of a Tribe!"
+            }
+            self.tribes[identity.currentTribeName!]!.removeMember(member: identity.address)
+            identity.removeTribe()
+        }
+
+        init(_tenantID: UInt64) {
+            self.id = _tenantID
             self.tribes = {}
             self.participants = {}
         }
+    }
+
+    pub fun instance(): @Tenant {
+        let tenantID = Tribes.totalTenants
+        Tribes.totalTenants = Tribes.totalTenants + (1 as UInt64)
+        return <- create Tenant(_tenantID: tenantID)
+    }
+
+    /**************************************** PACKAGE ****************************************/
+
+    // Named Paths
+    //
+    pub let PackageStoragePath: StoragePath
+    pub let PackagePublicPath: PublicPath
+    // Any things that should be linked to the public
+    pub resource interface PackagePublic {
+        
+    }
+    // A Package is so that you can sort all the resources you WILL or MAY recieve 
+    // as a part of you interacting with this contract by tenantID.
+    //
+    // This also removes the need to have a tenantID in every single resource.
+    pub resource Package: PackagePublic {
+        pub let identities: @{UInt64: Identity}
+
+        // Maybe have a map of tenantID: Capability<&Tenant{IState}> ??????
+
+        pub fun depositIdentity(Identity: @Identity) {
+            self.identities[Identity.tenantID] <-! Identity
+        }
+
+        pub fun borrowIdentity(tenantID: UInt64): &Identity {
+            return &self.identities[tenantID] as &Identity
+        }
+
+        init() {
+            self.identities <- {}
+        }
 
         destroy() {
-
+            destroy self.identities
         }
     }
 
-    pub fun instance(authNFT: Capability<&HyperverseService.AuthNFT>): @Tenant {
-        let clientTenant = authNFT.borrow()!.owner!.address
-        if let count = self.clientTenants[clientTenant] {
-            self.clientTenants[clientTenant] = self.clientTenants[clientTenant]! + (1 as UInt64)
-        } else {
-            self.clientTenants[clientTenant] = (1 as UInt64)
-        }
-
-        return <-create Tenant(_authNFT: authNFT)
+    pub fun getPackage(): @Package {
+        return <- create Package()
     }
 
-    pub fun getTenants(): {Address: UInt64} {
-        return self.clientTenants
-    }
+    /**************************************** FUNCTIONALITY ****************************************/
 
-    /* Functionality of the NFTMarketplace Module */
     pub event TribesContractInitialized()
 
     pub resource Identity {
-        // the person's username
-        pub var username: String
+        pub let tenantID: UInt64
 
         // the address this identity belongs to
         pub let address: Address
 
         // the tribe this user is a part of
-        pub var currentTribe: String?
+        pub var currentTribe: @Tribe?
+
+        pub var currentTribeName: String?
 
         // changes the current tribe
-        access(contract) fun changeCurrentTribe(newTribe: String?) {
-            self.currentTribe = newTribe
+        access(contract) fun addTribe(newTribe: @Tribe) {
+            self.currentTribeName = newTribe.name
+
+            let oldTribe <- self.currentTribe <- newTribe
+            destroy oldTribe
         }
 
-        init(_username: String, _address: Address) {
-            self.username = _username
+        access(contract) fun removeTribe() {
+            self.currentTribeName = nil
+
+            let oldTribe <- self.currentTribe <- nil
+            destroy oldTribe
+        }
+
+        init(_tenantID: UInt64, _address: Address) {
+            self.tenantID = _tenantID
             self.address = _address
-            self.currentTribe = nil
+            self.currentTribe <- nil
+            self.currentTribeName = nil
         }
-    }
 
-    // creates and returns a new identity. you have to pass in an address
-    // and a username
-    pub fun createIdentity(tenant: &Tenant{ITenantPublic}, username: String, participant: Address): @Identity {
-        tenant.addParticipant(participant: participant, tribe: nil)
-        return <- create Identity(_username: username, _address: participant)
+        destroy() {
+            destroy self.currentTribe
+        }
     }
 
     pub struct TribeData {
@@ -137,42 +197,23 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
         }
     }
 
-    pub fun joinTribe(tenant: &Tenant{ITenantPublic}, identity: &Identity, tribe: String): @Tribe {
-        pre {
-            identity.address == identity.owner!.address: "Hacker!"
-            tenant.participants.containsKey(identity.address): "Identity isn't registered for some reason"
-            tenant.participants[identity.address] == nil: "Participant is already in a Tribe!"
-            tenant.tribes.keys.contains(tribe): "Tribe does not exist!"
-        }
-        identity.changeCurrentTribe(newTribe: tribe)
-        tenant.addParticipant(participant: identity.address, tribe: tribe)
-
-        return <- create Tribe(_name: tribe)
-    }
-
-     pub fun leaveTribe(tenant: &Tenant{ITenantPublic}, identity: &Identity, tribeResource: @Tribe) {
-        pre {
-            identity.address == identity.owner!.address: "Hacker!"
-            tenant.participants.containsKey(identity.address): "Identity isn't registered for some reason"
-            tenant.participants[identity.address] != nil: "Participant is not already in a Tribe!"
-        }
-        identity.changeCurrentTribe(newTribe: nil)
-        tenant.addParticipant(participant: identity.address, tribe: nil)
-        destroy tribeResource
-    }
-
     init() {
         /* For Secondary Export */
         self.clientTenants = {}
         self.totalTenants = 0
 
+        // Set our named paths
+        self.PackageStoragePath = /storage/TribesPackage
+        self.PackagePublicPath = /public/TribesPackage
+
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "Tribes", 
             _authors: [HyperverseModule.Author(_address: 0x1, _externalLink: "https://localhost:5000/externalMetadata")], 
             _version: "0.0.1", 
-            _publishedAt: 1632887513,
-            _tenantStoragePath: /storage/Tribes,
-            _externalLink: "https://externalLink.net/1234567890",
+            _publishedAt: getCurrentBlock().timestamp,
+            _tenantStoragePath: /storage/TribesTenant,
+            _tenantPublicPath: /public/TribesTenant,
+            _externalUri: "https://externalLink.net/1234567890",
             _secondaryModules: nil
         )
 
