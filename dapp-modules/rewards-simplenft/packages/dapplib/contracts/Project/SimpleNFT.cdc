@@ -43,8 +43,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
             self.totalSupply = 0
         }
     }
-    // Returns a package of things that would normally be saved to account storage
-    // in a normal contract.
+    // Returns a Tenant.
     pub fun instance(): @Tenant {
         let tenantID = SimpleNFT.totalTenants
         SimpleNFT.totalTenants = SimpleNFT.totalTenants + (1 as UInt64)

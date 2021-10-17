@@ -5,3 +5,5 @@ Any time you have a pub function inside of a contract, that needs to take in a T
 Resources need a tenantID inside of them.
 
 Resources that should be stored by an account (like an NFTMinter, Identity, Collection) should all be moved inside the Package. The current idea is the functions inside Package should take in the resources themselves, then have borrow functions that expose the full reference, and then potentially other functions that expose the public versions of those references and then expose those functions inside PackagePublic (see SimpleNFT)
+
+Another thing is that before, we were trying to store stuff in the Tenant like an Administrator, Minter, etc. We don't do that now. Instead, you make functions to make those things so you can pass stuff in, like a reference to that Tenant restricted to IState. :) Before, we couldn't do that because you don't have access to IState at init, but you can in a function.

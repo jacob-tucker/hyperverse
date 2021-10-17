@@ -1,5 +1,4 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
-import NonFungibleToken from "../../../contracts/Flow/NonFungibleToken.cdc"
 
 // Will only be run 1 time per user - ever. So even if they need this
 // collection as dependencies, etc.

@@ -66,7 +66,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
             destroy self.simpleNFTMinter
         }
     }
-
+    // Returns a Tenant.
     pub fun instance(): @Tenant {
         let tenantID = Rewards.totalTenants
         Rewards.totalTenants = Rewards.totalTenants + (1 as UInt64)
