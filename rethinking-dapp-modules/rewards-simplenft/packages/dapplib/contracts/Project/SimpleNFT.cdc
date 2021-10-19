@@ -138,7 +138,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub let name: String
     
         init(_ tenantID: UInt64, _name: String) {
-            let tenant = &SimpleNFT.tenants[tenantID] as &Tenant{IState}
+            let tenant = SimpleNFT.getTenant(id: tenantID)
           
             self.id = tenant.totalSupply
             self.tenantID = tenantID
