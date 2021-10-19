@@ -12,43 +12,49 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     pub fun getMetadata(): HyperverseModule.ModuleMetadata {
         return self.metadata
     }
-    
-    pub var totalTenants: UInt64
 
     /**************************************** TENANT ****************************************/
+
+    pub var totalTenants: UInt64
 
     // All of the getters and setters.
     // ** Setters MUST be access(contract) or access(account) **
     pub resource interface IState {
        pub let id: UInt64
-       pub fun simpleNFTRef(): &SimpleNFT.Tenant{SimpleNFT.IState}
-       pub fun giveReward(nftCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic})
+       pub fun giveReward(package: &Package{PackagePublic})
     }
     
-    pub resource Tenant: IHyperverseComposable.ITenantID, IState {
+    // Implement dependency's IState
+    pub resource Tenant: IHyperverseComposable.ITenantID, IState, SimpleNFT.IState {
+        // DUE TO IHyperverseComposable.ITenantID
         pub let id: UInt64 
 
+        // DUE TO SimpleNFT.IState
+        pub var totalSupply: UInt64
+        pub fun updateTotalSupply() {
+            self.totalSupply = self.totalSupply + (1 as UInt64)
+        }
+
+        // BECAUSE WE USE A DEPENDENCY - Need this for every dependency
         pub let simpleNFT: @SimpleNFT.Tenant
-        pub let simpleNFTMinter: @SimpleNFT.NFTMinter
-
-        pub fun simpleNFTRef(): &SimpleNFT.Tenant{SimpleNFT.IState} {
-            return &self.simpleNFT as &SimpleNFT.Tenant{SimpleNFT.IState}
+        // Note that these capabilities actually refer to this Tenant resource
+        pub var sC: Capability<&{SimpleNFT.IState}>?
+        pub fun addSC(sC: Capability<&{SimpleNFT.IState}>) {
+            self.sC = sC
         }
 
-        pub fun mintNFT(collection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}) {
-            collection.deposit(token: <- self.simpleNFTMinter.mintNFT(tenant: self.simpleNFTRef(), name: "Base Reward"))
+        // For this module
+        pub fun mintNFT(package: &Package{PackagePublic}) {
+            let nftMinter <- self.simpleNFT.createNewMinter(tenantC: self.sC!)
+            package.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: self.simpleNFT.id).deposit(token: <- nftMinter.mintNFT(name: "Base Reward"))
+            destroy nftMinter
         }
-
-        pub fun giveReward( 
-            nftCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
-        ) {
-            // Note: You don't need to check if the nftCollection.tenantID == self.simpleNFT.id,
-            // that is done implicitly below.
-            
+        pub fun giveReward(package: &Package{PackagePublic}) {
+            let nftCollection = package.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: self.simpleNFT.id)
             let ids = nftCollection.getIDs()
             if ids.length > 2 {
-                let nftMinter <- self.simpleNFT.createNewMinter()
-                nftCollection.deposit(token: <- nftMinter.mintNFT(tenant: self.simpleNFTRef(), name: "Super Legendary Reward"))
+                let nftMinter <- self.simpleNFT.createNewMinter(tenantC: self.sC!)
+                nftCollection.deposit(token: <- nftMinter.mintNFT(name: "Super Legendary Reward"))
                 destroy nftMinter
             } else {
                 panic("Sorry! You are not cool enough. Need more NFTs!!!")
@@ -57,13 +63,13 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
         init(_tenantID: UInt64) {
             self.id = _tenantID
+            self.totalSupply = 0
             self.simpleNFT <- SimpleNFT.instance()
-            self.simpleNFTMinter <- self.simpleNFT.createNewMinter()
+            self.sC = nil
         }
 
         destroy() {
             destroy self.simpleNFT
-            destroy self.simpleNFTMinter
         }
     }
     // Returns a Tenant.
@@ -73,12 +79,52 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         return <-create Tenant(_tenantID: tenantID)
     }
 
+    /**************************************** PACKAGE ****************************************/
+
+    // Named Paths
+    //
+    pub let PackageStoragePath: StoragePath
+    pub let PackagePrivatePath: PrivatePath
+    pub let PackagePublicPath: PublicPath
+    // Any things that should be linked to the public
+    pub resource interface PackagePublic {
+       pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic}
+    }
+    // Need to include the dependency's package here
+    pub resource Package: PackagePublic {
+        pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
+
+        pub fun setup(tenantID: UInt64) {
+            self.SimpleNFTPackage.borrow()!.setup(tenantID: tenantID)
+        }
+
+        pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
+            return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
+        }
+
+        init(_SimpleNFTPackage: Capability<&SimpleNFT.Package>) {
+            self.SimpleNFTPackage = _SimpleNFTPackage
+        }
+    }
+
+    pub fun getPackage(SimpleNFTPackage: Capability<&SimpleNFT.Package>): @Package {
+        pre {
+            SimpleNFTPackage.borrow() != nil: "This is not a correct SimpleNFT.Package!"
+        }
+        return <- create Package(_SimpleNFTPackage: SimpleNFTPackage)
+    }
+
     /**************************************** FUNCTIONALITY ****************************************/
 
     pub event RewardsInitialized()
     
     init() {
         self.totalTenants = 0
+
+        // Set our named paths
+        self.PackageStoragePath = /storage/RewardsPackage
+        self.PackagePrivatePath = /private/RewardsPackage
+        self.PackagePublicPath = /public/RewardsPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "Rewards", 

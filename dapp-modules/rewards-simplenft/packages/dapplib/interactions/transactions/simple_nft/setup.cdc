@@ -16,8 +16,8 @@ transaction(tenant: Address) {
     }
 
     execute {
-        self.Package.depositCollection(Collection: <- self.TenantState.createCollection())
-        log("Signer deposited a SimpleNFT Collection to their Package.")
+        self.Package.setup(tenantID: self.TenantState.id)
+        log("Signer setup their Package for SimpleNFT and its dependencies.")
     }
 }
 

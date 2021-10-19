@@ -50,7 +50,7 @@ module.exports = class DappLib {
 
   }
 
-  static async SimpleNFTUserSetup(data) {
+  static async SimpleNFTSetup(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -58,7 +58,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'simple_nft_user_setup',
+      'simple_nft_setup',
       {
         tenant: { value: data.tenant, type: t.Address }
       }
@@ -197,6 +197,47 @@ module.exports = class DappLib {
 
   }
 
+  // Run by a user (like someone who wants a collection)
+  static async RewardsGetPackage(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'rewards_get_package'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async RewardsSetup(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'rewards_setup',
+      {
+        tenant: { value: data.tenant, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
   static async RewardsHasTenant(data) {
 
     let result = await Blockchain.get({
@@ -215,28 +256,6 @@ module.exports = class DappLib {
       label: 'Has Rewards Tenant',
       result: result.callData
     }
-  }
-
-  static async RewardsUserSetup(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'rewards_user_setup',
-      {
-        tenant: { value: data.tenant, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
   }
 
   static async RewardsMintNFT(data) {

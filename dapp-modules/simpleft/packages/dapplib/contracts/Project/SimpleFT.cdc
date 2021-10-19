@@ -19,7 +19,6 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     pub resource interface IState {
         pub let id: UInt64
         access(contract) fun updateTotalSupply(delta: Fix64)
-        pub fun createVault(tenantCapability: Capability<&Tenant{IState}>): @Vault
     }
     
     pub resource Tenant: IHyperverseComposable.ITenantID, IState {
@@ -28,9 +27,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         pub fun updateTotalSupply(delta: Fix64) {
             self.totalSupply = UFix64(Fix64(self.totalSupply) + delta)
         }
-        pub fun createVault(tenantCapability: Capability<&Tenant{IState}>): @Vault {
-            return <- create Vault(_tenantID: self.id, _tenantCapability: tenantCapability, _balance: 0.0)
-        }
+        
         pub fun createAdministrator(tenantCapability: Capability<&Tenant{IState}>): @Administrator {
             return <- create Administrator(_tenantID: self.id, _tenantCapability: tenantCapability)
         }
@@ -52,6 +49,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     // Named Paths
     //
     pub let PackageStoragePath: StoragePath
+    pub let PackagePrivatePath: PrivatePath
     pub let PackagePublicPath: PublicPath
     // Any things that should be linked to the public
     pub resource interface PackagePublic {
@@ -66,7 +64,9 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         pub let minters: @{UInt64: Minter}
         pub let vaults: @{UInt64: Vault}
 
-        // Maybe have a map of tenantID: Capability<&Tenant{IState}> ??????
+        pub fun setup(tenantID: UInt64) {
+            self.vaults[tenantID] <-! create Vault()
+        }
 
         pub fun depositAdministrator(Administrator: @Administrator) {
             self.admins[Administrator.tenantID] <-! Administrator
@@ -189,6 +189,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
 
         // Set our named paths
         self.PackageStoragePath = /storage/SimpleFTPackage
+        self.PackagePrivatePath = /private/SimpleFTPackage
         self.PackagePublicPath = /public/SimpleFTPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(

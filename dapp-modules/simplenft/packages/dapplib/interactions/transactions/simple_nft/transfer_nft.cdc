@@ -25,4 +25,3 @@ transaction(recipient: Address, withdrawID: UInt64, tenant: Address) {
         log("Transferred a SimpleNFT from the signer into the recipient's SimpleNFT Collection.")
     }
 }
-

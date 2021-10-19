@@ -50,7 +50,7 @@ module.exports = class DappLib {
 
   }
 
-  static async SimpleNFTUserSetup(data) {
+  static async SimpleNFTSetup(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -58,7 +58,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'simple_nft_user_setup',
+      'simple_nft_setup',
       {
         tenant: { value: data.tenant, type: t.Address }
       }

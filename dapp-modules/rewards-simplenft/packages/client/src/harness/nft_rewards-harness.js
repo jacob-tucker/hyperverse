@@ -50,9 +50,9 @@ export default class NFTRewardsHarness extends LitElement {
           </account-widget>
         </action-card>
       
-        <action-card title="SimpleNFT - User Setup"
-          description="User Setup (Receiving a SimpleNFT.Collection). ** 'Recipient' MUST have a SimpleNFT.Package **"
-          action="SimpleNFTUserSetup" method="post" fields="signer tenant">
+        <action-card title="SimpleNFT - Setup"
+          description="Setting up your SimpleNFT.Package. ** 'Recipient' MUST have a SimpleNFT.Package **"
+          action="SimpleNFTSetup" method="post" fields="signer tenant">
           <account-widget field="tenant" label="Tenant">
           </account-widget>
           <account-widget field="signer" label="Recipient">
@@ -111,9 +111,15 @@ export default class NFTRewardsHarness extends LitElement {
           </account-widget>
         </action-card>
       
-        <action-card title="Rewards - User Setup"
-          description="User Setup User Setup (Receiving a SimpleNFT.Collection). ** 'Recipient' MUST have a SimpleNFT.Package **"
-          action="RewardsUserSetup" method="post" fields="tenant signer">
+        <action-card title="Rewards - Get Package" description="Get Package. ** MUST Have SimpleNFT.Package **"
+          action="RewardsGetPackage" method="post" fields="signer">
+          <account-widget field="signer" label="Signer">
+          </account-widget>
+        </action-card>
+      
+        <action-card title="Rewards - Setup"
+          description="Setting up your Rewards.Package. ** 'Recipient' MUST have a Rewards.Package **" action="RewardsSetup"
+          method="post" fields="signer tenant">
           <account-widget field="tenant" label="Tenant">
           </account-widget>
           <account-widget field="signer" label="Recipient">
