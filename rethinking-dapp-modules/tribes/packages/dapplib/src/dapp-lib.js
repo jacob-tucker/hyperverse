@@ -71,6 +71,29 @@ module.exports = class DappLib {
     }
   }
 
+  static async TribesAddTribe(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'tribes_add_tribe',
+      {
+        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        newTribeName: { value: data.newTribeName, type: t.String }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
   static async TribesJoinTribe(data) {
 
     let result = await Blockchain.post({
