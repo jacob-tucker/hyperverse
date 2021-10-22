@@ -79,7 +79,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub let minters: @{UInt64: NFTMinter}
 
         pub fun setup(tenantID: UInt64) {
-            self.collections[tenantID] <-! create Collection(_tenantID: tenantID)
+            self.collections[tenantID] <-! create Collection(tenantID)
         }
 
         pub fun depositAdmin(Admin: @Admin) {
@@ -190,8 +190,8 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
             destroy self.ownedNFTs
         }
 
-        init (_tenantID: UInt64) {
-            self.tenantID = _tenantID
+        init (_ tenantID: UInt64) {
+            self.tenantID = tenantID
             self.ownedNFTs <- {}
         }
     }

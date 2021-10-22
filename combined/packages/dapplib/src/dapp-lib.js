@@ -9,6 +9,52 @@ const t = require('@onflow/types');
 
 module.exports = class DappLib {
 
+  /****** Registry ******/
+  static async RegisterContract(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'registry_register_contract',
+      {
+        convention: { value: data.convention, type: t.String },
+        address: { value: data.address, type: t.Address },
+        name: { value: data.name, type: t.String }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async RetrieveContract(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'registry_retrieve_contract',
+      {
+        convention: { value: data.convention, type: t.String }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_OBJECT,
+      label: 'Contract Information',
+      result: result.callData
+    }
+  }
+
+
   /****** Tribes ******/
 
   // Run by a user (like someone who wants a collection)
@@ -175,6 +221,178 @@ module.exports = class DappLib {
     return {
       type: DappLib.DAPP_RESULT_STRING,
       label: 'The identitys current tribe',
+      result: result.callData
+    }
+  }
+
+  /****** NFTMarketplace ******/
+
+  // Run by a user (like someone who wants a collection)
+  static async MarketplaceGetPackage(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'nftmarketplace_get_package'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async MarketplaceInstance(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'nftmarketplace_instance'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async MarketplaceSetup(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'nftmarketplace_setup',
+      {
+        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async MarketplaceUnlist(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'nftmarketplace_unlist_sale',
+      {
+        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        id: { value: parseInt(data.id), type: t.UInt64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async MarketplaceList(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'nftmarketplace_list_for_sale',
+      {
+        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        ids: DappLib.formatFlowArray(data.ids, t.UInt64),
+        price: { value: data.price, type: t.UFix64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async MarketplacePurchase(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'nftmarketplace_purchase',
+      {
+        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        id: { value: parseInt(data.id), type: t.UInt64 },
+        marketplace: { value: data.marketplace, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async MarketplaceOwnsTenant(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'nftmarketplace_owns_tenant',
+      {
+        account: { value: data.account, type: t.Address },
+        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_BOOLEAN,
+      label: 'Has SimpleFT Tenant',
+      result: result.callData
+    }
+  }
+
+  static async MarketplaceGetIDs(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'nftmarketplace_get_ids',
+      {
+        account: { value: data.account, type: t.Address },
+        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SaleCollection IDs',
       result: result.callData
     }
   }

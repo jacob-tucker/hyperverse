@@ -64,6 +64,20 @@ export default class HarnessPage extends LitElement {
         "description": "Join tribes and become part of a group.",
         "category": "Hyperverse",
         "route": "/core-tribes"
+      },
+      {
+        "name": "core-marketplace",
+        "title": "Hyperverse Marketplace Module",
+        "description": "Buy/sell SimpleNFTs using SimpleFTs.",
+        "category": "Hyperverse",
+        "route": "/core-marketplace"
+      },
+      {
+        "name": "core-registry",
+        "title": "Hyperverse Registry",
+        "description": "Register Hyperverse Smart Contracts",
+        "category": "Hyperverse",
+        "route": "/core-registry"
       }
     ];
   }
