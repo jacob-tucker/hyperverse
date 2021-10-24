@@ -43,5 +43,7 @@ pub contract interface IHyperverseComposable {
         pub var holder: Address
     }
 
-    // pub fun instance(): @Tenant
+    pub resource Package {
+        pub fun setup(tenantID: UInt64)
+    }
 }

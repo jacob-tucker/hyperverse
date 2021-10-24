@@ -224,8 +224,6 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
             _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalLink: "https://localhost:5000/externalMetadata")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
-            _tenantStoragePath: /storage/NFTMarketplaceTenant,
-            _tenantPublicPath: /public/NFTMarketplaceTenant,
             _externalLink: "https://externalLink.net/1234567890",
             _secondaryModules: [{self.account.address: "MorganNFT"}]
         )

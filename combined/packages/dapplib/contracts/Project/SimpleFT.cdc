@@ -204,8 +204,6 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
             _authors: [HyperverseModule.Author(_address: 0x1, _externalLink: "https://localhost:5000/externalMetadata")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
-            _tenantStoragePath: /storage/SimpleFTTenant,
-            _tenantPublicPath: /public/SimpleFTTenant,
             _externalLink: "https://externalLink.net/1234567890",
             _secondaryModules: nil
         )

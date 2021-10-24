@@ -22,14 +22,6 @@ pub contract HyperverseModule {
         // unix timestamp (ms)
         pub var publishedAt: UFix64
 
-        // Enforce a schema for how you create a storage
-        // path.
-        // If you have 1 Module that has 3 Composable SC in it,
-        // NONE of which are SE, you have 1 Tenant at the PE level.  
-        pub var tenantStoragePath: StoragePath
-
-        pub var tenantPublicPath: PublicPath
-
         // off-chain metadata
         // 
         // tags?
@@ -50,8 +42,6 @@ pub contract HyperverseModule {
             _authors: [Author], 
             _version: String, 
             _publishedAt: UFix64,
-            _tenantStoragePath: StoragePath,
-            _tenantPublicPath: PublicPath,
             _externalURI: String,
             _secondaryModules: [{Address: String}]?,
         ) {
@@ -59,8 +49,6 @@ pub contract HyperverseModule {
             self.authors = _authors
             self.version = _version
             self.publishedAt = _publishedAt
-            self.tenantStoragePath = _tenantStoragePath
-            self.tenantPublicPath = _tenantPublicPath
             self.externalURI = _externalURI
             self.secondaryModules = _secondaryModules
         }

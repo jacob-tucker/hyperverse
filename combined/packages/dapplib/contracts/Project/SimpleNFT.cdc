@@ -230,8 +230,6 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
             _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalURI: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
-            _tenantStoragePath: /storage/SimpleNFTTenant,
-            _tenantPublicPath: /public/SimpleNFTTenant,
             _externalURI: "https://externalLink.net/1234567890",
             _secondaryModules: nil
         )

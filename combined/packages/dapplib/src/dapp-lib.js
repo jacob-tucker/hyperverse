@@ -9,6 +9,43 @@ const t = require('@onflow/types');
 
 module.exports = class DappLib {
 
+  /****** SETUP ALL PACKAGES ******/
+  static async SETUPPACKAGES(data) {
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'setupall_setup_all_packages'
+    )
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async HasAllPackages(data) {
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'setupall_has_all_packages',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    )
+
+    return {
+      type: DappLib.DAPP_RESULT_BOOLEAN,
+      label: 'Has All Packages?',
+      result: result.callData
+    }
+  }
+
   /****** Registry ******/
   static async RegisterContract(data) {
 

@@ -264,8 +264,6 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
             _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalLink: "https://localhost:5000/externalMetadata")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
-            _tenantStoragePath: /storage/TribesTenant,
-            _tenantPublicPath: /public/TribesTenant,
             _externalUri: "https://externalLink.net/1234567890",
             _secondaryModules: nil
         )
