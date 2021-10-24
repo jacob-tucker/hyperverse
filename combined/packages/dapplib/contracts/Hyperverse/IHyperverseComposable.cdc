@@ -31,6 +31,8 @@ A function that all clients can call to receive an Tenant resource.
 
 pub contract interface IHyperverseComposable {
 
+    pub event TenantCreated(id: UInt64)
+
     pub var totalTenants: UInt64
 
     pub resource interface ITenant {

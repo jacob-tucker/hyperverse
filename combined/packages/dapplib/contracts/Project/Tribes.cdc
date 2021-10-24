@@ -14,9 +14,8 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
+    pub event TenantCreated(id: UInt64)
     pub var totalTenants: UInt64
-
-    // tenantID -> @Tenant{IState}
     access(contract) var tenants: @{UInt64: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: UInt64): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
@@ -81,6 +80,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
         package.depositAdmin(Admin: <- create Admin(tenantID))
 
+        emit TenantCreated(id: tenantID)
         return tenantID
     }
 

@@ -15,6 +15,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
+    pub event TenantCreated(id: UInt64)
     pub var totalTenants: UInt64
     access(contract) var tenants: @{UInt64: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: UInt64): &Tenant{IHyperverseComposable.ITenant, IState} {
@@ -26,24 +27,31 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     pub resource interface IState {
        pub let id: UInt64
        pub let SNFTTenantID: UInt64
+       access(contract) var recipients: {Address: Bool}
+       access(contract) fun addRecipient(recipient: Address)
     }
     
     // Implement dependency's IState
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
         pub let id: UInt64
         pub var holder: Address
-
         pub let SNFTTenantID: UInt64
+
+        pub var recipients: {Address: Bool}
+        pub fun addRecipient(recipient: Address) {
+            self.recipients[recipient] = true
+        }
 
         init(_tenantID: UInt64, _holder: Address, _SNFTTenantID: UInt64) {
             self.id = _tenantID
             self.holder = _holder
             self.SNFTTenantID = _SNFTTenantID
+            self.recipients = {}
         }
     }
     // Returns a Tenant.
     // We can make it so you can actually pass in a Tenant ID for SNFTTenantID and it will use that one!
-    pub fun instance(package: &Package) {
+    pub fun instance(package: &Package): UInt64 {
         let tenantID = Rewards.totalTenants
         Rewards.totalTenants = Rewards.totalTenants + (1 as UInt64)
 
@@ -51,6 +59,9 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         // inside their SimpleNFT.Package at the `SNFTTenantID`. 
         let SNFTTenantID = SimpleNFT.instance(package: package.SimpleNFTPackage.borrow()!)
         Rewards.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: package.owner!.address, _SNFTTenantID: SNFTTenantID)
+
+        emit TenantCreated(id: tenantID)
+        return tenantID
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -72,7 +83,6 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
             return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
         }
-
     
         pub fun setup(tenantID: UInt64) {
             // No additional setup required here...
@@ -83,7 +93,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
         // Won't work if you aren't a NFTMinter, but that's fine.
         access(contract) fun getMinterInContract(tenantID: UInt64): &SimpleNFT.NFTMinter {
-            return self.SimpleNFTPackage.borrow()!.borrowMinter(tenantID: tenantID) as &SimpleNFT.NFTMinter
+            return self.SimpleNFTPackage.borrow()!.borrowMinter(tenantID: Rewards.getTenant(id: tenantID).SNFTTenantID) as &SimpleNFT.NFTMinter
         }
 
         init(_SimpleNFTPackage: Capability<&SimpleNFT.Package>) {
@@ -108,12 +118,16 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
     // For this module
     pub fun giveReward(tenantID: UInt64, minterPackage: &Package{PackagePublic}, recipientPackage: &Package{PackagePublic}) {
-        let SNFTTenantID = self.getTenant(id: tenantID).id
-        let nftCollection = recipientPackage.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: SNFTTenantID)
+        let TenantState = self.getTenant(id: tenantID)
+        if TenantState.recipients[recipientPackage.owner!.address] == true {
+            panic("This recipient has already received a reward!")
+        }
+        let nftCollection = recipientPackage.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: TenantState.SNFTTenantID)
         let ids = nftCollection.getIDs()
         if ids.length > 2 {
-            let nftMinter = minterPackage.getMinterInContract(tenantID: SNFTTenantID)
+            let nftMinter = minterPackage.getMinterInContract(tenantID: tenantID)
             nftCollection.deposit(token: <- nftMinter.mintNFT(name: "Super Legendary Reward"))
+            TenantState.addRecipient(recipient: recipientPackage.owner!.address)
         } else {
             panic("Sorry! You are not cool enough. Need more NFTs!!!")
         }

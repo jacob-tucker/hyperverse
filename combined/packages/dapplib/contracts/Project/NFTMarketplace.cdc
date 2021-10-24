@@ -18,6 +18,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
+    pub event TenantCreated(id: UInt64)
     pub var totalTenants: UInt64
     access(contract) var tenants: @{UInt64: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: UInt64): &Tenant{IHyperverseComposable.ITenant, IState} {
@@ -58,6 +59,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
         NFTMarketplace.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: package.owner!.address, _SNFTTenantID: SNFTTenantID, _SFTTenantID: SFTTenantID)
 
+        emit TenantCreated(id: tenantID)
         return tenantID
     }
 
