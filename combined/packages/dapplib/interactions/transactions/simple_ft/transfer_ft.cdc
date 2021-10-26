@@ -1,27 +1,21 @@
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
 
-transaction(recipient: Address, amount: UFix64, tenantOwner: Address) {
+transaction(recipient: Address, amount: UFix64, tenantID: String) {
 
-    let TenantID: String
     let SignerVault: &SimpleFT.Vault
     let RecipientVault: &SimpleFT.Vault{SimpleFT.VaultPublic}
 
     prepare(signer: AuthAccount) {
 
-        let TenantPackage = getAccount(tenantOwner).getCapability(SimpleFT.PackagePublicPath)
-                                .borrow<&SimpleFT.Package{SimpleFT.PackagePublic}>()
-                                ?? panic("Could not borrow the public SimpleNFT.Package")
-        self.TenantID = tenantOwner.toString().concat(".").concat(TenantPackage.uuid.toString())
-
         let SignerPackage = signer.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
                                 ?? panic("Could not borrow the signer's SimpleFT Package.")
 
-        self.SignerVault = SignerPackage.borrowVault(tenantID: self.TenantID)
+        self.SignerVault = SignerPackage.borrowVault(tenantID: tenantID)
 
         let RecipientSimpleFTPackage = getAccount(recipient).getCapability(/public/SimpleFTPackage)
                                             .borrow<&SimpleFT.Package{SimpleFT.PackagePublic}>()
                                             ?? panic("Could not borrow the recipient's SimpleFT.Package.")
-        self.RecipientVault = RecipientSimpleFTPackage.borrowVaultPublic(tenantID: self.TenantID)
+        self.RecipientVault = RecipientSimpleFTPackage.borrowVaultPublic(tenantID: tenantID)
     }
 
     execute {

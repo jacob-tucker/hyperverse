@@ -19,7 +19,7 @@ transaction(recipient: Address, tenantID: String, name: String) {
     }
 
     execute {
-        let nft <- self.SimpleNFTMinter.mintNFT(name: name) 
+        let nft <- self.SimpleNFTMinter.mintNFT(metadata: {"name": name}) 
         self.RecipientCollection.deposit(token: <-nft)
         log("Minted a SimpleNFT into the recipient's SimpleNFT Collection.")
     }

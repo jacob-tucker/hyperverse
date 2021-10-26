@@ -45,11 +45,11 @@ export default class HarnessPage extends LitElement {
         "route": "/core-nft"
       },
       {
-        "name": "core-nft_rewards",
-        "title": "Hyperverse NFT Rewards Module",
+        "name": "core-rewards",
+        "title": "Hyperverse Rewards Module",
         "description": "Mint, own, and trade Simple NFTs, and get rewards when you have enough.",
         "category": "Hyperverse",
-        "route": "/core-nft_rewards"
+        "route": "/core-rewards"
       },
       {
         "name": "core-ft",

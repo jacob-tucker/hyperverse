@@ -139,14 +139,14 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     pub resource NFT {
         pub let tenantID: String
         pub let id: UInt64
-        pub let name: String
+        pub var metadata: {String: String}
     
-        init(_ tenantID: String, _name: String) {
+        init(_ tenantID: String, _metadata: {String: String}) {
             let tenant = SimpleNFT.getTenant(id: tenantID)
           
             self.id = tenant.totalSupply
             self.tenantID = tenantID
-            self.name = _name
+            self.metadata = _metadata
 
             tenant.updateTotalSupply()
         }
@@ -209,8 +209,8 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
     pub resource NFTMinter {
         pub let tenantID: String
-        pub fun mintNFT(name: String): @NFT {
-            return <- create NFT(self.tenantID, _name: name)
+        pub fun mintNFT(metadata: {String: String}): @NFT {
+            return <- create NFT(self.tenantID, _metadata: metadata)
         }
         init(_ tenantID: String) {
             self.tenantID = tenantID

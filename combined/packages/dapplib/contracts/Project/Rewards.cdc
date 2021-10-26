@@ -117,7 +117,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         let ids = nftCollection.getIDs()
         if ids.length > 2 {
             let nftMinter = minterPackage.getMinterInContract(tenantID: tenantID)
-            nftCollection.deposit(token: <- nftMinter.mintNFT(name: "Super Legendary Reward"))
+            nftCollection.deposit(token: <- nftMinter.mintNFT(metadata: {"name": "Super Legendary Reward"}))
             TenantState.addRecipient(recipient: recipientPackage.owner!.address)
         } else {
             panic("Sorry! You are not cool enough. Need more NFTs!!!")

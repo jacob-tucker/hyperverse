@@ -143,7 +143,7 @@ module.exports = class DappLib {
     },
       'tribes_setup',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -164,7 +164,8 @@ module.exports = class DappLib {
     },
       'tribes_add_tribe',
       {
-        newTribeName: { value: data.newTribeName, type: t.String }
+        newTribeName: { value: data.newTribeName, type: t.String },
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -186,7 +187,7 @@ module.exports = class DappLib {
     },
       'tribes_join_tribe',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        tenantID: { value: data.tenantID, type: t.String },
         tribeName: { value: data.tribeName, type: t.String }
       }
     );
@@ -208,7 +209,7 @@ module.exports = class DappLib {
     },
       'tribes_leave_tribe',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -228,13 +229,13 @@ module.exports = class DappLib {
     },
       'tribes_owns_tenant',
       {
-        account: { value: data.account, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'TenantID Tribes',
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'TenantID',
       result: result.callData
     }
   }
@@ -249,7 +250,7 @@ module.exports = class DappLib {
       'tribes_get_current_tribe',
       {
         account: { value: data.account, type: t.Address },
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -311,7 +312,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_setup',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -332,7 +333,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_unlist_sale',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        tenantID: { value: data.tenantID, type: t.String },
         id: { value: parseInt(data.id), type: t.UInt64 }
       }
     );
@@ -354,7 +355,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_list_for_sale',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        tenantID: { value: data.tenantID, type: t.String },
         ids: DappLib.formatFlowArray(data.ids, t.UInt64),
         price: { value: data.price, type: t.UFix64 }
       }
@@ -377,7 +378,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_purchase',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        tenantID: { value: data.tenantID, type: t.String },
         id: { value: parseInt(data.id), type: t.UInt64 },
         marketplace: { value: data.marketplace, type: t.Address }
       }
@@ -399,12 +400,12 @@ module.exports = class DappLib {
     },
       'nftmarketplace_owns_tenant',
       {
-        account: { value: data.account, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
+      type: DappLib.DAPP_RESULT_STRING,
       label: 'TenantIDs for Marketplace',
       result: result.callData
     }
@@ -420,7 +421,7 @@ module.exports = class DappLib {
       'nftmarketplace_get_ids',
       {
         account: { value: data.account, type: t.Address },
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -482,7 +483,7 @@ module.exports = class DappLib {
     },
       'simple_ft_setup',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -501,7 +502,10 @@ module.exports = class DappLib {
         authorizers: [data.tenantOwner, data.recipient]
       }
     },
-      'simple_ft_give_minter'
+      'simple_ft_give_minter',
+      {
+        tenantID: { value: data.tenantID, type: t.String }
+      }
     );
 
     return {
@@ -546,7 +550,7 @@ module.exports = class DappLib {
       {
         recipient: { value: data.recipient, type: t.Address },
         amount: { value: data.amount, type: t.UFix64 },
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -566,12 +570,12 @@ module.exports = class DappLib {
     },
       'simple_ft_owns_tenant',
       {
-        account: { value: data.account, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
+      type: DappLib.DAPP_RESULT_STRING,
       label: 'TenantID SimpleFT',
       result: result.callData
     }
@@ -587,7 +591,7 @@ module.exports = class DappLib {
       'simple_ft_get_balance',
       {
         account: { value: data.account, type: t.Address },
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -649,7 +653,7 @@ module.exports = class DappLib {
     },
       'simple_nft_setup',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -668,7 +672,10 @@ module.exports = class DappLib {
         authorizers: [data.tenantOwner, data.recipient]
       }
     },
-      'simple_nft_give_minter'
+      'simple_nft_give_minter',
+      {
+        tenantID: { value: data.tenantID, type: t.String }
+      }
     );
 
     return {
@@ -713,7 +720,7 @@ module.exports = class DappLib {
       {
         recipient: { value: data.recipient, type: t.Address },
         withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 },
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -733,13 +740,13 @@ module.exports = class DappLib {
     },
       'simple_nft_owns_tenant',
       {
-        account: { value: data.account, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'TenantIDs for SimpleNFT',
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'TenantID',
       result: result.callData
     }
   }
@@ -816,7 +823,7 @@ module.exports = class DappLib {
     },
       'rewards_setup',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -836,13 +843,13 @@ module.exports = class DappLib {
     },
       'rewards_owns_tenant',
       {
-        account: { value: data.account, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'TenantID for Rewards',
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'TenantID',
       result: result.callData
     }
   }
@@ -858,7 +865,8 @@ module.exports = class DappLib {
     },
       'rewards_mint_nft',
       {
-        recipient: { value: data.recipient, type: t.Address }
+        recipient: { value: data.recipient, type: t.Address },
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -880,7 +888,8 @@ module.exports = class DappLib {
     },
       'rewards_give_reward',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
