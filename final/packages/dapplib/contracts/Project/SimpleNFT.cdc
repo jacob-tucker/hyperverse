@@ -51,6 +51,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
     pub resource interface PackagePublic {
         pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic}
+        pub fun depositMinter(NFTMinter: @NFTMinter)
     }
 
     pub resource Package: PackagePublic {
