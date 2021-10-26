@@ -1,6 +1,7 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 
-transaction(recipient: Address, tenantID: UInt64, name: String) {
+transaction(recipient: Address, tenantID: String, name: String) {
+
     let SimpleNFTMinter: &SimpleNFT.NFTMinter
     let RecipientCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
 

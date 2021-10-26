@@ -60,14 +60,4 @@ pub contract HyperverseModule {
         }
     }
 
-    pub resource UniqueID {
-        pub(set) var dependency: Bool
-        init() {
-            self.dependency = false
-        }
-    }
-    pub fun createUID(): @UniqueID {
-        return <- create UniqueID()
-    }
-
 }

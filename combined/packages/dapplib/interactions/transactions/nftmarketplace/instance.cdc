@@ -12,9 +12,7 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        let UID <- HyperverseModule.createUID()
-        NFTMarketplace.instance(package: self.NFTMarketplacePackage, uid: &UID as &HyperverseModule.UniqueID)
-        destroy UID
+        self.NFTMarketplacePackage.instance(tenantID: self.NFTMarketplacePackage.uuid)
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

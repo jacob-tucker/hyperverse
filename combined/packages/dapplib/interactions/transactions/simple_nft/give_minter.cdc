@@ -1,11 +1,18 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 
-transaction(tenantID: UInt64) {
+transaction() {
+
+    let TenantID: String
     let AdminsSNFTPackage: &SimpleNFT.Package
     let RecipientsSNFTPackage: &SimpleNFT.Package
     
-    prepare(signer: AuthAccount, recipient: AuthAccount) {
-        self.AdminsSNFTPackage = signer.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
+    prepare(tenantOwner: AuthAccount, recipient: AuthAccount) {
+        let TenantPackage = getAccount(tenantOwner.address).getCapability(SimpleNFT.PackagePublicPath)
+                                .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()
+                                ?? panic("Could not borrow the public SimpleNFT.Package")
+        self.TenantID = tenantOwner.address.toString().concat(".").concat(TenantPackage.uuid.toString())
+
+        self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
                                     ?? panic("Could not borrow the SimpleNFT.Package from the signer.")
 
         self.RecipientsSNFTPackage = recipient.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
@@ -13,7 +20,7 @@ transaction(tenantID: UInt64) {
     }
 
     execute {
-        self.RecipientsSNFTPackage.depositMinter(NFTMinter: <- self.AdminsSNFTPackage.borrowAdmin(tenantID: tenantID).createNFTMinter())
+        self.RecipientsSNFTPackage.depositMinter(NFTMinter: <- self.AdminsSNFTPackage.borrowAdmin(tenantID: self.TenantID).createNFTMinter())
         log("Gave a SimpleNFT.NFTMinter to the recipient's account.")
     }
 }

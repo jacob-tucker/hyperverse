@@ -1,21 +1,28 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 
-transaction(recipient: Address, withdrawID: UInt64, tenantID: UInt64) {
+transaction(recipient: Address, withdrawID: UInt64, tenantOwner: Address) {
+
+    let TenantID: String
     let SignerCollection: &SimpleNFT.Collection
     let RecipientCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
 
     prepare(signer: AuthAccount) {
 
+        let TenantPackage = getAccount(tenantOwner).getCapability(SimpleNFT.PackagePublicPath)
+                                .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()
+                                ?? panic("Could not borrow the public SimpleNFT.Package")
+        self.TenantID = tenantOwner.toString().concat(".").concat(TenantPackage.uuid.toString())
+
         let SignerPackage = signer.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
                                 ?? panic("Could not borrow the signer's SimpleNFT Package.")
 
-        self.SignerCollection = SignerPackage.borrowCollection(tenantID: tenantID)
+        self.SignerCollection = SignerPackage.borrowCollection(tenantID: self.TenantID)
 
         let RecipientPackage = getAccount(recipient).getCapability(SimpleNFT.PackagePublicPath)
                                 .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()
                                 ?? panic("Could not borrow the recipient's public SimpleNFT Package.")
 
-        self.RecipientCollection = RecipientPackage.borrowCollectionPublic(tenantID: tenantID)
+        self.RecipientCollection = RecipientPackage.borrowCollectionPublic(tenantID: self.TenantID)
     }
 
     execute {

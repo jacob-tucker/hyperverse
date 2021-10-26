@@ -13,18 +13,18 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: UInt64)
-    access(contract) var clientTenants: {Address: UInt64}
-    pub fun getClientTenants(): {Address: UInt64} {
-        return self.clientTenants
+    pub event TenantCreated(id: String)
+    access(contract) var clientTenants: {Address: [String]}
+    pub fun getClientTenants(account: Address): [String] {
+        return self.clientTenants[account]!
     }
-    access(contract) var tenants: @{UInt64: Tenant{IHyperverseComposable.ITenant, IState}}
-    pub fun getTenant(id: UInt64): &Tenant{IHyperverseComposable.ITenant, IState} {
+    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
 
     pub resource interface IState {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         access(contract) var participants: {Address: Bool}
         access(contract) var tribes: {String: TribeData}
 
@@ -34,7 +34,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub var holder: Address
 
         pub var tribes: {String: TribeData}
@@ -62,29 +62,12 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
             self.participants[member] = false
         }
 
-        init(_tenantID: UInt64, _holder: Address) {
+        init(_tenantID: String, _holder: Address) {
             self.tenantID = _tenantID
             self.holder = _holder
             self.tribes = {}
             self.participants = {}
         }
-    }
-
-    pub fun instance(package: &Package, uid: &HyperverseModule.UniqueID): UInt64 {
-        pre {
-            uid.dependency || Tribes.clientTenants[package.owner!.address] == nil:
-                "This user already owns a Tenant from this contract!"
-        }
-        var tenantID: UInt64 = uid.uuid
-        let newTenant <- create Tenant(_tenantID: tenantID, _holder: package.owner!.address)
-        Tribes.tenants[tenantID] <-! newTenant
-        package.depositAdmin(Admin: <- create Admin(tenantID))
-        emit TenantCreated(id: tenantID)
-
-        if !uid.dependency {
-            Tribes.clientTenants[package.owner!.address] = tenantID
-        }
-        return tenantID
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -96,14 +79,28 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     pub let PackagePublicPath: PublicPath
 
     pub resource interface PackagePublic {
-        pub fun borrowIdentityPublic(tenantID: UInt64): &Identity{IdentityPublic}
+        pub fun borrowIdentityPublic(tenantID: String): &Identity{IdentityPublic}
     }
    
     pub resource Package: PackagePublic {
-        pub var identities: @{UInt64: Identity}
-        pub var admins: @{UInt64: Admin}
+        pub var identities: @{String: Identity}
+        pub var admins: @{String: Admin}
 
-        pub fun setup(tenantID: UInt64) {
+        pub fun instance(tenantID: UInt64) {
+            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
+            let newTenant <- create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
+            Tribes.tenants[tenantID] <-! newTenant
+            self.depositAdmin(Admin: <- create Admin(tenantID))
+            emit TenantCreated(id: tenantID)
+            
+             if Tribes.clientTenants[self.owner!.address] != nil {
+                Tribes.clientTenants[self.owner!.address]!.append(tenantID)
+            } else {
+                Tribes.clientTenants[self.owner!.address] = [tenantID]
+            }
+        }
+
+        pub fun setup(tenantID: String) {
             self.identities[tenantID] <-! create Identity(tenantID, _address: self.owner!.address)
         }
 
@@ -111,7 +108,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
             self.admins[Admin.tenantID] <-! Admin
         }
 
-        pub fun borrowAdmin(tenantID: UInt64): &Admin {
+        pub fun borrowAdmin(tenantID: String): &Admin {
             pre {
                 self.admins[tenantID] != nil:
                     "This Package does not have an Admin at this tenantID"
@@ -119,11 +116,11 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
             return &self.admins[tenantID] as &Admin
         }
 
-        pub fun borrowIdentity(tenantID: UInt64): &Identity {
+        pub fun borrowIdentity(tenantID: String): &Identity {
             return &self.identities[tenantID] as &Identity
         }
 
-        pub fun borrowIdentityPublic(tenantID: UInt64): &Identity{IdentityPublic} {
+        pub fun borrowIdentityPublic(tenantID: String): &Identity{IdentityPublic} {
             return &self.identities[tenantID] as &Identity{IdentityPublic}
         }
 
@@ -147,12 +144,12 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     pub event TribesContractInitialized()
 
     pub resource Admin {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub fun addNewTribe(newTribeName: String) {
             Tribes.getTenant(id: self.tenantID).addNewTribe(newTribeName: newTribeName)
         }
 
-        init(_ tenantID: UInt64) {
+        init(_ tenantID: String) {
             self.tenantID = tenantID
         }
     }
@@ -178,7 +175,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     }
 
     pub resource Identity: IdentityPublic {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub let address: Address
         pub var currentTribe: @Tribe?
         pub var currentTribeName: String?
@@ -200,7 +197,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
             destroy oldTribe
         }
 
-        init(_ tenantID: UInt64, _address: Address) {
+        init(_ tenantID: String, _address: Address) {
             self.tenantID = tenantID
             self.address = _address
             self.currentTribe <- nil

@@ -15,48 +15,29 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: UInt64)
-    access(contract) var clientTenants: {Address: UInt64}
-    pub fun getClientTenants(): {Address: UInt64} {
-        return self.clientTenants
+    pub event TenantCreated(id: String)
+    access(contract) var clientTenants: {Address: [String]}
+    pub fun getClientTenants(account: Address): [String] {
+        return self.clientTenants[account]!
     }
-    access(contract) var tenants: @{UInt64: Tenant{IHyperverseComposable.ITenant, IState}}
-    pub fun getTenant(id: UInt64): &Tenant{IHyperverseComposable.ITenant, IState} {
+    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
 
     pub resource interface IState {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub var holder: Address
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub var holder: Address
 
-        init(_tenantID: UInt64, _holder: Address) {
+        init(_tenantID: String, _holder: Address) {
             self.tenantID = _tenantID
             self.holder = _holder
         }
-    }
-
-    pub fun instance(package: &Package, uid: &HyperverseModule.UniqueID): UInt64 {
-        pre {
-            uid.dependency || NFTMarketplace.clientTenants[package.owner!.address] == nil:
-                "This user already owns a Tenant from this contract!"
-        }
-        var tenantID: UInt64 = uid.uuid
-        let newTenant <- create Tenant(_tenantID: tenantID, _holder: package.owner!.address)
-        NFTMarketplace.tenants[tenantID] <-! newTenant
-        emit TenantCreated(id: tenantID)
-
-        if !uid.dependency {
-            NFTMarketplace.clientTenants[package.owner!.address] = tenantID
-            uid.dependency = true
-        }
-        SimpleNFT.instance(package: package.SimpleNFTPackage.borrow()!, uid: uid)
-        SimpleFT.instance(package: package.SimpleFTPackage.borrow()!, uid: uid)
-        return tenantID
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -68,7 +49,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     pub resource interface PackagePublic {
        pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic}
        pub fun SimpleFTPackagePublic(): &SimpleFT.Package{SimpleFT.PackagePublic}
-       pub fun borrowSaleCollectionPublic(tenantID: UInt64): &SaleCollection{SalePublic}
+       pub fun borrowSaleCollectionPublic(tenantID: String): &SaleCollection{SalePublic}
     }
     
     pub resource Package: PackagePublic {
@@ -81,9 +62,23 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
             return self.SimpleFTPackage.borrow()! as &SimpleFT.Package{SimpleFT.PackagePublic}
         }
 
-        pub var salecollections: @{UInt64: SaleCollection}
+        pub var salecollections: @{String: SaleCollection}
+
+        pub fun instance(tenantID: UInt64) {
+            var tenantIDConvention: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
+            let newTenant <- create Tenant(_tenantID: tenantIDConvention, _holder: self.owner!.address)
+            NFTMarketplace.tenants[tenantIDConvention] <-! newTenant
+            emit TenantCreated(id: tenantIDConvention)
+            self.SimpleFTPackage.borrow()!.instance(tenantID: tenantID)
+            self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
+            if NFTMarketplace.clientTenants[self.owner!.address] != nil {
+                NFTMarketplace.clientTenants[self.owner!.address]!.append(tenantIDConvention)
+            } else {
+                NFTMarketplace.clientTenants[self.owner!.address] = [tenantIDConvention]
+            }
+        }
     
-        pub fun setup(tenantID: UInt64) {
+        pub fun setup(tenantID: String) {
             self.salecollections[tenantID] <-! create SaleCollection(tenantID, _nftPackage: self.SimpleNFTPackage, _ftPackage: self.SimpleFTPackage)
             let tenant = NFTMarketplace.getTenant(id: tenantID)
 
@@ -91,10 +86,10 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
             self.SimpleNFTPackage.borrow()!.setup(tenantID: tenantID)
         }
 
-        pub fun borrowSaleCollection(tenantID: UInt64): &SaleCollection {
+        pub fun borrowSaleCollection(tenantID: String): &SaleCollection {
             return &self.salecollections[tenantID] as &SaleCollection
         }
-        pub fun borrowSaleCollectionPublic(tenantID: UInt64): &SaleCollection{SalePublic} {
+        pub fun borrowSaleCollectionPublic(tenantID: String): &SaleCollection{SalePublic} {
             return &self.salecollections[tenantID] as &SaleCollection{SalePublic}
         }
 
@@ -139,12 +134,12 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     }
 
     pub resource SaleCollection: SalePublic {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub var forSale: {UInt64: UFix64}
         access(self) let SimpleFTPackage: Capability<&SimpleFT.Package>
         access(self) let SimpleNFTPackage: Capability<&SimpleNFT.Package>
 
-        init (_ tenantID: UInt64, _nftPackage: Capability<&SimpleNFT.Package>, _ftPackage: Capability<&SimpleFT.Package>,) {
+        init (_ tenantID: String, _nftPackage: Capability<&SimpleNFT.Package>, _ftPackage: Capability<&SimpleFT.Package>,) {
             self.tenantID = tenantID
             self.forSale = {}
             self.SimpleFTPackage = _ftPackage

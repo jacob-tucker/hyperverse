@@ -31,10 +31,10 @@ A function that all clients can call to receive an Tenant resource.
 
 pub contract interface IHyperverseComposable {
 
-    pub event TenantCreated(id: UInt64)
+    pub event TenantCreated(id: String)
 
-    access(contract) var clientTenants: {Address: UInt64}
-    pub fun getClientTenants(): {Address: UInt64}
+    access(contract) var clientTenants: {Address: [String]}
+    pub fun getClientTenants(account: Address): [String]
 
     pub resource interface ITenant {
         pub var holder: Address
@@ -45,6 +45,6 @@ pub contract interface IHyperverseComposable {
     }
 
     pub resource Package {
-        pub fun setup(tenantID: UInt64)
+        pub fun setup(tenantID: String)
     }
 }

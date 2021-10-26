@@ -1,6 +1,7 @@
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
 
-transaction(recipient: Address, tenantID: UInt64, amount: UFix64) {
+transaction(recipient: Address, tenantID: String, amount: UFix64) {
+
     let SimpleFTMinter: &SimpleFT.Minter
     let RecipientCollection: &SimpleFT.Vault{SimpleFT.VaultPublic}
 

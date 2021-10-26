@@ -52,40 +52,38 @@ export default class NFTHarness extends LitElement {
       
         <action-card title="SimpleNFT - Setup"
           description="Setting up your SimpleNFT.Package. ** 'Recipient' MUST have a SimpleNFT.Package **"
-          action="SimpleNFTSetup" method="post" fields="signer tenantID">
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
+          action="SimpleNFTSetup" method="post" fields="signer tenantOwner">
+          <account-widget field="tenantOwner" label="Tenant Address">
+          </account-widget>
           <account-widget field="signer" label="Recipient">
           </account-widget>
         </action-card>
       
         <action-card title="SimpleNFT - Give Minter"
           description="Give Minter (Receiving a SimpleNFT.NFTMinter). ** 'Recipient' MUST have a SimpleNFT.Package **"
-          action="SimpleNFTGiveMinter" method="post" fields="tenantID signer recipient">
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
-          <account-widget field="signer" label="Tenant Owner">
+          action="SimpleNFTGiveMinter" method="post" fields="tenantOwner signer recipient">
+          <account-widget field="tenantOwner" label="Tenant Address">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
           </account-widget>
         </action-card>
       
         <action-card title="SimpleNFT - Mint NFT" description="Mint NFT" action="SimpleNFTMintNFT" method="post"
-          fields="tenantID signer recipient name">
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
+          fields="tenantOwner signer recipient name">
+          <account-widget field="tenantOwner" label="Tenant Address">
+          </account-widget>
           <account-widget field="signer" label="NFTMinter">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
           </account-widget>
-          <text-widget field="name" label="Name of NFT" placeholder="BoredApe">
+          <text-widget field="name" label="Name of NFT" placeholder="BoredApe1">
           </text-widget>
         </action-card>
       
         <action-card title="SimpleNFT - Transfer NFT" description="Transfer NFT" action="SimpleNFTTransferNFT" method="post"
-          fields="tenantID signer recipient withdrawID">
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
+          fields="tenantOwner signer recipient withdrawID">
+          <account-widget field="tenantOwner" label="Tenant Address">
+          </account-widget>
           <account-widget field="signer" label="Signer">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
@@ -96,7 +94,7 @@ export default class NFTHarness extends LitElement {
       
         <action-card title="SimpleNFT - Get NFT IDs" description="Get NFT IDs" action="SimpleNFTGetNFTIDs" method="get"
           fields="account tenantID">
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
+          <text-widget field="tenantID" label="Tenant ID" placeholder="0x1cf0e2f2f715450.49">
           </text-widget>
           <account-widget field="account" label="Account">
           </account-widget>

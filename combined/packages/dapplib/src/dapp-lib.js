@@ -143,7 +143,7 @@ module.exports = class DappLib {
     },
       'tribes_setup',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -159,12 +159,11 @@ module.exports = class DappLib {
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
       roles: {
-        proposer: data.signer
+        proposer: data.tenantOwner
       }
     },
       'tribes_add_tribe',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
         newTribeName: { value: data.newTribeName, type: t.String }
       }
     );
@@ -187,7 +186,7 @@ module.exports = class DappLib {
     },
       'tribes_join_tribe',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         tribeName: { value: data.tribeName, type: t.String }
       }
     );
@@ -209,7 +208,7 @@ module.exports = class DappLib {
     },
       'tribes_leave_tribe',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -250,7 +249,7 @@ module.exports = class DappLib {
       'tribes_get_current_tribe',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -312,7 +311,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_setup',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -333,7 +332,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_unlist_sale',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         id: { value: parseInt(data.id), type: t.UInt64 }
       }
     );
@@ -355,7 +354,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_list_for_sale',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         ids: DappLib.formatFlowArray(data.ids, t.UInt64),
         price: { value: data.price, type: t.UFix64 }
       }
@@ -378,7 +377,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_purchase',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         id: { value: parseInt(data.id), type: t.UInt64 },
         marketplace: { value: data.marketplace, type: t.Address }
       }
@@ -405,8 +404,8 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'TenantID Marketplace',
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'TenantIDs for Marketplace',
       result: result.callData
     }
   }
@@ -421,7 +420,7 @@ module.exports = class DappLib {
       'nftmarketplace_get_ids',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -483,7 +482,7 @@ module.exports = class DappLib {
     },
       'simple_ft_setup',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -499,13 +498,10 @@ module.exports = class DappLib {
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
       roles: {
-        authorizers: [data.signer, data.recipient]
+        authorizers: [data.tenantOwner, data.recipient]
       }
     },
-      'simple_ft_give_minter',
-      {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
-      }
+      'simple_ft_give_minter'
     );
 
     return {
@@ -526,7 +522,7 @@ module.exports = class DappLib {
       'simple_ft_mint_ft',
       {
         recipient: { value: data.recipient, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        tenantID: { value: data.tenantID, type: t.String },
         amount: { value: data.amount, type: t.UFix64 }
       }
     );
@@ -550,7 +546,7 @@ module.exports = class DappLib {
       {
         recipient: { value: data.recipient, type: t.Address },
         amount: { value: data.amount, type: t.UFix64 },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -575,7 +571,7 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BIG_NUMBER,
+      type: DappLib.DAPP_RESULT_ARRAY,
       label: 'TenantID SimpleFT',
       result: result.callData
     }
@@ -591,7 +587,7 @@ module.exports = class DappLib {
       'simple_ft_get_balance',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -653,7 +649,7 @@ module.exports = class DappLib {
     },
       'simple_nft_setup',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -669,13 +665,10 @@ module.exports = class DappLib {
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
       roles: {
-        authorizers: [data.signer, data.recipient]
+        authorizers: [data.tenantOwner, data.recipient]
       }
     },
-      'simple_nft_give_minter',
-      {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
-      }
+      'simple_nft_give_minter'
     );
 
     return {
@@ -696,7 +689,7 @@ module.exports = class DappLib {
       'simple_nft_mint_nft',
       {
         recipient: { value: data.recipient, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
+        tenantID: { value: data.tenantID, type: t.String },
         name: { value: data.name, type: t.String }
       }
     );
@@ -720,7 +713,7 @@ module.exports = class DappLib {
       {
         recipient: { value: data.recipient, type: t.Address },
         withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -745,8 +738,8 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'TenantID SimpleNFT',
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'TenantIDs for SimpleNFT',
       result: result.callData
     }
   }
@@ -761,7 +754,7 @@ module.exports = class DappLib {
       'simple_nft_get_nft_ids',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantID: { value: data.tenantID, type: t.String }
       }
     );
 
@@ -823,7 +816,7 @@ module.exports = class DappLib {
     },
       'rewards_setup',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -848,7 +841,7 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BIG_NUMBER,
+      type: DappLib.DAPP_RESULT_ARRAY,
       label: 'TenantID for Rewards',
       result: result.callData
     }
@@ -860,12 +853,11 @@ module.exports = class DappLib {
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
       roles: {
-        proposer: data.signer
+        proposer: data.tenantOwner
       }
     },
       'rewards_mint_nft',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
         recipient: { value: data.recipient, type: t.Address }
       }
     );
@@ -888,8 +880,7 @@ module.exports = class DappLib {
     },
       'rewards_give_reward',
       {
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 },
-        minter: { value: data.minter, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 

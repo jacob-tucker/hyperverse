@@ -46,7 +46,7 @@ export default class MarketplaceHarness extends LitElement {
     
         <action-card title="SimpleFT - Mint FT" description="Mint FT" action="SimpleFTMintFT" method="post"
             fields="tenantID signer recipient amount">
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
+            <text-widget field="tenantID" label="Tenant ID" placeholder="0x1cf0e2f2f715450.50">
             </text-widget>
             <account-widget field="signer" label="FTMinter">
             </account-widget>
@@ -57,9 +57,9 @@ export default class MarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="SimpleFT - Get Balance" description="Get Balance" action="SimpleFTGetBalance" method="get"
-            fields="tenantID account">
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
+            fields="tenantOwner account">
+            <account-widget field="tenantOwner" label="Tenant Address">
+            </account-widget>
             <account-widget field="account" label="Account">
             </account-widget>
         </action-card>
@@ -78,22 +78,14 @@ export default class MarketplaceHarness extends LitElement {
     
         <action-card title="SimpleNFT - Mint NFT" description="Mint NFT" action="SimpleNFTMintNFT" method="post"
             fields="tenantID signer recipient name">
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
+            <text-widget field="tenantID" label="Tenant ID" placeholder="0x1cf0e2f2f715450.50">
             </text-widget>
             <account-widget field="signer" label="NFTMinter">
             </account-widget>
             <account-widget field="recipient" label="Recipient">
             </account-widget>
-            <text-widget field="name" label="Name of NFT" placeholder="BoredApe">
+            <text-widget field="name" label="Name of NFT" placeholder="BoredApe1">
             </text-widget>
-        </action-card>
-    
-        <action-card title="SimpleNFT - Get NFT IDs" description="Get NFT IDs" action="SimpleNFTGetNFTIDs" method="get"
-            fields="account tenantID">
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
-            <account-widget field="account" label="Account">
-            </account-widget>
         </action-card>
     
         <action-card title="Marketplace - Get Package" description="Get Package" action="MarketplaceGetPackage"
@@ -116,19 +108,19 @@ export default class MarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="Marketplace - Setup" description="Instance. **You need a NFTMarketplace.Package to do this. **"
-            action="MarketplaceSetup" method="post" fields="signer tenantID">
+            action="MarketplaceSetup" method="post" fields="signer tenantOwner">
+            <account-widget field="tenantOwner" label="Tenant Address">
+            </account-widget>
             <account-widget field="signer" label="Signer">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
         </action-card>
     
         <action-card title="Marketplace - List for Sale" description="List NFTs for Sale" action="MarketplaceList"
-            method="post" fields="signer tenantID price ids">
+            method="post" fields="signer tenantOwner price ids">
             <account-widget field="signer" label="Signer">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
+            <account-widget field="tenantOwner" label="Tenant Address">
+            </account-widget>
             <text-widget field="price" label="Price" placeholder="20.0">
             </text-widget>
             <array-widget field="ids" label="All the NFTs to list" valueLabel="id" placeholder="0">
@@ -136,21 +128,21 @@ export default class MarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="Marketplace - Unlist Sale" description="Unlist an NFT for sale" action="MarketplaceUnlist"
-            method="post" fields="signer tenantID id">
+            method="post" fields="signer tenantOwner id">
             <account-widget field="signer" label="Signer">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
+            <account-widget field="tenantOwner" label="Tenant Address">
+            </account-widget>
             <text-widget field="id" label="ID" placeholder="0">
             </text-widget>
         </action-card>
     
         <action-card title="Marketplace - Purchase" description="Purchase an NFT from the Marketplace."
-            action="MarketplacePurchase" method="post" fields="signer tenantID id marketplace">
+            action="MarketplacePurchase" method="post" fields="signer tenantOwner id marketplace">
             <account-widget field="signer" label="Signer">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
+            <account-widget field="tenantOwner" label="Tenant Address">
+            </account-widget>
             <text-widget field="id" label="ID" placeholder="0">
             </text-widget>
             <account-widget field="marketplace" label="Marketplace Address">
@@ -159,11 +151,11 @@ export default class MarketplaceHarness extends LitElement {
     
         <action-card title="Marketplace - Get IDs"
             description="Get all the NFTs for sale in this NFTMarketplace.SaleCollection." action="MarketplaceGetIDs"
-            method="post" fields="account tenantID">
+            method="post" fields="account tenantOwner">
             <account-widget field="account" label="Account">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
+            <account-widget field="tenantOwner" label="Tenant Address">
+            </account-widget>
         </action-card>
     
     </page-body>

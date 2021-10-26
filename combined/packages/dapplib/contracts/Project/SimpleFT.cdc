@@ -13,52 +13,34 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: UInt64)
-    access(contract) var clientTenants: {Address: UInt64}
-    pub fun getClientTenants(): {Address: UInt64} {
-        return self.clientTenants
+    pub event TenantCreated(id: String)
+    access(contract) var clientTenants: {Address: [String]}
+    pub fun getClientTenants(account: Address): [String] {
+        return self.clientTenants[account]!
     }
-    access(contract) var tenants: @{UInt64: Tenant{IHyperverseComposable.ITenant, IState}}
-    pub fun getTenant(id: UInt64): &Tenant{IHyperverseComposable.ITenant, IState} {
+    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
 
     pub resource interface IState {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         access(contract) fun updateTotalSupply(delta: Fix64)
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub var holder: Address
         pub var totalSupply: UFix64
         pub fun updateTotalSupply(delta: Fix64) {
             self.totalSupply = UFix64(Fix64(self.totalSupply) + delta)
         }
 
-        init(_tenantID: UInt64, _holder: Address) {
+        init(_tenantID: String, _holder: Address) {
             self.tenantID = _tenantID
             self.holder = _holder
             self.totalSupply = 0.0
         }
-    }
-
-    pub fun instance(package: &Package, uid: &HyperverseModule.UniqueID): UInt64 {
-        pre {
-            uid.dependency || SimpleFT.clientTenants[package.owner!.address] == nil:
-                "This user already owns a Tenant from this contract!"
-        }
-        var tenantID: UInt64 = uid.uuid
-        let newTenant <- create Tenant(_tenantID: tenantID, _holder: package.owner!.address)
-        SimpleFT.tenants[tenantID] <-! newTenant
-           package.depositAdministrator(Administrator: <- create Administrator(tenantID))
-        package.depositMinter(Minter: <- create Minter(tenantID))
-        emit TenantCreated(id: tenantID)
-
-        if !uid.dependency {
-            SimpleFT.clientTenants[package.owner!.address] = tenantID
-        }
-        return tenantID
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -70,36 +52,51 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     pub let PackagePublicPath: PublicPath
  
     pub resource interface PackagePublic {
-        pub fun borrowVaultPublic(tenantID: UInt64): &Vault{VaultPublic}
+        pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic}
     }
 
     pub resource Package: PackagePublic {
-        pub var admins: @{UInt64: Administrator}
-        pub var minters: @{UInt64: Minter}
-        pub var vaults: @{UInt64: Vault}
+        pub var admins: @{String: Administrator}
+        pub var minters: @{String: Minter}
+        pub var vaults: @{String: Vault}
 
-        pub fun setup(tenantID: UInt64) {
+        pub fun instance(tenantID: UInt64) {
+            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
+            SimpleFT.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
+            self.depositAdministrator(Administrator: <- create Administrator(tenantID))
+            self.depositMinter(Minter: <- create Minter(tenantID))
+            emit TenantCreated(id: tenantID)
+
+            if SimpleFT.clientTenants[self.owner!.address] != nil {
+                SimpleFT.clientTenants[self.owner!.address]!.append(tenantID)
+            } else {
+                SimpleFT.clientTenants[self.owner!.address] = [tenantID]
+            }
+            
+        }
+
+        pub fun setup(tenantID: String) {
             self.vaults[tenantID] <-! create Vault(tenantID, _balance: 0.0)
         }
 
         pub fun depositAdministrator(Administrator: @Administrator) {
             self.admins[Administrator.tenantID] <-! Administrator
         }
-        pub fun borrowAdministrator(tenantID: UInt64): &Administrator {
+        pub fun borrowAdministrator(tenantID: String): &Administrator {
             return &self.admins[tenantID] as &Administrator
         }
 
         pub fun depositMinter(Minter: @Minter) {
             self.minters[Minter.tenantID] <-! Minter
         }
-        pub fun borrowMinter(tenantID: UInt64): &Minter {
+        pub fun borrowMinter(tenantID: String): &Minter {
             return &self.minters[tenantID] as &Minter
         }
         
-        pub fun borrowVault(tenantID: UInt64): &Vault {
+        pub fun borrowVault(tenantID: String): &Vault {
             return &self.vaults[tenantID] as &Vault
         }
-        pub fun borrowVaultPublic(tenantID: UInt64): &Vault{VaultPublic} {
+        pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic} {
             return &self.vaults[tenantID] as &Vault{VaultPublic}
         }
 
@@ -123,11 +120,11 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     /**************************************** FUNCTIONALITY ****************************************/
 
     pub resource interface VaultPublic {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub var balance: UFix64
         pub fun deposit(vault: @Vault)
 
-        init(_ tenantID: UInt64, _balance: UFix64) {
+        init(_ tenantID: String, _balance: UFix64) {
             post {
                 self.balance == _balance:
                     "Balance must be initialized to the initial balance"
@@ -136,7 +133,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     }
 
     pub resource Vault: VaultPublic {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         pub var balance: UFix64
 
         pub fun withdraw(amount: UFix64): @SimpleFT.Vault {
@@ -156,7 +153,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
             destroy vault
         }
 
-        init(_ tenantID: UInt64, _balance: UFix64, ) {
+        init(_ tenantID: String, _balance: UFix64, ) {
             self.balance = _balance
             self.tenantID = tenantID
 
@@ -169,18 +166,18 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     }
 
     pub resource Administrator {
-        pub let tenantID: UInt64
+        pub let tenantID: String
 
         pub fun createNewMinter(): @Minter {
             return <-create Minter(self.tenantID)
         }
-        init(_ tenantID: UInt64) {
+        init(_ tenantID: String) {
             self.tenantID = tenantID
         }
     }
 
     pub resource Minter {
-        pub let tenantID: UInt64
+        pub let tenantID: String
         
         pub fun mintTokens(amount: UFix64): @Vault {
             pre {
@@ -188,7 +185,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
             }
             return <-create Vault(self.tenantID, _balance: amount)
         }
-        init(_ tenantID: UInt64) {
+        init(_ tenantID: String) {
            self.tenantID = tenantID
         }
     }

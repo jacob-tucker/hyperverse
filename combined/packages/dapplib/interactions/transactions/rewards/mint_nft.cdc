@@ -1,13 +1,20 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 import Rewards from "../../../contracts/Project/Rewards.cdc"
 
-transaction(tenantID: UInt64, recipient: Address) {
+transaction(recipient: Address) {
+
+    let TenantID: String
     let MintersSNFTPackage: &SimpleNFT.Package
     let RecipientsSNFTPackage: &SimpleNFT.Package{SimpleNFT.PackagePublic}
 
-    prepare(signer: AuthAccount) {
+    prepare(tenantOwner: AuthAccount) {
 
-        self.MintersSNFTPackage = signer.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
+        let TenantPackage = getAccount(tenantOwner.address).getCapability(Rewards.PackagePublicPath)
+                                .borrow<&Rewards.Package{Rewards.PackagePublic}>()
+                                ?? panic("Could not borrow the public SimpleNFT.Package")
+        self.TenantID = tenantOwner.address.toString().concat(".").concat(TenantPackage.uuid.toString())
+
+        self.MintersSNFTPackage = tenantOwner.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
                                     ?? panic("Could not borrow the Package from the signer.")
 
         self.RecipientsSNFTPackage = getAccount(recipient).getCapability(SimpleNFT.PackagePublicPath)
@@ -16,9 +23,9 @@ transaction(tenantID: UInt64, recipient: Address) {
     }
 
     execute {
-        let minter = self.MintersSNFTPackage.borrowMinter(tenantID: tenantID)
+        let minter = self.MintersSNFTPackage.borrowMinter(tenantID: self.TenantID)
 
-        self.RecipientsSNFTPackage.borrowCollectionPublic(tenantID: tenantID).deposit(token: <- minter.mintNFT(name: "Base Reward"))
+        self.RecipientsSNFTPackage.borrowCollectionPublic(tenantID: self.TenantID).deposit(token: <- minter.mintNFT(name: "Base Reward"))
     
         log("Minted a SimpleNFT into the recipient's SimpleNFT Collection.")
     }
