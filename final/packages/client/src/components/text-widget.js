@@ -7,6 +7,7 @@ export default class TextWidget extends LitElement {
   label = null;
   @property({ type: String })
   placeholder = null;
+
   createRenderRoot() {
     return this;
   }
@@ -18,16 +19,10 @@ export default class TextWidget extends LitElement {
     this.classList.add("mb-3");
     let content = html`
       <div class="input-group flex mb-3">
-        <label
-          class="bg-gray-200 p-2 block rounded rounded-r-none text-gray-500"
-          >${this.label}</label
-        >
-        <input
-          type="text"
-          data-field="${this.field}"
+        <label class="bg-gray-200 p-2 block rounded rounded-r-none text-gray-500">${this.label}</label>
+        <input type="text" data-field="${this.field}"
           class="shadow-inner appearance-none border rounded rounded-l-none w-1/2 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="${this.placeholder}"
-        />
+          placeholder="${this.placeholder}" />
       </div>
     `;
 

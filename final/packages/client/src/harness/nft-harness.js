@@ -59,7 +59,7 @@ export default class NFTHarness extends LitElement {
         <button @click="${() => fcl.unauthenticate()}"
           class="text-white font-bold py-2 px-8 rounded bg-red-500 hover:bg-red-700">Logout with FCL</button>
         <p class="text-white font-bold py-2 px-8 rounded bg-purple-500 hover:bg-purple-700">Current Address: ${this.user ?
-        this.user.addr : null}</p>
+          this.user.addr : null}</p>
       
         <action-card title="SimpleNFT - Instance" description="Instance. **You need a SimpleNFT.Package to do this. **"
           action="SimpleNFTInstance" method="post" fields="">
