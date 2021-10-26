@@ -73,13 +73,6 @@ export default class HarnessPage extends LitElement {
         "route": "/core-marketplace"
       },
       {
-        "name": "core-registry",
-        "title": "Hyperverse Registry",
-        "description": "Register Hyperverse Smart Contracts",
-        "category": "Hyperverse",
-        "route": "/core-registry"
-      },
-      {
         "name": "core-setup",
         "title": "Hyperverse Registry - SETUP",
         "description": "Setup an account",
