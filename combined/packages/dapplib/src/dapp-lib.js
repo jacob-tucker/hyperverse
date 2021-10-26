@@ -46,52 +46,6 @@ module.exports = class DappLib {
     }
   }
 
-  /****** Registry ******/
-  static async RegisterContract(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-        proposer: data.signer
-      }
-    },
-      'registry_register_contract',
-      {
-        convention: { value: data.convention, type: t.String },
-        address: { value: data.address, type: t.Address },
-        name: { value: data.name, type: t.String }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async RetrieveContract(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'registry_retrieve_contract',
-      {
-        convention: { value: data.convention, type: t.String }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_OBJECT,
-      label: 'Contract Information',
-      result: result.callData
-    }
-  }
-
-
   /****** Tribes ******/
 
   // Run by a user (like someone who wants a collection)
