@@ -32,32 +32,9 @@ export default class NFTRewardsHarness extends LitElement {
     let content = html`
       <page-body title="${this.title}" category="${this.category}" description="${this.description}">
       
-        <action-card title="SimpleNFT - Get Package" description="Get Package" action="SimpleNFTGetPackage" method="post"
-          fields="signer">
-          <account-widget field="signer" label="Signer">
-          </account-widget>
-        </action-card>
-      
-        <action-card title="SimpleNFT - Instance" description="Instance. **You need a SimpleNFT.Package to do this. **"
-          action="SimpleNFTInstance" method="post" fields="signer">
-          <account-widget field="signer" label="Signer">
-          </account-widget>
-        </action-card>
-      
         <action-card title="SimpleNFT - Owns Tenant" description="Owns the SimpleNFT Tenant" action="SimpleNFTOwnsTenant"
-          method="get" fields="account tenantID">
+          method="get" fields="account">
           <account-widget field="account" label="Account">
-          </account-widget>
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
-        </action-card>
-      
-        <action-card title="SimpleNFT - Setup"
-          description="Setting up your SimpleNFT.Package. ** 'Recipient' MUST have a SimpleNFT.Package **"
-          action="SimpleNFTSetup" method="post" fields="signer tenantID">
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
-          <account-widget field="signer" label="Recipient">
           </account-widget>
         </action-card>
       
@@ -116,9 +93,7 @@ export default class NFTRewardsHarness extends LitElement {
         </action-card>
       
         <action-card title="Rewards - Owns Tenant" description="Owns the Rewards Tenant" action="RewardsOwnsTenant"
-          method="get" fields="tenantID account">
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
+          method="get" fields="account">
           <account-widget field="account" label="Account">
           </account-widget>
         </action-card>

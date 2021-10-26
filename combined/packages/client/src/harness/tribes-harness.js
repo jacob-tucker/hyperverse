@@ -45,11 +45,9 @@ export default class TribesHarness extends LitElement {
         </action-card>
       
         <action-card title="Tribes - Owns Tenant" description="Owns the Tribes Tenant" action="TribesOwnsTenant" method="get"
-          fields="account tenantID">
+          fields="account">
           <account-widget field="account" label="Account">
           </account-widget>
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
         </action-card>
       
         <action-card title="Tribes - Setup"
@@ -62,7 +60,7 @@ export default class TribesHarness extends LitElement {
         </action-card>
       
         <action-card title="Tribes - Add a New Tribe" description="Add a new Tribe. ** 'Recipient' MUST have a Tribes.Admin for the
-                    specified tenantID**" action="TribesAddTribe" method="post" fields="tenantID signer newTribeName">
+                          specified tenantID**" action="TribesAddTribe" method="post" fields="tenantID signer newTribeName">
           <text-widget field="tenantID" label="Tenant" placeholder="0">
           </text-widget>
           <account-widget field="signer" label="Admin Owner">
@@ -72,7 +70,7 @@ export default class TribesHarness extends LitElement {
         </action-card>
       
         <action-card title="Tribes - Join a Tribe" description="Join a Tribe and add the Tribe's resource to your Identity. ** 'Recipient' MUST have a Tribes.Package 
-                                                    and Setup their Package**" action="TribesJoinTribe" method="post"
+                                                          and Setup their Package**" action="TribesJoinTribe" method="post"
           fields="tenantID signer tribeName">
           <text-widget field="tenantID" label="Tenant" placeholder="0">
           </text-widget>
@@ -84,8 +82,8 @@ export default class TribesHarness extends LitElement {
       
         <action-card title="Tribes - Leave Your Tribe"
           description="Leave your current Tribe and remove 
-                                      the Tribe's resource from your Identity. ** 'Signer' MUST be a part of a Tribe already.**" action="TribesLeaveTribe" method="post"
-          fields="tenantID signer">
+                                            the Tribe's resource from your Identity. ** 'Signer' MUST be a part of a Tribe already.**" action="TribesLeaveTribe"
+          method="post" fields="tenantID signer">
           <text-widget field="tenantID" label="Tenant" placeholder="0">
           </text-widget>
           <account-widget field="signer" label="Identity Owner">

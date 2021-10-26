@@ -1,5 +1,5 @@
 import Tribes from "../../../contracts/Project/Tribes.cdc"
-import IHyperverseComposable from "../../../contracts/Hyperverse/IHyperverseComposable.cdc"
+import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
 
 transaction() {
     let TribesPackage: &Tribes.Package
@@ -12,7 +12,9 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        Tribes.instance(package: self.TribesPackage)
+        let UID <- HyperverseModule.createUID()
+        Tribes.instance(package: self.TribesPackage, uid: &UID as &HyperverseModule.UniqueID)
+        destroy UID
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

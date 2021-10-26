@@ -374,7 +374,8 @@ class Flow {
 
             }
         }
-        fcl.config().put("accessNode.api", this.serviceUri);
+        fcl.config()
+            .put("accessNode.api", this.serviceUri);
 
 
         // try {

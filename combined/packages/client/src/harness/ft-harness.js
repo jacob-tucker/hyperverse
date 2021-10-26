@@ -45,11 +45,9 @@ export default class FTHarness extends LitElement {
         </action-card>
       
         <action-card title="SimpleFT - Owns Tenant" description="Owns the SimpleFT Tenant" action="SimpleFTOwnsTenant"
-          method="get" fields="account tenantID">
+          method="get" fields="account">
           <account-widget field="account" label="Account">
           </account-widget>
-          <text-widget field="tenantID" label="Tenant" placeholder="0">
-          </text-widget>
         </action-card>
       
         <action-card title="SimpleFT - User Setup"

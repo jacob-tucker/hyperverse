@@ -1,5 +1,5 @@
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
-import IHyperverseComposable from "../../../contracts/Hyperverse/IHyperverseComposable.cdc"
+import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
 
 transaction() {
     let SFTPackage: &SimpleFT.Package
@@ -12,7 +12,9 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        SimpleFT.instance(package: self.SFTPackage)
+        let UID <- HyperverseModule.createUID()
+        SimpleFT.instance(package: self.SFTPackage, uid: &UID as &HyperverseModule.UniqueID)
+        destroy UID
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

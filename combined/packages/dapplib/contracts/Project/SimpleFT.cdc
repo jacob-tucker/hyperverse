@@ -6,7 +6,6 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** METADATA ****************************************/
 
-    // ** MUST be access(contract) **
     access(contract) let metadata: HyperverseModule.ModuleMetadata
     pub fun getMetadata(): HyperverseModule.ModuleMetadata {
         return self.metadata
@@ -15,21 +14,22 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: UInt64)
-    pub var totalTenants: UInt64
+    access(contract) var clientTenants: {Address: UInt64}
+    pub fun getClientTenants(): {Address: UInt64} {
+        return self.clientTenants
+    }
     access(contract) var tenants: @{UInt64: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: UInt64): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
 
-    // All of the getters and setters.
-    // ** Setters MUST be access(contract) or access(account) **
     pub resource interface IState {
-        pub let id: UInt64
+        pub let tenantID: UInt64
         access(contract) fun updateTotalSupply(delta: Fix64)
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
-        pub let id: UInt64 
+        pub let tenantID: UInt64
         pub var holder: Address
         pub var totalSupply: UFix64
         pub fun updateTotalSupply(delta: Fix64) {
@@ -37,20 +37,27 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         }
 
         init(_tenantID: UInt64, _holder: Address) {
-            self.id = _tenantID
+            self.tenantID = _tenantID
             self.holder = _holder
             self.totalSupply = 0.0
         }
     }
-    // Returns a Tenant.
-    pub fun instance(package: &Package): UInt64 {
-        let tenantID = SimpleFT.totalTenants
-        SimpleFT.totalTenants = SimpleFT.totalTenants + (1 as UInt64)
-        SimpleFT.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: package.owner!.address)
-        
-        package.depositAdministrator(Administrator: <- create Administrator(tenantID))
-        package.depositMinter(Minter: <- create Minter(tenantID))
 
+    pub fun instance(package: &Package, uid: &HyperverseModule.UniqueID): UInt64 {
+        pre {
+            uid.dependency || SimpleFT.clientTenants[package.owner!.address] == nil:
+                "This user already owns a Tenant from this contract!"
+        }
+        var tenantID: UInt64 = uid.uuid
+        let newTenant <- create Tenant(_tenantID: tenantID, _holder: package.owner!.address)
+        SimpleFT.tenants[tenantID] <-! newTenant
+           package.depositAdministrator(Administrator: <- create Administrator(tenantID))
+        package.depositMinter(Minter: <- create Minter(tenantID))
+        emit TenantCreated(id: tenantID)
+
+        if !uid.dependency {
+            SimpleFT.clientTenants[package.owner!.address] = tenantID
+        }
         return tenantID
     }
 
@@ -61,18 +68,15 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     pub let PackageStoragePath: StoragePath
     pub let PackagePrivatePath: PrivatePath
     pub let PackagePublicPath: PublicPath
-    // Any things that should be linked to the public
+ 
     pub resource interface PackagePublic {
         pub fun borrowVaultPublic(tenantID: UInt64): &Vault{VaultPublic}
     }
-    // A Package is so that you can sort all the resources you WILL or MAY recieve 
-    // as a part of you interacting with this contract by tenantID.
-    //
-    // This also removes the need to have a tenantID in every single resource.
+
     pub resource Package: PackagePublic {
-        pub let admins: @{UInt64: Administrator}
-        pub let minters: @{UInt64: Minter}
-        pub let vaults: @{UInt64: Vault}
+        pub var admins: @{UInt64: Administrator}
+        pub var minters: @{UInt64: Minter}
+        pub var vaults: @{UInt64: Vault}
 
         pub fun setup(tenantID: UInt64) {
             self.vaults[tenantID] <-! create Vault(tenantID, _balance: 0.0)
@@ -190,7 +194,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     }
 
     init() {
-        self.totalTenants = 0
+        self.clientTenants = {}
         self.tenants <- {}
 
         // Set our named paths
@@ -200,10 +204,10 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "SimpleFT", 
-            _authors: [HyperverseModule.Author(_address: 0x1, _externalLink: "https://localhost:5000/externalMetadata")], 
+            _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalLink: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
-            _externalLink: "https://externalLink.net/1234567890",
+            _externalLink: "",
             _secondaryModules: nil
         )
     }

@@ -1,15 +1,5 @@
-// This contract defines the specific things that a HyperverseModule will need. 
-// For example, it specifies/implements what a Smart Module metadata will look like. 
-
-// All of the definitions here will be used inside the `IHyperverseModule` 
-// contract to enforce these implementations upon all wanna-be Smart Modules.
-
 pub contract HyperverseModule {
     
-    // Has to exist with every exposed part of this module.
-    // - Primary export (exactly one)
-    // - Secondary exports (0 or more)
-    // - ...
     pub struct ModuleMetadata {
         pub var title: String
         
@@ -69,4 +59,15 @@ pub contract HyperverseModule {
             self.externalURI = _externalURI
         }
     }
+
+    pub resource UniqueID {
+        pub(set) var dependency: Bool
+        init() {
+            self.dependency = false
+        }
+    }
+    pub fun createUID(): @UniqueID {
+        return <- create UniqueID()
+    }
+
 }

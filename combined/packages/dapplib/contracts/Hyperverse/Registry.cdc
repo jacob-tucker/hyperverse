@@ -22,8 +22,18 @@ pub contract Registry {
         }
     }
 
+    access(contract) var tenantIDs: {UInt64: Bool}
+    pub fun addTenantID(tenantID: UInt64) {
+        pre {
+            Registry.tenantIDs[tenantID] == nil:
+                "This Tenant ID already exists!"
+        }
+        Registry.tenantIDs
+    }
+
     init() {
         self.contracts = {}
+        self.tenantIDs = {}
         self.account.save(<- create Headmaster(), to: /storage/RegistryHeadmaster)
     }
 }

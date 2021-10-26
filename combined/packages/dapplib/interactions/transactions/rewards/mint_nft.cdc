@@ -16,10 +16,9 @@ transaction(tenantID: UInt64, recipient: Address) {
     }
 
     execute {
-        let TheSimpleNFTID = Rewards.getTenant(id: tenantID).SNFTTenantID
-        let minter = self.MintersSNFTPackage.borrowMinter(tenantID: TheSimpleNFTID)
+        let minter = self.MintersSNFTPackage.borrowMinter(tenantID: tenantID)
 
-        self.RecipientsSNFTPackage.borrowCollectionPublic(tenantID: TheSimpleNFTID).deposit(token: <- minter.mintNFT(name: "Base Reward"))
+        self.RecipientsSNFTPackage.borrowCollectionPublic(tenantID: tenantID).deposit(token: <- minter.mintNFT(name: "Base Reward"))
     
         log("Minted a SimpleNFT into the recipient's SimpleNFT Collection.")
     }

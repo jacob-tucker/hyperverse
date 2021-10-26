@@ -1,5 +1,5 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
-import IHyperverseComposable from "../../../contracts/Hyperverse/IHyperverseComposable.cdc"
+import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
 
 transaction() {
     let SNFTPackage: &SimpleNFT.Package
@@ -12,7 +12,9 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        SimpleNFT.instance(package: self.SNFTPackage)
+        let UID <- HyperverseModule.createUID()
+        SimpleNFT.instance(package: self.SNFTPackage, uid: &UID as &HyperverseModule.UniqueID)
+        destroy UID
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

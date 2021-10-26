@@ -1,5 +1,5 @@
 import Rewards from "../../../contracts/Project/Rewards.cdc"
-import IHyperverseComposable from "../../../contracts/Hyperverse/IHyperverseComposable.cdc"
+import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
 
 transaction() {
     let RewardsPackage: &Rewards.Package
@@ -12,7 +12,9 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        Rewards.instance(package: self.RewardsPackage)
+        let UID <- HyperverseModule.createUID()
+        Rewards.instance(package: self.RewardsPackage, uid: &UID as &HyperverseModule.UniqueID)
+        destroy UID
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

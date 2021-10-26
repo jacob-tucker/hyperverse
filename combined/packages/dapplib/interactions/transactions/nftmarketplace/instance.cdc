@@ -1,4 +1,5 @@
 import NFTMarketplace from "../../../contracts/Project/NFTMarketplace.cdc"
+import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
 
 transaction() {
     let NFTMarketplacePackage: &NFTMarketplace.Package
@@ -11,7 +12,9 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        NFTMarketplace.instance(package: self.NFTMarketplacePackage)
+        let UID <- HyperverseModule.createUID()
+        NFTMarketplace.instance(package: self.NFTMarketplacePackage, uid: &UID as &HyperverseModule.UniqueID)
+        destroy UID
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

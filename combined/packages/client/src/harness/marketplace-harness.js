@@ -39,11 +39,9 @@ export default class MarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="SimpleFT - Owns Tenant" description="Owns the SimpleFT Tenant" action="SimpleFTOwnsTenant"
-            method="get" fields="account tenantID">
+            method="get" fields="account">
             <account-widget field="account" label="Account">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
         </action-card>
     
         <action-card title="SimpleFT - Mint FT" description="Mint FT" action="SimpleFTMintFT" method="post"
@@ -73,11 +71,9 @@ export default class MarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="SimpleNFT - Owns Tenant" description="Owns the SimpleNFT Tenant" action="SimpleNFTOwnsTenant"
-            method="get" fields="account tenantID">
+            method="get" fields="account">
             <account-widget field="account" label="Account">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
         </action-card>
     
         <action-card title="SimpleNFT - Mint NFT" description="Mint NFT" action="SimpleNFTMintNFT" method="post"
@@ -107,11 +103,9 @@ export default class MarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="Marketplace - Owns Tenant" description="Owns the Marketplace Tenant"
-            action="MarketplaceOwnsTenant" method="get" fields="account tenantID">
+            action="MarketplaceOwnsTenant" method="get" fields="account">
             <account-widget field="account" label="Account">
             </account-widget>
-            <text-widget field="tenantID" label="Tenant" placeholder="0">
-            </text-widget>
         </action-card>
     
         <action-card title="Marketplace - Instance"

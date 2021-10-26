@@ -229,14 +229,13 @@ module.exports = class DappLib {
     },
       'tribes_owns_tenant',
       {
-        account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        account: { value: data.account, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BOOLEAN,
-      label: 'Has Tribes Tenant',
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
+      label: 'TenantID Tribes',
       result: result.callData
     }
   }
@@ -401,14 +400,13 @@ module.exports = class DappLib {
     },
       'nftmarketplace_owns_tenant',
       {
-        account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        account: { value: data.account, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BOOLEAN,
-      label: 'Has SimpleFT Tenant',
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
+      label: 'TenantID Marketplace',
       result: result.callData
     }
   }
@@ -572,14 +570,13 @@ module.exports = class DappLib {
     },
       'simple_ft_owns_tenant',
       {
-        account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        account: { value: data.account, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BOOLEAN,
-      label: 'Has SimpleFT Tenant',
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
+      label: 'TenantID SimpleFT',
       result: result.callData
     }
   }
@@ -743,14 +740,13 @@ module.exports = class DappLib {
     },
       'simple_nft_owns_tenant',
       {
-        account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        account: { value: data.account, type: t.Address }
       }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_BOOLEAN,
-      label: 'Has SimpleNFT Tenant',
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
+      label: 'TenantID SimpleNFT',
       result: result.callData
     }
   }
@@ -847,14 +843,13 @@ module.exports = class DappLib {
     },
       'rewards_owns_tenant',
       {
-        account: { value: data.account, type: t.Address },
-        tenantID: { value: parseInt(data.tenantID), type: t.UInt64 }
+        account: { value: data.account, type: t.Address }
       }
     );
 
     return {
       type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'Has Rewards Tenant',
+      label: 'TenantID for Rewards',
       result: result.callData
     }
   }
