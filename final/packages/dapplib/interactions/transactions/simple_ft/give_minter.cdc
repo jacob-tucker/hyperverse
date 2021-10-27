@@ -7,10 +7,6 @@ transaction(tenantID: String, recipient: Address) {
     
     prepare(tenantOwner: AuthAccount) {
 
-        let TenantPackage = getAccount(tenantOwner.address).getCapability(SimpleFT.PackagePublicPath)
-                                .borrow<&SimpleFT.Package{SimpleFT.PackagePublic}>()
-                                ?? panic("Could not borrow the public SimpleNFT.Package")
-
         self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
                                     ?? panic("Could not borrow the SimpleFT.Package from the signer.")
 

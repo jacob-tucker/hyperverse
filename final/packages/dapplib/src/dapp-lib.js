@@ -84,26 +84,6 @@ module.exports = class DappLib {
 
   }
 
-  static async TribesSetup(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'tribes_setup',
-      {
-        tenantID: { value: data.tenantID, type: t.String }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
   static async TribesAddTribe(data) {
 
     let result = await Blockchain.post({
@@ -245,26 +225,6 @@ module.exports = class DappLib {
       result: result.callData.transactionId
     }
 
-  }
-
-  static async MarketplaceSetup(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'nftmarketplace_setup',
-      {
-        tenantID: { value: data.tenantID, type: t.String }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
   }
 
   static async MarketplaceUnlist(data) {
@@ -412,26 +372,6 @@ module.exports = class DappLib {
 
   }
 
-  static async SimpleFTSetup(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'simple_ft_setup',
-      {
-        tenantID: { value: data.tenantID, type: t.String }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
   static async SimpleFTGiveMinter(data) {
 
     let result = await Blockchain.post({
@@ -577,26 +517,6 @@ module.exports = class DappLib {
 
   }
 
-  static async SimpleNFTSetup(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'simple_nft_setup',
-      {
-        tenantID: { value: data.tenantID, type: t.String }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
   static async SimpleNFTGiveMinter(data) {
 
     let result = await Blockchain.post({
@@ -739,26 +659,6 @@ module.exports = class DappLib {
       result: result.callData.transactionId
     }
 
-  }
-
-  static async RewardsSetup(data) {
-
-    let result = await Blockchain.post({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'rewards_setup',
-      {
-        tenantID: { value: data.tenantID, type: t.String }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
   }
 
   static async RewardsOwnsTenant(data) {
