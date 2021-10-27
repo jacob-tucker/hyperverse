@@ -51,6 +51,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
     pub resource interface PackagePublic {
         pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic}
+        pub fun depositMinter(NFTMinter: @NFTMinter)
     }
 
     pub resource Package: PackagePublic {
@@ -74,6 +75,9 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun setup(tenantID: String) {
+            pre {
+                SimpleNFT.tenants[tenantID] != nil: "This tenantID does not exist."
+            }
             self.collections[tenantID] <-! create Collection(tenantID)
         }
 
@@ -94,12 +98,15 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun borrowCollection(tenantID: String): &Collection {
+            if self.collections[tenantID] == nil {
+                self.setup(tenantID: tenantID)
+            }
             return &self.collections[tenantID] as &Collection
         }
 
         pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic} {
-            pre {
-                self.collections[tenantID] != nil: "It's nil."
+            if self.collections[tenantID] == nil {
+                self.setup(tenantID: tenantID)
             }
             return &self.collections[tenantID] as &Collection{CollectionPublic}
         }

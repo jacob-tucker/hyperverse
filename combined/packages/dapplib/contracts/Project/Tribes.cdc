@@ -117,10 +117,16 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun borrowIdentity(tenantID: String): &Identity {
+            if self.identities[tenantID] == nil {
+                self.setup(tenantID: tenantID)
+            }
             return &self.identities[tenantID] as &Identity
         }
 
         pub fun borrowIdentityPublic(tenantID: String): &Identity{IdentityPublic} {
+             if self.identities[tenantID] == nil {
+                self.setup(tenantID: tenantID)
+            }
             return &self.identities[tenantID] as &Identity{IdentityPublic}
         }
 

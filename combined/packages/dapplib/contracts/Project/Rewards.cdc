@@ -79,12 +79,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
             }
         }
     
-        pub fun setup(tenantID: String) {
-            // No additional setup required here...
-
-            // so call the next setup in the dependency tree (could be multiple).
-            self.SimpleNFTPackage.borrow()!.setup(tenantID: tenantID)
-        }
+        pub fun setup(tenantID: String) {}
 
         access(contract) fun getMinterInContract(tenantID: String): &SimpleNFT.NFTMinter {
             return self.SimpleNFTPackage.borrow()!.borrowMinter(tenantID: tenantID) as &SimpleNFT.NFTMinter

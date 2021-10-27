@@ -44,15 +44,6 @@ export default class TribesHarness extends LitElement {
           </account-widget>
         </action-card>
       
-        <action-card title="Tribes - Setup"
-          description="Setting up your Tribes.Package. ** 'Recipient' MUST have a Tribes.Package **" action="TribesSetup"
-          method="post" fields="signer tenantID">
-          <text-widget field="tenantID" label="Tenant ID" placeholder="0x1cf0e2f2f715450.49">
-          </text-widget>
-          <account-widget field="signer" label="Recipient">
-          </account-widget>
-        </action-card>
-      
         <action-card title="Tribes - Add a New Tribe"
           description="Add a new Tribe. ** 'Recipient' MUST have a Tribes.Admin for the specified tenantID**"
           action="TribesAddTribe" method="post" fields="tenantID tenantOwner newTribeName">

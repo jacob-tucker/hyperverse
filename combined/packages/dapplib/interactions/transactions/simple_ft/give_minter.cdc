@@ -1,21 +1,18 @@
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
 
-transaction(tenantID: String) {
+transaction(tenantID: String, recipient: Address) {
 
     let AdminsSNFTPackage: &SimpleFT.Package
-    let RecipientsSNFTPackage: &SimpleFT.Package
+    let RecipientsSNFTPackage: &SimpleFT.Package{SimpleFT.PackagePublic}
     
-    prepare(tenantOwner: AuthAccount, recipient: AuthAccount) {
-
-        let TenantPackage = getAccount(tenantOwner.address).getCapability(SimpleFT.PackagePublicPath)
-                                .borrow<&SimpleFT.Package{SimpleFT.PackagePublic}>()
-                                ?? panic("Could not borrow the public SimpleNFT.Package")
+    prepare(tenantOwner: AuthAccount) {
 
         self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
                                     ?? panic("Could not borrow the SimpleFT.Package from the signer.")
 
-        self.RecipientsSNFTPackage = recipient.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
-                                    ?? panic("Could not borrow the SimpleFT.Package from the signer.")
+        self.RecipientsSNFTPackage = getAccount(recipient).getCapability(SimpleFT.PackagePublicPath)
+                                        .borrow<&SimpleFT.Package{SimpleFT.PackagePublic}>()
+                                        ?? panic("Could not borrow the public SimpleFT.Package from the signer.")
     }
 
     execute {

@@ -53,6 +53,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
  
     pub resource interface PackagePublic {
         pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic}
+        pub fun depositMinter(Minter: @Minter)
     }
 
     pub resource Package: PackagePublic {
@@ -94,9 +95,15 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         }
         
         pub fun borrowVault(tenantID: String): &Vault {
+            if self.vaults[tenantID] == nil {
+                self.setup(tenantID: tenantID)
+            }
             return &self.vaults[tenantID] as &Vault
         }
         pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic} {
+            if self.vaults[tenantID] == nil {
+                self.setup(tenantID: tenantID)
+            }
             return &self.vaults[tenantID] as &Vault{VaultPublic}
         }
 

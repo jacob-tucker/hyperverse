@@ -80,16 +80,18 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     
         pub fun setup(tenantID: String) {
             self.salecollections[tenantID] <-! create SaleCollection(tenantID, _nftPackage: self.SimpleNFTPackage, _ftPackage: self.SimpleFTPackage)
-            let tenant = NFTMarketplace.getTenant(id: tenantID)
-
-            self.SimpleFTPackage.borrow()!.setup(tenantID: tenantID)
-            self.SimpleNFTPackage.borrow()!.setup(tenantID: tenantID)
         }
 
         pub fun borrowSaleCollection(tenantID: String): &SaleCollection {
+            if self.salecollections[tenantID] == nil {
+                self.setup(tenantID: tenantID)
+            }
             return &self.salecollections[tenantID] as &SaleCollection
         }
         pub fun borrowSaleCollectionPublic(tenantID: String): &SaleCollection{SalePublic} {
+            if self.salecollections[tenantID] == nil {
+                self.setup(tenantID: tenantID)
+            }
             return &self.salecollections[tenantID] as &SaleCollection{SalePublic}
         }
 

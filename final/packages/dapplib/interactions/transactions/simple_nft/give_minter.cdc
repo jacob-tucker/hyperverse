@@ -5,7 +5,7 @@ transaction(tenantID: String, recipient: Address) {
     let AdminsSNFTPackage: &SimpleNFT.Package
     let RecipientsSNFTPackage: &SimpleNFT.Package{SimpleNFT.PackagePublic}
     
-    prepare(tenantOwner: AuthAccount, recipient: AuthAccount) {
+    prepare(tenantOwner: AuthAccount) {
 
         self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
                                     ?? panic("Could not borrow the SimpleNFT.Package from the signer.")
@@ -20,4 +20,3 @@ transaction(tenantID: String, recipient: Address) {
         log("Gave a SimpleNFT.NFTMinter to the recipient's account.")
     }
 }
-
