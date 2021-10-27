@@ -38,7 +38,7 @@ const serviceWallet = {
 }
 
 // Only fill this in with testnet accounts if you're developing on testnet
-const testnetAccounts = ['0x3ab8742701757923', '0x21fcf034f807a1fb', '0xac70648174bc9884', '0xcfd43d231ceee5ab', '0x1', '0x2'];
+const testnetAccounts = ['0xb8990a3c20fa7898', '0x3ab8742701757923', '0x21fcf034f807a1fb', '0xac70648174bc9884', '0xcfd43d231ceee5ab', '0x1', '0x2'];
 
 const dappConfigFile = path.join(__dirname, 'dapp-config.json');
 
