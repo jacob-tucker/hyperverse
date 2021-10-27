@@ -71,7 +71,6 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
             } else {
                 SimpleNFT.clientTenants[self.owner!.address] = [tenantID]
             }
-            
         }
 
         pub fun setup(tenantID: String) {
@@ -105,10 +104,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic} {
-            if self.collections[tenantID] == nil {
-                self.setup(tenantID: tenantID)
-            }
-            return &self.collections[tenantID] as &Collection{CollectionPublic}
+            return self.borrowCollection(tenantID: tenantID)
         }
 
         init() {
@@ -154,6 +150,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub let tenantID: String
         pub fun deposit(token: @NFT)
         pub fun getIDs(): [UInt64]
+        pub fun getMetadata(id: UInt64): {String: String}
     }
 
     pub resource Collection: CollectionPublic {
@@ -183,6 +180,11 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
         pub fun borrowNFT(id: UInt64): &NFT {
             return &self.ownedNFTs[id] as &NFT
+        }
+
+        pub fun getMetadata(id: UInt64): {String: String} {
+            let ref = &self.ownedNFTs[id] as &NFT
+            return ref.metadata
         }
 
         destroy() {

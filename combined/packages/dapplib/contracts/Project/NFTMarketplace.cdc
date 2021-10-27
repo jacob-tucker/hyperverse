@@ -66,8 +66,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
         pub fun instance(tenantID: UInt64) {
             var tenantIDConvention: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            let newTenant <- create Tenant(_tenantID: tenantIDConvention, _holder: self.owner!.address)
-            NFTMarketplace.tenants[tenantIDConvention] <-! newTenant
+            NFTMarketplace.tenants[tenantIDConvention] <-! create Tenant(_tenantID: tenantIDConvention, _holder: self.owner!.address)
             emit TenantCreated(id: tenantIDConvention)
             self.SimpleFTPackage.borrow()!.instance(tenantID: tenantID)
             self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
@@ -79,6 +78,9 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
         }
     
         pub fun setup(tenantID: String) {
+            pre {
+                NFTMarketplace.tenants[tenantID] != nil: "This tenantID does not exist."
+            }
             self.salecollections[tenantID] <-! create SaleCollection(tenantID, _nftPackage: self.SimpleNFTPackage, _ftPackage: self.SimpleFTPackage)
         }
 
@@ -89,10 +91,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
             return &self.salecollections[tenantID] as &SaleCollection
         }
         pub fun borrowSaleCollectionPublic(tenantID: String): &SaleCollection{SalePublic} {
-            if self.salecollections[tenantID] == nil {
-                self.setup(tenantID: tenantID)
-            }
-            return &self.salecollections[tenantID] as &SaleCollection{SalePublic}
+            return self.borrowSaleCollection(tenantID: tenantID)
         }
 
         init(
@@ -197,22 +196,20 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     }
 
     init() {
-        /* For Secondary Export */
         self.clientTenants = {}
         self.tenants <- {}
 
-        // Set our named paths
         self.PackageStoragePath = /storage/NFTMarketplacePackage
         self.PackagePrivatePath = /private/NFTMarketplacePackage
         self.PackagePublicPath = /public/NFTMarketplacePackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "NFT Marketplace", 
-            _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalLink: "https://www.decentology.com/")], 
+            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
             _externalLink: "",
-            _secondaryModules: [{Address(0xe37a242dfff69bbc): "SimpleNFT", 0xe37a242dfff69bbc: "SimpleFT"}]
+            _secondaryModules: [{Address(0x26a365de6d6237cd): "SimpleNFT", 0x26a365de6d6237cd: "SimpleFT"}]
         )
 
         emit NFTMarketplaceInitialized()

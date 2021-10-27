@@ -45,8 +45,6 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** PACKAGE ****************************************/
 
-    // Named Paths
-    //
     pub let PackageStoragePath: StoragePath
     pub let PackagePrivatePath: PrivatePath
     pub let PackagePublicPath: PublicPath
@@ -77,6 +75,9 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun setup(tenantID: String) {
+            pre {
+                SimpleFT.tenants[tenantID] != nil: "This tenantID does not exist."
+            }
             self.vaults[tenantID] <-! create Vault(tenantID, _balance: 0.0)
         }
 
@@ -101,10 +102,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
             return &self.vaults[tenantID] as &Vault
         }
         pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic} {
-            if self.vaults[tenantID] == nil {
-                self.setup(tenantID: tenantID)
-            }
-            return &self.vaults[tenantID] as &Vault{VaultPublic}
+            return self.borrowVault(tenantID: tenantID)
         }
 
         init() {
@@ -149,8 +147,6 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun deposit(vault: @Vault) {
-            // Makes sure that the tokens being deposited are from the
-            // same Tenant. That's why we need the Tenant's id.
             pre {
                 vault.tenantID == self.tenantID:
                     "Trying to deposit SimpleFT that belongs to another Tenant"
@@ -201,14 +197,13 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         self.clientTenants = {}
         self.tenants <- {}
 
-        // Set our named paths
         self.PackageStoragePath = /storage/SimpleFTPackage
         self.PackagePrivatePath = /private/SimpleFTPackage
         self.PackagePublicPath = /public/SimpleFTPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "SimpleFT", 
-            _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalLink: "https://www.decentology.com/")], 
+            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
             _externalLink: "",

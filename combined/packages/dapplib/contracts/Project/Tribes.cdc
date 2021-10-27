@@ -72,8 +72,6 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** PACKAGE ****************************************/
 
-    // Named Paths
-    //
     pub let PackageStoragePath: StoragePath
     pub let PackagePrivatePath: PrivatePath
     pub let PackagePublicPath: PublicPath
@@ -88,8 +86,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
         pub fun instance(tenantID: UInt64) {
             var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            let newTenant <- create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            Tribes.tenants[tenantID] <-! newTenant
+            Tribes.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
             self.depositAdmin(Admin: <- create Admin(tenantID))
             emit TenantCreated(id: tenantID)
             
@@ -101,6 +98,9 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun setup(tenantID: String) {
+            pre {
+                Tribes.tenants[tenantID] != nil: "This tenantID does not exist."
+            }
             self.identities[tenantID] <-! create Identity(tenantID, _address: self.owner!.address)
         }
 
@@ -124,10 +124,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun borrowIdentityPublic(tenantID: String): &Identity{IdentityPublic} {
-             if self.identities[tenantID] == nil {
-                self.setup(tenantID: tenantID)
-            }
-            return &self.identities[tenantID] as &Identity{IdentityPublic}
+            return self.borrowIdentity(tenantID: tenantID)
         }
 
         init() {
@@ -244,18 +241,16 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     }
 
     init() {
-        /* For Secondary Export */
         self.clientTenants = {}
         self.tenants <- {}
 
-        // Set our named paths
         self.PackageStoragePath = /storage/TribesPackage
         self.PackagePrivatePath = /private/TribesPackage
         self.PackagePublicPath = /public/TribesPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "Tribes", 
-            _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalLink: "https://www.decentology.com/")], 
+            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
             _externalUri: "",

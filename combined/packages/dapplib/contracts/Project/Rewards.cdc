@@ -47,8 +47,6 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** PACKAGE ****************************************/
 
-    // Named Paths
-    //
     pub let PackageStoragePath: StoragePath
     pub let PackagePrivatePath: PrivatePath
     pub let PackagePublicPath: PublicPath
@@ -67,8 +65,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
         pub fun instance(tenantID: UInt64) {
             var tenantIDConvention: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            let newTenant <- create Tenant(_tenantID: tenantIDConvention, _holder: self.owner!.address)
-            Rewards.tenants[tenantIDConvention] <-! newTenant
+            Rewards.tenants[tenantIDConvention] <-! create Tenant(_tenantID: tenantIDConvention, _holder: self.owner!.address)
             emit TenantCreated(id: tenantIDConvention)
             self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
 
@@ -90,7 +87,6 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         }
     }
 
-    // Yes, it's a requirement that you have a SimpleNFT.Package before you do this.  
     pub fun getPackage(SimpleNFTPackage: Capability<&SimpleNFT.Package>): @Package {
         pre {
             SimpleNFTPackage.borrow() != nil: "This is not a correct SimpleNFT.Package! Or you don't have one yet."
@@ -122,18 +118,17 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         self.clientTenants = {}
         self.tenants <- {}
 
-        // Set our named paths
         self.PackageStoragePath = /storage/RewardsPackage
         self.PackagePrivatePath = /private/RewardsPackage
         self.PackagePublicPath = /public/RewardsPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "Rewards", 
-            _authors: [HyperverseModule.Author(_address: 0xe37a242dfff69bbc, _externalURI: "https://www.decentology.com/")], 
+            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalURI: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
             _externalURI: "",
-            _secondaryModules: [{(Address(0xe37a242dfff69bbc)): "SimpleNFT"}]
+            _secondaryModules: [{(Address(0x26a365de6d6237cd)): "SimpleNFT"}]
         )
 
         emit RewardsInitialized()
