@@ -34,11 +34,12 @@ export default class FlowMarketplaceHarness extends LitElement {
     
         <action-card title="FlowMarketplace - Instance"
             description="Instance. **You need a FlowMarketplace.Package to do this. **" action="FlowMarketplaceInstance"
-            method="post" fields="signer SimpleNFTID">
+            method="post" fields="signer modules">
             <account-widget field="signer" label="Signer">
             </account-widget>
-            <text-widget field="SimpleNFTID" label="OPTIONAL Tenant ID for SimpleNFT" placeholder="46">
-            </text-widget>
+            <dictionary-widget field="modules" label="Tenant UIDs" objectLabel="Tenant UID" keyplaceholder="Contract"
+                valueplaceholder="UID">
+            </dictionary-widget>
         </action-card>
     
         <action-card title="FlowMarketplace - Owns Tenant" description="Owns the FlowMarketplace Tenant"

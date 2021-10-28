@@ -73,19 +73,19 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
         pub var salecollections: @{String: SaleCollection}
 
-        pub fun instance(tenantID: UInt64, SimpleNFTID: UInt64?, SimpleFTID: UInt64?) {
+        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
             var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
             /* Dependencies */
-            if SimpleFTID == nil {
-                self.SimpleFTPackage.borrow()!.instance(tenantID: tenantID)
+            if modules["SimpleFT"] == nil {
+                self.SimpleFTPackage.borrow()!.instance(tenantID: tenantID, modules: {})
             } else {
-                self.SimpleFTPackage.borrow()!.addAlias(original: SimpleFTID!, new: tenantID)
+                self.SimpleFTPackage.borrow()!.addAlias(original: modules["SimpleFT"]!, new: tenantID)
             }
-            if SimpleNFTID == nil {
-                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
+            if modules["SimpleNFT"] == nil {
+                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID, modules: {})
             } else {
-                self.SimpleNFTPackage.borrow()!.addAlias(original: SimpleNFTID!, new: tenantID)
+                self.SimpleNFTPackage.borrow()!.addAlias(original: modules["SimpleNFT"]!, new: tenantID)
             }
             NFTMarketplace.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
             NFTMarketplace.addAlias(original: STenantID, new: STenantID)

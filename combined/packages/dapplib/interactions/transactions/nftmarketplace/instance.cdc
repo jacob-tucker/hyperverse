@@ -1,7 +1,7 @@
 import NFTMarketplace from "../../../contracts/Project/NFTMarketplace.cdc"
 import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
 
-transaction(SimpleNFTID: UInt64?, SimpleFTID: UInt64?) {
+transaction(modules: {String: UInt64}) {
     let NFTMarketplacePackage: &NFTMarketplace.Package
 
     prepare(signer: AuthAccount) {
@@ -12,7 +12,7 @@ transaction(SimpleNFTID: UInt64?, SimpleFTID: UInt64?) {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        self.NFTMarketplacePackage.instance(tenantID: self.NFTMarketplacePackage.uuid, SimpleNFTID: SimpleNFTID, SimpleFTID: SimpleFTID)
+        self.NFTMarketplacePackage.instance(tenantID: self.NFTMarketplacePackage.uuid, modules: modules)
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

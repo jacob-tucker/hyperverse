@@ -11,7 +11,7 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        self.TribesPackage.instance(tenantID: self.TribesPackage.uuid)
+        self.TribesPackage.instance(tenantID: self.TribesPackage.uuid, modules: {})
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

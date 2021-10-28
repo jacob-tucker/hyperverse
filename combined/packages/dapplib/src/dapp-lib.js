@@ -226,8 +226,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_instance',
       {
-        SimpleNFTID: { value: data.SimpleNFTID == "" ? null : parseInt(data.SimpleNFTID), type: t.Optional(t.UInt64) },
-        SimpleFTID: { value: data.SimpleFTID == "" ? null : parseInt(data.SimpleFTID), type: t.Optional(t.UInt64) }
+        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.UInt64 })
       }
     );
 
@@ -380,7 +379,7 @@ module.exports = class DappLib {
     },
       'flowmarketplace_instance',
       {
-        SimpleNFTID: { value: data.SimpleNFTID == "" ? null : parseInt(data.SimpleNFTID), type: t.Optional(t.UInt64) }
+        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.UInt64 })
       }
     );
 
@@ -873,9 +872,7 @@ module.exports = class DappLib {
     },
       'rewards_instance',
       {
-        SimpleNFTID: {
-          value: data.SimpleNFTID == "" ? null : parseInt(data.SimpleNFTID), type: t.Optional(t.UInt64)
-        }
+        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.UInt64 })
       }
     );
 

@@ -1,7 +1,7 @@
 import FlowMarketplace from "../../../contracts/Project/FlowMarketplace.cdc"
 import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
 
-transaction(SimpleNFTID: UInt64?) {
+transaction(modules: {String: UInt64}) {
     let FlowMarketplacePackage: &FlowMarketplace.Package
 
     prepare(signer: AuthAccount) {
@@ -12,7 +12,7 @@ transaction(SimpleNFTID: UInt64?) {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        self.FlowMarketplacePackage.instance(tenantID: self.FlowMarketplacePackage.uuid, SimpleNFTID: SimpleNFTID)
+        self.FlowMarketplacePackage.instance(tenantID: self.FlowMarketplacePackage.uuid, modules: modules)
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

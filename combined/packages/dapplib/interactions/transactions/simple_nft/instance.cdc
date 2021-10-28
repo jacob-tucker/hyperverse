@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        self.SNFTPackage.instance(tenantID: self.SNFTPackage.uuid)
+        self.SNFTPackage.instance(tenantID: self.SNFTPackage.uuid, modules: {})
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

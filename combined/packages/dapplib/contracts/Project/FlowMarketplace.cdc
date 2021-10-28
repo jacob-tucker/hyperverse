@@ -70,14 +70,14 @@ pub contract FlowMarketplace: IHyperverseModule, IHyperverseComposable {
 
         pub var salecollections: @{String: SaleCollection}
 
-        pub fun instance(tenantID: UInt64, SimpleNFTID: UInt64?) {
+        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
             var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
             /* Dependencies */
-            if SimpleNFTID == nil {
-                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
+            if modules["SimpleNFT"] == nil {
+                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID, modules: {})
             } else {
-                self.SimpleNFTPackage.borrow()!.addAlias(original: SimpleNFTID!, new: tenantID)
+                self.SimpleNFTPackage.borrow()!.addAlias(original: modules["SimpleNFT"]!, new: tenantID)
             }
             FlowMarketplace.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
             FlowMarketplace.addAlias(original: STenantID, new: STenantID)

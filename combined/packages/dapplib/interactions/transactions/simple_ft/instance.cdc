@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        self.SFTPackage.instance(tenantID: self.SFTPackage.uuid)
+        self.SFTPackage.instance(tenantID: self.SFTPackage.uuid, modules: {})
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

@@ -73,7 +73,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub var minters: @{String: NFTMinter}
 
         // If we're making a new Tenant resource
-        pub fun instance(tenantID: UInt64) {
+        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
             var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
         
             SimpleNFT.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)

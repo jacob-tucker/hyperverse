@@ -92,7 +92,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         pub var identities: @{String: Identity}
         pub var admins: @{String: Admin}
 
-        pub fun instance(tenantID: UInt64) {
+        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
             var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
             Tribes.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)

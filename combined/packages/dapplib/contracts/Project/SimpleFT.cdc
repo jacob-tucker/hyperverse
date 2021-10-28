@@ -67,7 +67,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         pub var minters: @{String: Minter}
         pub var vaults: @{String: Vault}
 
-        pub fun instance(tenantID: UInt64) {
+        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
             var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
             SimpleFT.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
