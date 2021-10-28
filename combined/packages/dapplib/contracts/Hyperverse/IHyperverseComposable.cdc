@@ -17,6 +17,5 @@ pub contract interface IHyperverseComposable {
         pub fun setup(tenantID: String)
         // `instance` takes in a tenantID that represents the `uuid`
         // of a Package.
-        pub fun instance(tenantIDs: {String: UInt64})
     }
 }

@@ -34,12 +34,13 @@ export default class MarketplaceHarness extends LitElement {
     
         <action-card title="Marketplace - Instance"
             description="Instance. **You need a NFTMarketplace.Package to do this. **" action="MarketplaceInstance"
-            method="post" fields="signer tenantIDs">
+            method="post" fields="signer SimpleNFTID SimpleFTID">
             <account-widget field="signer" label="Signer">
             </account-widget>
-            <dictionary-widget field="tenantIDs" label="Tenant IDs" objectLabel="Tenant ID" keyplaceholder="Contract"
-                valueplaceholder="ID">
-            </dictionary-widget>
+            <text-widget field="SimpleNFTID" label="OPTIONAL Tenant ID for SimpleNFT" placeholder="46">
+            </text-widget>
+            <text-widget field="SimpleFTID" label="OPTIONAL Tenant ID for SimpleFT" placeholder="47">
+            </text-widget>
         </action-card>
     
         <action-card title="Marketplace - Owns Tenant" description="Owns the Marketplace Tenant"

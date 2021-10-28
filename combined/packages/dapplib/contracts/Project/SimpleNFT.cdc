@@ -73,19 +73,19 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub var minters: @{String: NFTMinter}
 
         // If we're making a new Tenant resource
-        pub fun instance(tenantIDs: {String: UInt64}) {
-            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantIDs["SimpleNFT"]!.toString())
-           
-            SimpleNFT.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            SimpleNFT.addAlias(original: tenantID, new: tenantID)
-            self.depositAdmin(Admin: <- create Admin(tenantID))
-            self.depositMinter(NFTMinter: <- create NFTMinter(tenantID))
-            emit TenantCreated(id: tenantID)
+        pub fun instance(tenantID: UInt64) {
+            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
+        
+            SimpleNFT.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
+            SimpleNFT.addAlias(original: STenantID, new: STenantID)
+            self.depositAdmin(Admin: <- create Admin(STenantID))
+            self.depositMinter(NFTMinter: <- create NFTMinter(STenantID))
+            emit TenantCreated(id: STenantID)
 
             if SimpleNFT.clientTenants[self.owner!.address] != nil {
-                SimpleNFT.clientTenants[self.owner!.address]!.append(tenantID)
+                SimpleNFT.clientTenants[self.owner!.address]!.append(STenantID)
             } else {
-                SimpleNFT.clientTenants[self.owner!.address] = [tenantID]
+                SimpleNFT.clientTenants[self.owner!.address] = [STenantID]
             }
            
         }

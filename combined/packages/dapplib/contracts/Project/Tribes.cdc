@@ -92,18 +92,18 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         pub var identities: @{String: Identity}
         pub var admins: @{String: Admin}
 
-        pub fun instance(tenantIDs: {String: UInt64}) {
-            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantIDs["Tribes"]!.toString())
+        pub fun instance(tenantID: UInt64) {
+            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
-            Tribes.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            Tribes.addAlias(original: tenantID, new: tenantID)
-            self.depositAdmin(Admin: <- create Admin(tenantID))
-            emit TenantCreated(id: tenantID)
+            Tribes.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
+            Tribes.addAlias(original: STenantID, new: STenantID)
+            self.depositAdmin(Admin: <- create Admin(STenantID))
+            emit TenantCreated(id: STenantID)
             
             if Tribes.clientTenants[self.owner!.address] != nil {
-                Tribes.clientTenants[self.owner!.address]!.append(tenantID)
+                Tribes.clientTenants[self.owner!.address]!.append(STenantID)
             } else {
-                Tribes.clientTenants[self.owner!.address] = [tenantID]
+                Tribes.clientTenants[self.owner!.address] = [STenantID]
             }
         }
 

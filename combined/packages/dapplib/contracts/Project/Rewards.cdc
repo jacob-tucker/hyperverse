@@ -65,23 +65,22 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
             return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
         }
 
-        pub fun instance(tenantIDs: {String: UInt64}) {
-            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantIDs["Rewards"]!.toString())
+        pub fun instance(tenantID: UInt64, SimpleNFTID: UInt64?) {
+            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
             /* Dependencies */
-            if tenantIDs["SimpleNFT"] == nil {
-                self.SimpleNFTPackage.borrow()!.instance(tenantIDs: {"SimpleNFT": tenantIDs["Rewards"]!})
+            if SimpleNFTID == nil {
+                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
             } else {
-                self.SimpleNFTPackage.borrow()!.addAlias(original: tenantIDs["SimpleNFT"]!, new: tenantIDs["Rewards"]!)
+                self.SimpleNFTPackage.borrow()!.addAlias(original: SimpleNFTID!, new: tenantID)
             }
-            Rewards.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            emit TenantCreated(id: tenantID)
-            self.SimpleNFTPackage.borrow()!.instance(tenantIDs: tenantIDs)
+            Rewards.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
+            emit TenantCreated(id: STenantID)
 
             if Rewards.clientTenants[self.owner!.address] != nil {
-                Rewards.clientTenants[self.owner!.address]!.append(tenantID)
+                Rewards.clientTenants[self.owner!.address]!.append(STenantID)
             } else {
-                Rewards.clientTenants[self.owner!.address] = [tenantID]
+                Rewards.clientTenants[self.owner!.address] = [STenantID]
             }
             
         }

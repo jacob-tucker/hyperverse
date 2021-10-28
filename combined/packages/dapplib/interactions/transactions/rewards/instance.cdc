@@ -1,6 +1,6 @@
 import Rewards from "../../../contracts/Project/Rewards.cdc"
 
-transaction(tenantIDs: {String: UInt64}) {
+transaction(SimpleNFTID: UInt64?) {
     let RewardsPackage: &Rewards.Package
 
     prepare(signer: AuthAccount) {
@@ -10,8 +10,7 @@ transaction(tenantIDs: {String: UInt64}) {
     }
 
     execute {
-        tenantIDs.insert(key: "Rewards", self.RewardsPackage.uuid)
-        self.RewardsPackage.instance(tenantIDs: tenantIDs)
+        self.RewardsPackage.instance(tenantID: self.RewardsPackage.uuid, SimpleNFTID: SimpleNFTID)
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

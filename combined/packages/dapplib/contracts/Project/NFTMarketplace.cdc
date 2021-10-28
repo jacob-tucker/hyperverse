@@ -73,28 +73,28 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
         pub var salecollections: @{String: SaleCollection}
 
-        pub fun instance(tenantIDs: {String: UInt64}) {
-            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantIDs["NFTMarketplace"]!.toString())
+        pub fun instance(tenantID: UInt64, SimpleNFTID: UInt64?, SimpleFTID: UInt64?) {
+            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
             /* Dependencies */
-            if tenantIDs["SimpleFT"] == nil {
-                self.SimpleFTPackage.borrow()!.instance(tenantIDs: {"SimpleFT": tenantIDs["NFTMarketplace"]!})
+            if SimpleFTID == nil {
+                self.SimpleFTPackage.borrow()!.instance(tenantID: tenantID)
             } else {
-                self.SimpleFTPackage.borrow()!.addAlias(original: tenantIDs["SimpleFT"]!, new: tenantIDs["NFTMarketplace"]!)
+                self.SimpleFTPackage.borrow()!.addAlias(original: SimpleFTID!, new: tenantID)
             }
-            if tenantIDs["SimpleNFT"] == nil {
-                self.SimpleNFTPackage.borrow()!.instance(tenantIDs: {"SimpleNFT": tenantIDs["NFTMarketplace"]!})
+            if SimpleNFTID == nil {
+                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
             } else {
-                self.SimpleNFTPackage.borrow()!.addAlias(original: tenantIDs["SimpleNFT"]!, new: tenantIDs["NFTMarketplace"]!)
+                self.SimpleNFTPackage.borrow()!.addAlias(original: SimpleNFTID!, new: tenantID)
             }
-            NFTMarketplace.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            NFTMarketplace.addAlias(original: tenantID, new: tenantID)
-            emit TenantCreated(id: tenantID)
+            NFTMarketplace.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
+            NFTMarketplace.addAlias(original: STenantID, new: STenantID)
+            emit TenantCreated(id: STenantID)
 
             if NFTMarketplace.clientTenants[self.owner!.address] != nil {
-                NFTMarketplace.clientTenants[self.owner!.address]!.append(tenantID)
+                NFTMarketplace.clientTenants[self.owner!.address]!.append(STenantID)
             } else {
-                NFTMarketplace.clientTenants[self.owner!.address] = [tenantID]
+                NFTMarketplace.clientTenants[self.owner!.address] = [STenantID]
             }
         }
 

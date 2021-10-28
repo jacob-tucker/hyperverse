@@ -67,19 +67,19 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         pub var minters: @{String: Minter}
         pub var vaults: @{String: Vault}
 
-        pub fun instance(tenantIDs: {String: UInt64}) {
-            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantIDs["SimpleFT"]!.toString())
+        pub fun instance(tenantID: UInt64) {
+            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
             
-            SimpleFT.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            SimpleFT.addAlias(original: tenantID, new: tenantID)
-            self.depositAdministrator(Administrator: <- create Administrator(tenantID))
-            self.depositMinter(Minter: <- create Minter(tenantID))
-            emit TenantCreated(id: tenantID)
+            SimpleFT.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
+            SimpleFT.addAlias(original: STenantID, new: STenantID)
+            self.depositAdministrator(Administrator: <- create Administrator(STenantID))
+            self.depositMinter(Minter: <- create Minter(STenantID))
+            emit TenantCreated(id: STenantID)
 
             if SimpleFT.clientTenants[self.owner!.address] != nil {
-                SimpleFT.clientTenants[self.owner!.address]!.append(tenantID)
+                SimpleFT.clientTenants[self.owner!.address]!.append(STenantID)
             } else {
-                SimpleFT.clientTenants[self.owner!.address] = [tenantID]
+                SimpleFT.clientTenants[self.owner!.address] = [STenantID]
             }
         }
 
