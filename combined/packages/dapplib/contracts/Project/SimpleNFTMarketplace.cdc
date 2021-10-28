@@ -5,7 +5,7 @@ import SimpleNFT from "./SimpleNFT.cdc"
 import FlowToken from "../Flow/FlowToken.cdc"
 import FungibleToken from "../Flow/FungibleToken.cdc"
 
-pub contract FlowMarketplace: IHyperverseModule, IHyperverseComposable {
+pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** METADATA ****************************************/
 
@@ -79,14 +79,14 @@ pub contract FlowMarketplace: IHyperverseModule, IHyperverseComposable {
             } else {
                 self.SimpleNFTPackage.borrow()!.addAlias(original: modules["SimpleNFT"]!, new: tenantID)
             }
-            FlowMarketplace.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
-            FlowMarketplace.addAlias(original: STenantID, new: STenantID)
+            SimpleNFTMarketplace.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
+            SimpleNFTMarketplace.addAlias(original: STenantID, new: STenantID)
             emit TenantCreated(id: STenantID)
 
-            if FlowMarketplace.clientTenants[self.owner!.address] != nil {
-                FlowMarketplace.clientTenants[self.owner!.address]!.append(STenantID)
+            if SimpleNFTMarketplace.clientTenants[self.owner!.address] != nil {
+                SimpleNFTMarketplace.clientTenants[self.owner!.address]!.append(STenantID)
             } else {
-                FlowMarketplace.clientTenants[self.owner!.address] = [STenantID]
+                SimpleNFTMarketplace.clientTenants[self.owner!.address] = [STenantID]
             }
         }
 
@@ -94,19 +94,19 @@ pub contract FlowMarketplace: IHyperverseModule, IHyperverseComposable {
             let originalID = self.owner!.address.toString().concat(".").concat(original.toString())
             let newID = self.owner!.address.toString().concat(".").concat(new.toString())
             
-            FlowMarketplace.addAlias(original: originalID, new: newID)
+            SimpleNFTMarketplace.addAlias(original: originalID, new: newID)
             emit TenantReused(id: originalID)
         }
     
         pub fun setup(tenantID: String) {
             pre {
-                FlowMarketplace.tenants[tenantID] != nil: "This tenantID does not exist."
+                SimpleNFTMarketplace.tenants[tenantID] != nil: "This tenantID does not exist."
             }
             self.salecollections[tenantID] <-! create SaleCollection(tenantID, _nftPackage: self.SimpleNFTPackage, _ftVault: self.FlowTokenVault)
         }
 
         pub fun borrowSaleCollection(tenantID: String): &SaleCollection {
-            let original = FlowMarketplace.aliases[tenantID]!
+            let original = SimpleNFTMarketplace.aliases[tenantID]!
             if self.salecollections[original] == nil {
                 self.setup(tenantID: original)
             }
@@ -142,7 +142,7 @@ pub contract FlowMarketplace: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** FUNCTIONALITY ****************************************/
 
-    pub event FlowMarketplaceInitialized()
+    pub event SimpleNFTMarketplaceInitialized()
 
     pub event ForSale(id: UInt64, price: UFix64)
 
@@ -222,12 +222,12 @@ pub contract FlowMarketplace: IHyperverseModule, IHyperverseComposable {
         self.tenants <- {}
         self.aliases = {}
 
-        self.PackageStoragePath = /storage/FlowMarketplacePackage
-        self.PackagePrivatePath = /private/FlowMarketplacePackage
-        self.PackagePublicPath = /public/FlowMarketplacePackage
+        self.PackageStoragePath = /storage/SimpleNFTMarketplacePackage
+        self.PackagePrivatePath = /private/SimpleNFTMarketplacePackage
+        self.PackagePublicPath = /public/SimpleNFTMarketplacePackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
-            _title: "Flow Marketplace", 
+            _title: "SimpleNFT Marketplace", 
             _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,
@@ -235,6 +235,6 @@ pub contract FlowMarketplace: IHyperverseModule, IHyperverseComposable {
             _secondaryModules: [{Address(0x26a365de6d6237cd): "SimpleNFT"}]
         )
 
-        emit FlowMarketplaceInitialized()
+        emit SimpleNFTMarketplaceInitialized()
     }
 }

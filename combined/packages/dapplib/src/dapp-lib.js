@@ -347,10 +347,10 @@ module.exports = class DappLib {
     }
   }
 
-  /****** FlowMarketplace ******/
+  /****** SimpleNFTMarketplace ******/
 
   // Run by a user (like someone who wants a collection)
-  static async FlowMarketplaceGetPackage(data) {
+  static async SimpleNFTMarketplaceGetPackage(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -358,7 +358,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'flowmarketplace_get_package'
+      'simplenftmarketplace_get_package'
     );
 
     return {
@@ -369,7 +369,7 @@ module.exports = class DappLib {
 
   }
 
-  static async FlowMarketplaceInstance(data) {
+  static async SimpleNFTMarketplaceInstance(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -377,7 +377,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'flowmarketplace_instance',
+      'simplenftmarketplace_instance',
       {
         modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.UInt64 })
       }
@@ -391,7 +391,7 @@ module.exports = class DappLib {
 
   }
 
-  static async FlowMarketplaceUnlist(data) {
+  static async SimpleNFTMarketplaceUnlist(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -399,7 +399,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'flowmarketplace_unlist_sale',
+      'simplenftmarketplace_unlist_sale',
       {
         tenantID: { value: data.tenantID, type: t.String },
         id: { value: parseInt(data.id), type: t.UInt64 }
@@ -413,7 +413,7 @@ module.exports = class DappLib {
     }
   }
 
-  static async FlowMarketplaceList(data) {
+  static async SimpleNFTMarketplaceList(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -421,7 +421,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'flowmarketplace_list_for_sale',
+      'simplenftmarketplace_list_for_sale',
       {
         tenantID: { value: data.tenantID, type: t.String },
         ids: DappLib.formatFlowArray(data.ids, t.UInt64),
@@ -436,7 +436,7 @@ module.exports = class DappLib {
     }
   }
 
-  static async FlowMarketplacePurchase(data) {
+  static async SimpleNFTMarketplacePurchase(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -444,7 +444,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'flowmarketplace_purchase',
+      'simplenftmarketplace_purchase',
       {
         tenantID: { value: data.tenantID, type: t.String },
         id: { value: parseInt(data.id), type: t.UInt64 },
@@ -459,14 +459,14 @@ module.exports = class DappLib {
     }
   }
 
-  static async FlowMarketplaceOwnsTenant(data) {
+  static async SimpleNFTMarketplaceOwnsTenant(data) {
 
     let result = await Blockchain.get({
       config: DappLib.getConfig(),
       roles: {
       }
     },
-      'flowmarketplace_owns_tenant',
+      'simplenftmarketplace_owns_tenant',
       {
         tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
@@ -479,14 +479,14 @@ module.exports = class DappLib {
     }
   }
 
-  static async FlowMarketplaceGetIDs(data) {
+  static async SimpleNFTMarketplaceGetIDs(data) {
 
     let result = await Blockchain.get({
       config: DappLib.getConfig(),
       roles: {
       }
     },
-      'flowmarketplace_get_ids',
+      'simplenftmarketplace_get_ids',
       {
         account: { value: data.account, type: t.Address },
         tenantID: { value: data.tenantID, type: t.String }
@@ -507,7 +507,7 @@ module.exports = class DappLib {
       roles: {
       }
     },
-      'flowmarketplace_flowtoken_get_balance',
+      'simplenftmarketplace_flowtoken_get_balance',
       {
         account: { value: data.account, type: t.Address }
       }

@@ -3,7 +3,7 @@ import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 import Rewards from "../../../contracts/Project/Rewards.cdc"
 import NFTMarketplace from "../../../contracts/Project/NFTMarketplace.cdc"
 import Tribes from "../../../contracts/Project/Tribes.cdc"
-import FlowMarketplace from "../../../contracts/Project/FlowMarketplace.cdc"
+import SimpleNFTMarketplace from "../../../contracts/Project/SimpleNFTMarketplace.cdc"
 import FlowToken from "../../../contracts/Flow/FlowToken.cdc"
 import FungibleToken from "../../../contracts/Flow/FungibleToken.cdc"
 
@@ -50,12 +50,12 @@ transaction() {
         }
 
         /* NFTMarketplace */
-        if signer.borrow<&FlowMarketplace.Package>(from: FlowMarketplace.PackageStoragePath) == nil {
+        if signer.borrow<&SimpleNFTMarketplace.Package>(from: SimpleNFTMarketplace.PackageStoragePath) == nil {
             let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
             let FlowTokenVault = signer.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-            signer.save(<- FlowMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, FlowTokenVault: FlowTokenVault), to: FlowMarketplace.PackageStoragePath)
-            signer.link<&FlowMarketplace.Package>(FlowMarketplace.PackagePrivatePath, target: FlowMarketplace.PackageStoragePath)
-            signer.link<&FlowMarketplace.Package{FlowMarketplace.PackagePublic}>(FlowMarketplace.PackagePublicPath, target: FlowMarketplace.PackageStoragePath)
+            signer.save(<- SimpleNFTMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, FlowTokenVault: FlowTokenVault), to: SimpleNFTMarketplace.PackageStoragePath)
+            signer.link<&SimpleNFTMarketplace.Package>(SimpleNFTMarketplace.PackagePrivatePath, target: SimpleNFTMarketplace.PackageStoragePath)
+            signer.link<&SimpleNFTMarketplace.Package{SimpleNFTMarketplace.PackagePublic}>(SimpleNFTMarketplace.PackagePublicPath, target: SimpleNFTMarketplace.PackageStoragePath)
         }
     }
 

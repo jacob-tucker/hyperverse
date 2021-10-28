@@ -1,4 +1,4 @@
-import FlowMarketplace from "../../../contracts/Project/FlowMarketplace.cdc"
+import SimpleNFTMarketplace from "../../../contracts/Project/SimpleNFTMarketplace.cdc"
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 import FlowToken from "../../../contracts/Flow/FlowToken.cdc"
 import FungibleToken from "../../../contracts/Flow/FungibleToken.cdc"
@@ -20,14 +20,14 @@ transaction() {
         /* FlowToken */
         let FlowTokenVault = signer.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 
-        /* FlowMarketplace */
-        signer.save(<- FlowMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, FlowTokenVault: FlowTokenVault), to: FlowMarketplace.PackageStoragePath)
-        signer.link<&FlowMarketplace.Package>(FlowMarketplace.PackagePrivatePath, target: FlowMarketplace.PackageStoragePath)
-        signer.link<&FlowMarketplace.Package{FlowMarketplace.PackagePublic}>(FlowMarketplace.PackagePublicPath, target: FlowMarketplace.PackageStoragePath)
+        /* SimpleNFTMarketplace */
+        signer.save(<- SimpleNFTMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, FlowTokenVault: FlowTokenVault), to: SimpleNFTMarketplace.PackageStoragePath)
+        signer.link<&SimpleNFTMarketplace.Package>(SimpleNFTMarketplace.PackagePrivatePath, target: SimpleNFTMarketplace.PackageStoragePath)
+        signer.link<&SimpleNFTMarketplace.Package{SimpleNFTMarketplace.PackagePublic}>(SimpleNFTMarketplace.PackagePublicPath, target: SimpleNFTMarketplace.PackageStoragePath)
     }
 
     execute {
-        log("Signer has a FlowMarketplace.Package.")
+        log("Signer has a SimpleNFTMarketplace.Package.")
     }
 }
 

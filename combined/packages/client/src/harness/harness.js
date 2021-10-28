@@ -87,11 +87,11 @@ export default class HarnessPage extends LitElement {
         "route": "/core-setup"
       },
       {
-        "name": "core-flowmarketplace",
-        "title": "Hyperverse Flow Marketplace Module",
+        "name": "core-simplenftmarketplace",
+        "title": "Hyperverse SimpleNFT Marketplace Module",
         "description": "Buy/sell SimpleNFTs using FlowToken",
         "category": "Hyperverse",
-        "route": "/core-flowmarketplace"
+        "route": "/core-simplenftmarketplace"
       }
     ];
   }
