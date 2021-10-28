@@ -44,6 +44,12 @@ export default class NFTHarness extends LitElement {
           </account-widget>
         </action-card>
       
+        <action-card title="SimpleNFT - Get Client Tenants" description="Get the client tenants for this account"
+          action="SimpleNFTGetClientTenants" method="get" fields="account">
+          <account-widget field="account" label="Account">
+          </account-widget>
+        </action-card>
+      
         <action-card title="SimpleNFT - Give Minter"
           description="Give Minter (Receiving a SimpleNFT.NFTMinter). ** 'Recipient' MUST have a SimpleNFT.Package **"
           action="SimpleNFTGiveMinter" method="post" fields="tenantID tenantOwner recipient">

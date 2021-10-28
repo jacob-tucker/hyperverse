@@ -1,6 +1,6 @@
 import Tribes from "../../../contracts/Project/Tribes.cdc"
 
-transaction() {
+transaction(tenantIDs: {String: UInt64}) {
     let TribesPackage: &Tribes.Package
 
     prepare(signer: AuthAccount) {
@@ -11,7 +11,8 @@ transaction() {
 
     execute {
         // Create a new instance of a Tenant using your Package as a key.
-        self.TribesPackage.instance(tenantID: self.TribesPackage.uuid)
+        tenantIDs.insert(key: "Tribes", self.TribesPackage.uuid)
+        self.TribesPackage.instance(tenantIDs: tenantIDs)
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

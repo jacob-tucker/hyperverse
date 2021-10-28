@@ -1,6 +1,6 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 
-transaction() {
+transaction(tenantIDs: {String: UInt64}) {
     let SNFTPackage: &SimpleNFT.Package
 
     prepare(signer: AuthAccount) {
@@ -10,7 +10,8 @@ transaction() {
     }
 
     execute {
-        self.SNFTPackage.instance(tenantID: self.SNFTPackage.uuid)
+        tenantIDs.insert(key: "SimpleNFT", self.SNFTPackage.uuid)
+        self.SNFTPackage.instance(tenantIDs: tenantIDs)
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

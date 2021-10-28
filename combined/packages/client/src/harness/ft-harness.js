@@ -44,6 +44,12 @@ export default class FTHarness extends LitElement {
           </account-widget>
         </action-card>
       
+        <action-card title="SimpleFT - Get Client Tenants" description="Get the client tenants for this account"
+          action="SimpleFTGetClientTenants" method="get" fields="account">
+          <account-widget field="account" label="Account">
+          </account-widget>
+        </action-card>
+      
         <action-card title="SimpleFT - Give Minter"
           description="Give Minter (Receiving a SimpleFT.Minter). ** 'Recipient' MUST have a SimpleFT.Package **"
           action="SimpleFTGiveMinter" method="post" fields="tenantID tenantOwner recipient">

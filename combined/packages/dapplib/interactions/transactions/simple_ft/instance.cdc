@@ -1,6 +1,6 @@
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
 
-transaction() {
+transaction(tenantIDs: {String: UInt64}) {
     let SFTPackage: &SimpleFT.Package
 
     prepare(signer: AuthAccount) {
@@ -10,7 +10,8 @@ transaction() {
     }
 
     execute {
-        self.SFTPackage.instance(tenantID: self.SFTPackage.uuid)
+        tenantIDs.insert(key: "SimpleFT", self.SFTPackage.uuid)
+        self.SFTPackage.instance(tenantIDs: tenantIDs)
         log("Create a new instance of a Tenant using your Package as a key.")
     }
 }

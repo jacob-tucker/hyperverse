@@ -16,6 +16,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
+    pub event TenantReused(id: String)
     access(contract) var clientTenants: {Address: [String]}
     pub fun getClientTenants(account: Address): [String] {
         return self.clientTenants[account]!
@@ -24,6 +25,14 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
+    access(contract) var aliases: {String: String}
+    access(contract) fun addAlias(original: String, new: String) {
+        pre {
+            self.tenants[original] != nil: "Original tenantID does not exist."
+        }
+        self.aliases[new] = original
+    }
+
 
     pub resource interface IState {
         pub let tenantID: String
@@ -64,17 +73,37 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
         pub var salecollections: @{String: SaleCollection}
 
-        pub fun instance(tenantID: UInt64) {
-            var tenantIDConvention: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            NFTMarketplace.tenants[tenantIDConvention] <-! create Tenant(_tenantID: tenantIDConvention, _holder: self.owner!.address)
-            emit TenantCreated(id: tenantIDConvention)
-            self.SimpleFTPackage.borrow()!.instance(tenantID: tenantID)
-            self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID)
-            if NFTMarketplace.clientTenants[self.owner!.address] != nil {
-                NFTMarketplace.clientTenants[self.owner!.address]!.append(tenantIDConvention)
+        pub fun instance(tenantIDs: {String: UInt64}) {
+            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantIDs["NFTMarketplace"]!.toString())
+            
+            /* Dependencies */
+            if tenantIDs["SimpleFT"] == nil {
+                self.SimpleFTPackage.borrow()!.instance(tenantIDs: {"SimpleFT": tenantIDs["NFTMarketplace"]!})
             } else {
-                NFTMarketplace.clientTenants[self.owner!.address] = [tenantIDConvention]
+                self.SimpleFTPackage.borrow()!.addAlias(original: tenantIDs["SimpleFT"]!, new: tenantIDs["NFTMarketplace"]!)
             }
+            if tenantIDs["SimpleNFT"] == nil {
+                self.SimpleNFTPackage.borrow()!.instance(tenantIDs: {"SimpleNFT": tenantIDs["NFTMarketplace"]!})
+            } else {
+                self.SimpleNFTPackage.borrow()!.addAlias(original: tenantIDs["SimpleNFT"]!, new: tenantIDs["NFTMarketplace"]!)
+            }
+            NFTMarketplace.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
+            NFTMarketplace.addAlias(original: tenantID, new: tenantID)
+            emit TenantCreated(id: tenantID)
+
+            if NFTMarketplace.clientTenants[self.owner!.address] != nil {
+                NFTMarketplace.clientTenants[self.owner!.address]!.append(tenantID)
+            } else {
+                NFTMarketplace.clientTenants[self.owner!.address] = [tenantID]
+            }
+        }
+
+        pub fun addAlias(original: UInt64, new: UInt64) {
+            let originalID = self.owner!.address.toString().concat(".").concat(original.toString())
+            let newID = self.owner!.address.toString().concat(".").concat(new.toString())
+            
+            NFTMarketplace.addAlias(original: originalID, new: newID)
+            emit TenantReused(id: originalID)
         }
     
         pub fun setup(tenantID: String) {
@@ -85,10 +114,11 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun borrowSaleCollection(tenantID: String): &SaleCollection {
-            if self.salecollections[tenantID] == nil {
-                self.setup(tenantID: tenantID)
+            let original = NFTMarketplace.aliases[tenantID]!
+            if self.salecollections[original] == nil {
+                self.setup(tenantID: original)
             }
-            return &self.salecollections[tenantID] as &SaleCollection
+            return &self.salecollections[original] as &SaleCollection
         }
         pub fun borrowSaleCollectionPublic(tenantID: String): &SaleCollection{SalePublic} {
             return self.borrowSaleCollection(tenantID: tenantID)
@@ -198,6 +228,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     init() {
         self.clientTenants = {}
         self.tenants <- {}
+        self.aliases = {}
 
         self.PackageStoragePath = /storage/NFTMarketplacePackage
         self.PackagePrivatePath = /private/NFTMarketplacePackage

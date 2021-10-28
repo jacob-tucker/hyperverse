@@ -76,7 +76,10 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'tribes_instance'
+      'tribes_instance',
+      {
+        tenantIDs: DappLib.formatFlowDictionary({}, { key: t.String, value: t.UInt64 })
+      }
     );
 
     return {
@@ -224,7 +227,10 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'nftmarketplace_instance'
+      'nftmarketplace_instance',
+      {
+        tenantIDs: DappLib.formatFlowDictionary(data.tenantIDs, { key: t.String, value: t.UInt64 })
+      }
     );
 
     return {
@@ -354,7 +360,10 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'simple_ft_instance'
+      'simple_ft_instance',
+      {
+        tenantIDs: DappLib.formatFlowDictionary({}, { key: t.String, value: t.UInt64 })
+      }
     );
 
     return {
@@ -494,6 +503,26 @@ module.exports = class DappLib {
     }
   }
 
+  static async SimpleFTGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simple_ft_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SimpleFT Tenants',
+      result: result.callData
+    }
+  }
+
   /****** SimpleNFT ******/
 
   // Run by a user (like someone who wants a collection)
@@ -524,7 +553,10 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'simple_nft_instance'
+      'simple_nft_instance',
+      {
+        tenantIDs: DappLib.formatFlowDictionary({}, { key: t.String, value: t.UInt64 })
+      }
     );
 
     return {
@@ -644,6 +676,26 @@ module.exports = class DappLib {
     }
   }
 
+  static async SimpleNFTGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simple_nft_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SimpleFT Tenants',
+      result: result.callData
+    }
+  }
+
   /****** Rewards ******/
 
   static async RewardsInstance(data) {
@@ -654,7 +706,10 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'rewards_instance'
+      'rewards_instance',
+      {
+        tenantIDs: DappLib.formatFlowDictionary(data.tenantIDs, { key: t.String, value: t.UInt64 })
+      }
     );
 
     return {
