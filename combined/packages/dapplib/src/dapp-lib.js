@@ -348,6 +348,179 @@ module.exports = class DappLib {
     }
   }
 
+  /****** FlowMarketplace ******/
+
+  // Run by a user (like someone who wants a collection)
+  static async FlowMarketplaceGetPackage(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'flowmarketplace_get_package'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async FlowMarketplaceInstance(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'flowmarketplace_instance',
+      {
+        SimpleNFTID: { value: data.SimpleNFTID == "" ? null : parseInt(data.SimpleNFTID), type: t.Optional(t.UInt64) }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async FlowMarketplaceUnlist(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'flowmarketplace_unlist_sale',
+      {
+        tenantID: { value: data.tenantID, type: t.String },
+        id: { value: parseInt(data.id), type: t.UInt64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async FlowMarketplaceList(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'flowmarketplace_list_for_sale',
+      {
+        tenantID: { value: data.tenantID, type: t.String },
+        ids: DappLib.formatFlowArray(data.ids, t.UInt64),
+        price: { value: data.price, type: t.UFix64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async FlowMarketplacePurchase(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'flowmarketplace_purchase',
+      {
+        tenantID: { value: data.tenantID, type: t.String },
+        id: { value: parseInt(data.id), type: t.UInt64 },
+        marketplace: { value: data.marketplace, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async FlowMarketplaceOwnsTenant(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'flowmarketplace_owns_tenant',
+      {
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'TenantIDs for Marketplace',
+      result: result.callData
+    }
+  }
+
+  static async FlowMarketplaceGetIDs(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'flowmarketplace_get_ids',
+      {
+        account: { value: data.account, type: t.Address },
+        tenantID: { value: data.tenantID, type: t.String }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SaleCollection IDs',
+      result: result.callData
+    }
+  }
+
+  static async FlowTokenGetBalance(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'flowmarketplace_flowtoken_get_balance',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
+      label: 'SaleCollection IDs',
+      result: result.callData
+    }
+  }
+
   /****** SimpleFT ******/
 
   static async SimpleFTInstance(data) {

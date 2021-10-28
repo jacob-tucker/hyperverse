@@ -3,6 +3,9 @@ import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 import Rewards from "../../../contracts/Project/Rewards.cdc"
 import NFTMarketplace from "../../../contracts/Project/NFTMarketplace.cdc"
 import Tribes from "../../../contracts/Project/Tribes.cdc"
+import FlowMarketplace from "../../../contracts/Project/FlowMarketplace.cdc"
+import FlowToken from "../../../contracts/Flow/FlowToken.cdc"
+import FungibleToken from "../../../contracts/Flow/FungibleToken.cdc"
 
 // Sets up all the Packages from the 5 Smart Modules for an account.
 transaction() {
@@ -44,6 +47,15 @@ transaction() {
             signer.save(<- NFTMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, SimpleFTPackage: SimpleFTPackage), to: NFTMarketplace.PackageStoragePath)
             signer.link<&NFTMarketplace.Package>(NFTMarketplace.PackagePrivatePath, target: NFTMarketplace.PackageStoragePath)
             signer.link<&NFTMarketplace.Package{NFTMarketplace.PackagePublic}>(NFTMarketplace.PackagePublicPath, target: NFTMarketplace.PackageStoragePath)
+        }
+
+        /* NFTMarketplace */
+        if signer.borrow<&FlowMarketplace.Package>(from: FlowMarketplace.PackageStoragePath) == nil {
+            let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
+            let FlowTokenVault = signer.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+            signer.save(<- FlowMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, FlowTokenVault: FlowTokenVault), to: FlowMarketplace.PackageStoragePath)
+            signer.link<&FlowMarketplace.Package>(FlowMarketplace.PackagePrivatePath, target: FlowMarketplace.PackageStoragePath)
+            signer.link<&FlowMarketplace.Package{FlowMarketplace.PackagePublic}>(FlowMarketplace.PackagePublicPath, target: FlowMarketplace.PackageStoragePath)
         }
     }
 
