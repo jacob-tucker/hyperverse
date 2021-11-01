@@ -9,6 +9,24 @@ const t = require('@onflow/types');
 
 module.exports = class DappLib {
 
+  /****** AUTH ******/
+  static async GetAuth(data) {
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'auth_get_auth'
+    )
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
   /****** SETUP ALL PACKAGES ******/
   static async SETUPPACKAGES(data) {
     let result = await Blockchain.post({

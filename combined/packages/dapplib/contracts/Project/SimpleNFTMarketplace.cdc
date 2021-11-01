@@ -4,6 +4,7 @@ import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import SimpleNFT from "./SimpleNFT.cdc"
 import FlowToken from "../Flow/FlowToken.cdc"
 import FungibleToken from "../Flow/FungibleToken.cdc"
+import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
 pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
@@ -27,10 +28,12 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
     access(contract) var aliases: {String: String}
-    access(contract) fun addAlias(original: String, new: String) {
-        pre {
-            self.tenants[original] != nil: "Original tenantID does not exist."
-        }
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+        let original = auth.owner!.address.toString()
+                        .concat(".")
+                        .concat(self.getType().identifier)
+                        .concat(".")
+                        .concat(original.toString())
         self.aliases[new] = original
     }
 
@@ -50,6 +53,32 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         }
     }
 
+    // OpenSea format.
+    // Note    : The caller doesn't need a Package in this case...
+    // Note #2 : Modules is empty because this doesn't rely on any modules.
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+        var number: Int = 0
+        if self.clientTenants[auth.owner!.address] != nil {
+            number = self.clientTenants[auth.owner!.address]!.length
+        } else {
+            self.clientTenants[auth.owner!.address] = []
+        }
+        // If Jacob is the one calling instance...  
+        // STenantID = "{Jacob's Address}.A.{Address of Contract}.{SimpleNFTMarketplace}.{Incremented number of Tenants Jacob owns from this contract}
+        // JacobsAddress.A.AddressOfContract.SimpleNFTMarketplace.0 <- would be the first one I get from this contract
+        // JacobsAddress.A.AddressOfContract.SimpleNFTMarketplace.1 <- would be the second one I get from this contract
+        var STenantID: String = auth.owner!.address.toString()
+                                .concat(".")
+                                .concat(self.getType().identifier)
+                                .concat(".")
+                                .concat(number.toString())
+        
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.addAlias(auth: auth, original: number, new: STenantID)
+        
+        emit TenantCreated(id: STenantID)
+    }
+
     /**************************************** PACKAGE ****************************************/
 
     pub let PackageStoragePath: StoragePath
@@ -61,42 +90,18 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
        pub fun borrowSaleCollectionPublic(tenantID: String): &SaleCollection{SalePublic}
     }
     
+    // For users... so they will need a SimpleNFTPackage because then why else would you
+    // be creating a Storefront. You're creating a storefront for YOUR NFTs, so those
+    // NFTs must already exist.
     pub resource Package: PackagePublic {
         pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
         pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
             return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
         }
+        
         pub let FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
 
         pub var salecollections: @{String: SaleCollection}
-
-        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
-            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            
-            /* Dependencies */
-            if modules["SimpleNFT"] == nil {
-                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID, modules: {})
-            } else {
-                self.SimpleNFTPackage.borrow()!.addAlias(original: modules["SimpleNFT"]!, new: tenantID)
-            }
-            SimpleNFTMarketplace.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
-            SimpleNFTMarketplace.addAlias(original: STenantID, new: STenantID)
-            emit TenantCreated(id: STenantID)
-
-            if SimpleNFTMarketplace.clientTenants[self.owner!.address] != nil {
-                SimpleNFTMarketplace.clientTenants[self.owner!.address]!.append(STenantID)
-            } else {
-                SimpleNFTMarketplace.clientTenants[self.owner!.address] = [STenantID]
-            }
-        }
-
-        pub fun addAlias(original: UInt64, new: UInt64) {
-            let originalID = self.owner!.address.toString().concat(".").concat(original.toString())
-            let newID = self.owner!.address.toString().concat(".").concat(new.toString())
-            
-            SimpleNFTMarketplace.addAlias(original: originalID, new: newID)
-            emit TenantReused(id: originalID)
-        }
     
         pub fun setup(tenantID: String) {
             pre {
@@ -162,7 +167,7 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         access(self) let FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
         access(self) let SimpleNFTPackage: Capability<&SimpleNFT.Package>
 
-        init (_ tenantID: String, _nftPackage: Capability<&SimpleNFT.Package>, _ftVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>,) {
+        init (_ tenantID: String, _nftPackage: Capability<&SimpleNFT.Package>, _ftVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>) {
             self.tenantID = tenantID
             self.forSale = {}
             self.FlowTokenVault = _ftVault
@@ -175,13 +180,14 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
             emit SaleWithdrawn(id: id)
         }
 
-        pub fun listForSale(ids: [UInt64], price: UFix64) {
+        // You pass in the tenantID of the SimpleNFT you'll be listing for sale.
+        pub fun listForSale(ids: [UInt64], price: UFix64, simpleNFTTenantID: String) {
             pre {
                 price > 0.0:
                     "Cannot list a NFT for 0.0"
             }
 
-            var ownedNFTs = self.SimpleNFTPackage.borrow()!.borrowCollection(tenantID: self.tenantID).getIDs()
+            var ownedNFTs = self.SimpleNFTPackage.borrow()!.borrowCollection(tenantID: simpleNFTTenantID).getIDs()
             for id in ids {
                 if (ownedNFTs.contains(id)) {
                     self.forSale[id] = price

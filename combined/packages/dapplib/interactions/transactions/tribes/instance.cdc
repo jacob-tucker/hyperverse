@@ -1,17 +1,16 @@
 import Tribes from "../../../contracts/Project/Tribes.cdc"
+import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
 transaction() {
-    let TribesPackage: &Tribes.Package
+    let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
-        // Get a reference to the signer's Tribes.Package
-        self.TribesPackage = signer.borrow<&Tribes.Package>(from: Tribes.PackageStoragePath)
-                                ?? panic("Could not get the Tribes.Package from the signer.")
+        self.Auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
+                                ?? panic("Could not get the Auth from the signer.")
     }
 
     execute {
-        // Create a new instance of a Tenant using your Package as a key.
-        self.TribesPackage.instance(tenantID: self.TribesPackage.uuid, modules: {})
-        log("Create a new instance of a Tenant using your Package as a key.")
+        Tribes.instance(auth: self.Auth, modules: {})
+        log("Create a new instance of a Tribes Tenant.")
     }
 }

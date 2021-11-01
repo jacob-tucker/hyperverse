@@ -1,6 +1,7 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
 import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
+import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
 pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
@@ -24,10 +25,12 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
     access(contract) var aliases: {String: String}
-    access(contract) fun addAlias(original: String, new: String) {
-        pre {
-            self.tenants[original] != nil: "Original tenantID does not exist."
-        }
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: UInt64, new: String) {
+        let original = auth.owner!.address.toString()
+                        .concat(".")
+                        .concat(self.getType().identifier)
+                        .concat(".")
+                        .concat(original.toString())
         self.aliases[new] = original
     }
 
@@ -78,6 +81,27 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         }
     }
 
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+        var STenantID: String = auth.owner!.address.toString()
+                                .concat(".")
+                                .concat(self.getType().identifier)
+                                .concat(".")
+                                .concat(self.clientTenants[auth.owner!.address]!.length.toString())
+        
+        Tribes.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        Tribes.addAlias(auth: auth, original: (self.clientTenants[auth.owner!.address]!.length as! UInt64), new: STenantID)
+        
+        let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
+        package.depositAdmin(Admin: <- create Admin(STenantID))
+        
+        emit TenantCreated(id: STenantID)
+        if Tribes.clientTenants[auth.owner!.address] != nil {
+            Tribes.clientTenants[auth.owner!.address]!.append(STenantID)
+        } else {
+            Tribes.clientTenants[auth.owner!.address] = [STenantID]
+        }
+    }
+
     /**************************************** PACKAGE ****************************************/
 
     pub let PackageStoragePath: StoragePath
@@ -91,29 +115,6 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     pub resource Package: PackagePublic {
         pub var identities: @{String: Identity}
         pub var admins: @{String: Admin}
-
-        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
-            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            
-            Tribes.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
-            Tribes.addAlias(original: STenantID, new: STenantID)
-            self.depositAdmin(Admin: <- create Admin(STenantID))
-            emit TenantCreated(id: STenantID)
-            
-            if Tribes.clientTenants[self.owner!.address] != nil {
-                Tribes.clientTenants[self.owner!.address]!.append(STenantID)
-            } else {
-                Tribes.clientTenants[self.owner!.address] = [STenantID]
-            }
-        }
-
-        pub fun addAlias(original: UInt64, new: UInt64) {
-            let originalID = self.owner!.address.toString().concat(".").concat(original.toString())
-            let newID = self.owner!.address.toString().concat(".").concat(new.toString())
-            
-            Tribes.addAlias(original: originalID, new: newID)
-            emit TenantReused(id: originalID)
-        }
 
         pub fun setup(tenantID: String) {
             pre {

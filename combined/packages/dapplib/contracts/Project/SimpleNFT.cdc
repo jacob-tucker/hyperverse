@@ -1,6 +1,7 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
 import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
+import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
 pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
@@ -27,10 +28,12 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     // Alias to original. Original -> actual resource above
     // So if an alias exists, it already points to a Tenant
     access(contract) var aliases: {String: String}
-    access(contract) fun addAlias(original: String, new: String) {
-        pre {
-            self.tenants[original] != nil: "Original tenantID does not exist."
-        }
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+        let original = auth.owner!.address.toString()
+                        .concat(".")
+                        .concat(self.getType().identifier)
+                        .concat(".")
+                        .concat(original.toString())
         self.aliases[new] = original
     }
 
@@ -55,6 +58,31 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
     }
 
+    // If we're making a new Tenant resource
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+        var number: Int = 0
+        if self.clientTenants[auth.owner!.address] != nil {
+            number = self.clientTenants[auth.owner!.address]!.length
+        } else {
+            self.clientTenants[auth.owner!.address] = []
+        }
+        var STenantID: String = auth.owner!.address.toString()
+                                .concat(".")
+                                .concat(self.getType().identifier)
+                                .concat(".")
+                                .concat(number.toString())
+    
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.addAlias(auth: auth, original: number, new: STenantID)
+
+        let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
+        package.depositAdmin(Admin: <- create Admin(STenantID))
+        package.depositMinter(NFTMinter: <- create NFTMinter(STenantID))
+
+        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        emit TenantCreated(id: STenantID)
+    }
+
     /**************************************** PACKAGE ****************************************/
 
     pub let PackageStoragePath: StoragePath
@@ -71,33 +99,6 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub var collections: @{String: Collection}
         pub var admins: @{String: Admin}
         pub var minters: @{String: NFTMinter}
-
-        // If we're making a new Tenant resource
-        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
-            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-        
-            SimpleNFT.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
-            SimpleNFT.addAlias(original: STenantID, new: STenantID)
-            self.depositAdmin(Admin: <- create Admin(STenantID))
-            self.depositMinter(NFTMinter: <- create NFTMinter(STenantID))
-            emit TenantCreated(id: STenantID)
-
-            if SimpleNFT.clientTenants[self.owner!.address] != nil {
-                SimpleNFT.clientTenants[self.owner!.address]!.append(STenantID)
-            } else {
-                SimpleNFT.clientTenants[self.owner!.address] = [STenantID]
-            }
-           
-        }
-
-        // If we're reusing the Tenant resource
-        pub fun addAlias(original: UInt64, new: UInt64) {
-            let originalID = self.owner!.address.toString().concat(".").concat(original.toString())
-            let newID = self.owner!.address.toString().concat(".").concat(new.toString())
-            
-            SimpleNFT.addAlias(original: originalID, new: newID)
-            emit TenantReused(id: originalID)
-        }
 
         pub fun setup(tenantID: String) {
             pre {

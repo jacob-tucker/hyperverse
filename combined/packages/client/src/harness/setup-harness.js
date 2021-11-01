@@ -32,6 +32,11 @@ export default class SetupHarness extends LitElement {
         let content = html`
     <page-body title="${this.title}" category="${this.category}" description="${this.description}">
     
+        <action-card title="GET AUTH" description="Get an Auth" action="GetAuth" method="post" fields="signer">
+            <account-widget field="signer" label="Signer">
+            </account-widget>
+        </action-card>
+    
         <action-card title="SETUP PACKAGES" description="Setup a Package for all the contracts" action="SETUPPACKAGES"
             method="post" fields="signer">
             <account-widget field="signer" label="Signer">

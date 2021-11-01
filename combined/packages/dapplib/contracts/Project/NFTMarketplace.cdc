@@ -3,6 +3,7 @@ import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import SimpleNFT from "./SimpleNFT.cdc"
 import SimpleFT from "./SimpleFT.cdc"
+import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
 pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
@@ -26,12 +27,15 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
     access(contract) var aliases: {String: String}
-    access(contract) fun addAlias(original: String, new: String) {
-        pre {
-            self.tenants[original] != nil: "Original tenantID does not exist."
-        }
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+        let original = auth.owner!.address.toString()
+                        .concat(".")
+                        .concat(self.getType().identifier)
+                        .concat(".")
+                        .concat(original.toString())
         self.aliases[new] = original
     }
+
 
 
     pub resource interface IState {
@@ -47,6 +51,37 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
             self.tenantID = _tenantID
             self.holder = _holder
         }
+    }
+
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+        var number: Int = 0
+        if self.clientTenants[auth.owner!.address] != nil {
+            number = self.clientTenants[auth.owner!.address]!.length
+        } else {
+            self.clientTenants[auth.owner!.address] = []
+        }
+        var STenantID: String = auth.owner!.address.toString()
+                                .concat(".")
+                                .concat(self.getType().identifier)
+                                .concat(".")
+                                .concat(self.clientTenants[auth.owner!.address]!.length.toString())
+        
+        /* Dependencies */
+        if modules[SimpleFT.getType().identifier] == nil {
+            SimpleFT.instance(auth: auth, modules: {})
+        } else {
+            SimpleFT.addAlias(auth: auth, original: modules[SimpleFT.getType().identifier]!, new: STenantID)
+        }
+        if modules[SimpleNFT.getType().identifier] == nil {
+            SimpleNFT.instance(auth: auth, modules: {})
+        } else {
+            SimpleNFT.addAlias(auth: auth, original: modules[SimpleNFT.getType().identifier]!, new: STenantID)
+        }
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.addAlias(auth: auth, original: number, new: STenantID)
+        
+        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        emit TenantCreated(id: STenantID)
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -72,39 +107,6 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
         }
 
         pub var salecollections: @{String: SaleCollection}
-
-        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
-            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            
-            /* Dependencies */
-            if modules["SimpleFT"] == nil {
-                self.SimpleFTPackage.borrow()!.instance(tenantID: tenantID, modules: {})
-            } else {
-                self.SimpleFTPackage.borrow()!.addAlias(original: modules["SimpleFT"]!, new: tenantID)
-            }
-            if modules["SimpleNFT"] == nil {
-                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID, modules: {})
-            } else {
-                self.SimpleNFTPackage.borrow()!.addAlias(original: modules["SimpleNFT"]!, new: tenantID)
-            }
-            NFTMarketplace.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
-            NFTMarketplace.addAlias(original: STenantID, new: STenantID)
-            emit TenantCreated(id: STenantID)
-
-            if NFTMarketplace.clientTenants[self.owner!.address] != nil {
-                NFTMarketplace.clientTenants[self.owner!.address]!.append(STenantID)
-            } else {
-                NFTMarketplace.clientTenants[self.owner!.address] = [STenantID]
-            }
-        }
-
-        pub fun addAlias(original: UInt64, new: UInt64) {
-            let originalID = self.owner!.address.toString().concat(".").concat(original.toString())
-            let newID = self.owner!.address.toString().concat(".").concat(new.toString())
-            
-            NFTMarketplace.addAlias(original: originalID, new: newID)
-            emit TenantReused(id: originalID)
-        }
     
         pub fun setup(tenantID: String) {
             pre {

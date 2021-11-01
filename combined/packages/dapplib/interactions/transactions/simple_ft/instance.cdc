@@ -1,16 +1,16 @@
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
+import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
 transaction() {
-    let SFTPackage: &SimpleFT.Package
+    let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
-        // Get a reference to the signer's SimpleFT.Package
-        self.SFTPackage = signer.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
-                                ?? panic("Could not get the SimpleFT.Package from the signer.")
+        self.Auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
+                                ?? panic("Could not get the Auth from the signer.")
     }
 
     execute {
-        self.SFTPackage.instance(tenantID: self.SFTPackage.uuid, modules: {})
-        log("Create a new instance of a Tenant using your Package as a key.")
+        SimpleFT.instance(auth: self.Auth, modules: {})
+        log("Create a new instance of a SimpleFT Tenant.")
     }
 }

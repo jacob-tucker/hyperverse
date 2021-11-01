@@ -2,6 +2,7 @@ import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
 import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import SimpleNFT from "./SimpleNFT.cdc"
+import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
 pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
@@ -46,6 +47,35 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         }
     }
 
+    // Modules
+    // String : the identifier of the contract
+    // UInt64 : The incremented # (from 0) for that account. For example, you want your
+    // 2nd Tenant from SimpleNFT, it'd be `1`.
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+        var number: Int = 0
+        if self.clientTenants[auth.owner!.address] != nil {
+            number = self.clientTenants[auth.owner!.address]!.length
+        } else {
+            self.clientTenants[auth.owner!.address] = []
+        }
+        var STenantID: String = auth.owner!.address.toString()
+                                .concat(".")
+                                .concat(self.getType().identifier)
+                                .concat(".")
+                                .concat(number.toString())
+        
+        /* Dependencies */
+        if modules[SimpleNFT.getType().identifier] == nil {
+            SimpleNFT.instance(auth: auth, modules: {})
+        } else {
+            SimpleNFT.addAlias(auth: auth, original: number, new: STenantID)
+        }
+
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        emit TenantCreated(id: STenantID)
+    }
+
     /**************************************** PACKAGE ****************************************/
 
     pub let PackageStoragePath: StoragePath
@@ -63,26 +93,6 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
         pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
             return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
-        }
-
-        pub fun instance(tenantID: UInt64, modules: {String: UInt64}) {
-            var STenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            
-            /* Dependencies */
-            if modules["SimpleNFT"] == nil {
-                self.SimpleNFTPackage.borrow()!.instance(tenantID: tenantID, modules: {})
-            } else {
-                self.SimpleNFTPackage.borrow()!.addAlias(original: modules["SimpleNFT"]!, new: tenantID)
-            }
-            Rewards.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: self.owner!.address)
-            emit TenantCreated(id: STenantID)
-
-            if Rewards.clientTenants[self.owner!.address] != nil {
-                Rewards.clientTenants[self.owner!.address]!.append(STenantID)
-            } else {
-                Rewards.clientTenants[self.owner!.address] = [STenantID]
-            }
-            
         }
     
         pub fun setup(tenantID: String) {}
