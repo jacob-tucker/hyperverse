@@ -59,7 +59,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     }
 
     // If we're making a new Tenant resource
-    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
         var number: Int = 0
         if self.clientTenants[auth.owner!.address] != nil {
             number = self.clientTenants[auth.owner!.address]!.length
@@ -81,6 +81,8 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
         self.clientTenants[auth.owner!.address]!.append(STenantID)
         emit TenantCreated(id: STenantID)
+
+        return number
     }
 
     /**************************************** PACKAGE ****************************************/

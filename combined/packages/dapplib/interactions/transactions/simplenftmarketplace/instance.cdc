@@ -1,7 +1,7 @@
 import SimpleNFTMarketplace from "../../../contracts/Project/SimpleNFTMarketplace.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
-transaction(modules: {String: Int}) {
+transaction() {
     let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
@@ -10,7 +10,7 @@ transaction(modules: {String: Int}) {
     }
 
     execute {
-        SimpleNFTMarketplace.instance(auth: self.Auth, modules: modules)
+        SimpleNFTMarketplace.instance(auth: self.Auth, modules: {})
         log("Create a new instance of a SimpleNFTMarketplace Tenant.")
     }
 }

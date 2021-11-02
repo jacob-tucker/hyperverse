@@ -56,7 +56,7 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
     // OpenSea format.
     // Note    : The caller doesn't need a Package in this case...
     // Note #2 : Modules is empty because this doesn't rely on any modules.
-    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
         var number: Int = 0
         if self.clientTenants[auth.owner!.address] != nil {
             number = self.clientTenants[auth.owner!.address]!.length
@@ -76,7 +76,10 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
         self.addAlias(auth: auth, original: number, new: STenantID)
         
+        self.clientTenants[auth.owner!.address]!.append(STenantID)
         emit TenantCreated(id: STenantID)
+
+        return number
     }
 
     /**************************************** PACKAGE ****************************************/

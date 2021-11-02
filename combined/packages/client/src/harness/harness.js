@@ -39,17 +39,10 @@ export default class HarnessPage extends LitElement {
     return [
       {
         "name": "core-nft",
-        "title": "Hyperverse NFT Module",
+        "title": "Hyperverse SimpleNFT Module",
         "description": "Mint, own, and trade Simple NFTs with a name field.",
         "category": "Hyperverse",
         "route": "/core-nft"
-      },
-      {
-        "name": "core-rewards",
-        "title": "Hyperverse Rewards Module",
-        "description": "Mint, own, and trade Simple NFTs, and get rewards when you have enough.",
-        "category": "Hyperverse",
-        "route": "/core-rewards"
       },
       {
         "name": "core-ft",
@@ -66,6 +59,20 @@ export default class HarnessPage extends LitElement {
         "route": "/core-tribes"
       },
       {
+        "name": "core-simplenftmarketplace",
+        "title": "Hyperverse SimpleNFT Marketplace Module",
+        "description": "Buy/sell SimpleNFTs using FlowToken",
+        "category": "Hyperverse",
+        "route": "/core-simplenftmarketplace"
+      },
+      {
+        "name": "core-rewards",
+        "title": "Hyperverse Rewards Module",
+        "description": "Mint, own, and trade Simple NFTs, and get rewards when you have enough.",
+        "category": "Hyperverse",
+        "route": "/core-rewards"
+      },
+      {
         "name": "core-marketplace",
         "title": "Hyperverse Marketplace Module",
         "description": "Buy/sell SimpleNFTs using SimpleFTs.",
@@ -73,26 +80,12 @@ export default class HarnessPage extends LitElement {
         "route": "/core-marketplace"
       },
       {
-        "name": "core-registry",
-        "title": "Hyperverse Registry",
-        "description": "Register Hyperverse Smart Contracts",
-        "category": "Hyperverse",
-        "route": "/core-registry"
-      },
-      {
         "name": "core-setup",
-        "title": "Hyperverse Registry - SETUP",
-        "description": "Setup an account",
+        "title": "Hyperverse Setup - SETUP",
+        "description": "Already done for you.",
         "category": "Hyperverse",
         "route": "/core-setup"
       },
-      {
-        "name": "core-simplenftmarketplace",
-        "title": "Hyperverse SimpleNFT Marketplace Module",
-        "description": "Buy/sell SimpleNFTs using FlowToken",
-        "category": "Hyperverse",
-        "route": "/core-simplenftmarketplace"
-      }
     ];
   }
 

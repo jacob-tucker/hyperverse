@@ -25,6 +25,15 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
+    access(contract) var aliases: {String: String}
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+        let original = auth.owner!.address.toString()
+                        .concat(".")
+                        .concat(self.getType().identifier)
+                        .concat(".")
+                        .concat(original.toString())
+        self.aliases[new] = original
+    }
 
     pub resource interface IState {
        access(contract) var recipients: {Address: Bool}
@@ -51,7 +60,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     // String : the identifier of the contract
     // UInt64 : The incremented # (from 0) for that account. For example, you want your
     // 2nd Tenant from SimpleNFT, it'd be `1`.
-    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
         var number: Int = 0
         if self.clientTenants[auth.owner!.address] != nil {
             number = self.clientTenants[auth.owner!.address]!.length
@@ -66,14 +75,19 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         
         /* Dependencies */
         if modules[SimpleNFT.getType().identifier] == nil {
-            SimpleNFT.instance(auth: auth, modules: {})
+            let tenantNumber = SimpleNFT.instance(auth: auth, modules: {})
+            SimpleNFT.addAlias(auth: auth, original: tenantNumber, new: STenantID)
         } else {
-            SimpleNFT.addAlias(auth: auth, original: number, new: STenantID)
+            SimpleNFT.addAlias(auth: auth, original: modules[SimpleNFT.getType().identifier]!, new: STenantID)
         }
 
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.addAlias(auth: auth, original: number, new: STenantID)
+
         self.clientTenants[auth.owner!.address]!.append(STenantID)
         emit TenantCreated(id: STenantID)
+
+        return number
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -137,6 +151,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     init() {
         self.clientTenants = {}
         self.tenants <- {}
+        self.aliases = {}
 
         self.PackageStoragePath = /storage/RewardsPackage
         self.PackagePrivatePath = /private/RewardsPackage

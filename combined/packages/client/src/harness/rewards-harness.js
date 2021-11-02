@@ -32,24 +32,23 @@ export default class RewardsHarness extends LitElement {
     let content = html`
       <page-body title="${this.title}" category="${this.category}" description="${this.description}">
       
-        <action-card title="Rewards - Instance" description="Instance" action="RewardsInstance" method="post" fields="signer">
-          <account-widget field="signer modules" label="Signer">
+        <action-card title="Rewards - Instance" description="Instance" action="RewardsInstance" method="post"
+          fields="signer modules">
+          <account-widget field="signer" label="Signer">
           </account-widget>
           <dictionary-widget field="modules" label="Tenant UIDs" objectLabel="Tenant UID" keyplaceholder="Contract"
             valueplaceholder="UID">
           </dictionary-widget>
         </action-card>
       
-        <action-card title="Rewards - Owns Tenant" description="Owns the Rewards Tenant" action="RewardsOwnsTenant"
-          method="get" fields="tenantOwner">
-          <account-widget field="tenantOwner" label="Tenant Owner">
+        <action-card title="Rewards - Get Client Tenants" description="Get all your Tenant IDs"
+          action="RewardsGetClientTenants" method="get" fields="account">
+          <account-widget field="account" label="Account">
           </account-widget>
         </action-card>
       
         <action-card title="Rewards - Mint NFT" description="Mint NFT" action="RewardsMintNFT" method="post"
-          fields="tenantID tenantOwner recipient">
-          <text-widget field="tenantID" label="Tenant ID" placeholder="0x1cf0e2f2f715450.49">
-          </text-widget>
+          fields="tenantOwner recipient">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
@@ -57,19 +56,17 @@ export default class RewardsHarness extends LitElement {
         </action-card>
       
         <action-card title="Rewards - Give Reward" description="Give Reward" action="RewardsGiveReward" method="post"
-          fields="tenantID tenantOwner signer">
-          <text-widget field="tenantID" label="Tenant ID" placeholder="0x1cf0e2f2f715450.49">
-          </text-widget>
+          fields="tenantOwner signer">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="signer" label="Signer">
           </account-widget>
         </action-card>
       
-        <action-card title="Rewards - Get NFT IDs" description="Get NFT IDs" action="SimpleNFTGetNFTIDs" method="get"
-          fields="account tenantID">
-          <text-widget field="tenantID" label="Tenant ID" placeholder="0x1cf0e2f2f715450.49">
-          </text-widget>
+        <action-card title="Rewards - Get NFT IDs" description="Get NFT IDs" action="RewardsGetNFTIDs" method="get"
+          fields="account tenantOwner">
+          <account-widget field="tenantOwner" label="Tenant Owner">
+          </account-widget>
           <account-widget field="account" label="Account">
           </account-widget>
         </action-card>

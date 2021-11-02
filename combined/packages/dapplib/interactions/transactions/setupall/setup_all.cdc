@@ -13,6 +13,11 @@ import IHyperverseComposable from "../../../contracts/Hyperverse/IHyperverseComp
 transaction() {
 
     prepare(signer: AuthAccount) {
+        /* Auth */
+        if signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath) == nil {
+            signer.save(<- HyperverseAuth.createAuth(), to: HyperverseAuth.AuthStoragePath)
+            signer.link<&HyperverseAuth.Auth{HyperverseAuth.IAuth}>(HyperverseAuth.AuthPublicPath, target: HyperverseAuth.AuthStoragePath)
+        }
         let auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
                         ?? panic("Could not borrow the Auth.")
 
@@ -71,7 +76,7 @@ transaction() {
     }
 
     execute {
-        log("Signer setup all their Packages for the 5 Smart Modules.")
+        log("Signer setup their Auth and all their Packages for the 6 Smart Modules.")
     }
 }
 

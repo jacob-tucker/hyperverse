@@ -25,7 +25,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
     access(contract) var aliases: {String: String}
-    pub fun addAlias(auth: &HyperverseAuth.Auth, original: UInt64, new: String) {
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
         let original = auth.owner!.address.toString()
                         .concat(".")
                         .concat(self.getType().identifier)
@@ -81,25 +81,29 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         }
     }
 
-    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}) {
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
+        var number: Int = 0
+        if self.clientTenants[auth.owner!.address] != nil {
+            number = self.clientTenants[auth.owner!.address]!.length
+        } else {
+            self.clientTenants[auth.owner!.address] = []
+        }
         var STenantID: String = auth.owner!.address.toString()
                                 .concat(".")
                                 .concat(self.getType().identifier)
                                 .concat(".")
-                                .concat(self.clientTenants[auth.owner!.address]!.length.toString())
+                                .concat(number.toString())
         
-        Tribes.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
-        Tribes.addAlias(auth: auth, original: (self.clientTenants[auth.owner!.address]!.length as! UInt64), new: STenantID)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.addAlias(auth: auth, original: number, new: STenantID)
         
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
         package.depositAdmin(Admin: <- create Admin(STenantID))
         
+        self.clientTenants[auth.owner!.address]!.append(STenantID)
         emit TenantCreated(id: STenantID)
-        if Tribes.clientTenants[auth.owner!.address] != nil {
-            Tribes.clientTenants[auth.owner!.address]!.append(STenantID)
-        } else {
-            Tribes.clientTenants[auth.owner!.address] = [STenantID]
-        }
+
+        return number
     }
 
     /**************************************** PACKAGE ****************************************/

@@ -4,7 +4,12 @@ pub contract HyperverseAuth {
     pub var totalAuths: UInt64
 
     pub let AuthStoragePath: StoragePath
-    pub resource Auth {
+    pub let AuthPublicPath: PublicPath
+
+    pub resource interface IAuth {
+        pub let id: UInt64
+    }
+    pub resource Auth: IAuth {
         pub let id: UInt64
 
         // String : A.{Address of Contract}.{Contract Name}
@@ -31,5 +36,6 @@ pub contract HyperverseAuth {
     init () {
         self.totalAuths = 0
         self.AuthStoragePath = /storage/AuthStoragePath
+        self.AuthPublicPath = /public/AuthPublicPath
     }
 }

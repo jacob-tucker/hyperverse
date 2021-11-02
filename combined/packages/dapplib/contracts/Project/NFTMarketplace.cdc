@@ -68,15 +68,21 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
         
         /* Dependencies */
         if modules[SimpleFT.getType().identifier] == nil {
-            SimpleFT.instance(auth: auth, modules: {})
+            // Creates a new SimpleFT because we need one
+            let tenantNumber = SimpleFT.instance(auth: auth, modules: {})
+            // Maps our Rewards tenantID to that new one
+            SimpleFT.addAlias(auth: auth, original: tenantNumber, new: STenantID)
         } else {
+            // Takes the supplied one and maps our Rewards tenantID to that one
             SimpleFT.addAlias(auth: auth, original: modules[SimpleFT.getType().identifier]!, new: STenantID)
         }
         if modules[SimpleNFT.getType().identifier] == nil {
-            SimpleNFT.instance(auth: auth, modules: {})
+            let tenantNumber = SimpleNFT.instance(auth: auth, modules: {})
+            SimpleNFT.addAlias(auth: auth, original: tenantNumber, new: STenantID)
         } else {
             SimpleNFT.addAlias(auth: auth, original: modules[SimpleNFT.getType().identifier]!, new: STenantID)
         }
+
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
         self.addAlias(auth: auth, original: number, new: STenantID)
         
