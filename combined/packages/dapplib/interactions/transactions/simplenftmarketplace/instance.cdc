@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        SimpleNFTMarketplace.instance(auth: self.Auth, modules: {})
+        SimpleNFTMarketplace.instance(auth: self.Auth)
         log("Create a new instance of a SimpleNFTMarketplace Tenant.")
     }
 }

@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        SimpleFT.instance(auth: self.Auth, modules: {})
+        SimpleFT.instance(auth: self.Auth)
         log("Create a new instance of a SimpleFT Tenant.")
     }
 }

@@ -10,7 +10,6 @@ transaction(recipient: Address, withdrawID: UInt64, tenantOwner: Address) {
         self.TenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(SimpleNFT.getType().identifier)
-                        .concat(".0")
 
         let SignerPackage = signer.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
                                 ?? panic("Could not borrow the signer's SimpleNFT Package.")

@@ -11,7 +11,6 @@ transaction(recipient: Address) {
         self.TenantID = tenantOwner.address.toString()
                         .concat(".")
                         .concat(SimpleNFT.getType().identifier)
-                        .concat(".0")
 
         self.MintersSNFTPackage = tenantOwner.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
                                     ?? panic("Could not borrow the Package from the signer.")

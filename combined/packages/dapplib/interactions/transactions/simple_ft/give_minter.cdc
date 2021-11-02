@@ -10,7 +10,6 @@ transaction(recipient: Address) {
         self.TenantID = tenantOwner.address.toString()
                         .concat(".")
                         .concat(SimpleFT.getType().identifier)
-                        .concat(".0")
 
         self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
                                     ?? panic("Could not borrow the SimpleFT.Package from the signer.")

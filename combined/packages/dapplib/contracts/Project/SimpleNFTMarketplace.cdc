@@ -19,21 +19,20 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
     pub event TenantCreated(id: String)
     pub event TenantReused(id: String)
-    access(contract) var clientTenants: {Address: [String]}
-    pub fun getClientTenants(account: Address): [String] {
-        return self.clientTenants[account]!
+    access(contract) var clientTenants: {Address: String}
+    pub fun getClientTenantID(account: Address): String? {
+        return self.clientTenants[account]
     }
     access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
     access(contract) var aliases: {String: String}
-    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+    pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
         let original = auth.owner!.address.toString()
                         .concat(".")
                         .concat(self.getType().identifier)
-                        .concat(".")
-                        .concat(original.toString())
+                        
         self.aliases[new] = original
     }
 
@@ -53,33 +52,23 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         }
     }
 
-    // OpenSea format.
-    // Note    : The caller doesn't need a Package in this case...
-    // Note #2 : Modules is empty because this doesn't rely on any modules.
-    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
-        var number: Int = 0
-        if self.clientTenants[auth.owner!.address] != nil {
-            number = self.clientTenants[auth.owner!.address]!.length
-        } else {
-            self.clientTenants[auth.owner!.address] = []
+    pub fun instance(auth: &HyperverseAuth.Auth) {
+        pre {
+            self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
         }
+
         // If Jacob is the one calling instance...  
-        // STenantID = "{Jacob's Address}.A.{Address of Contract}.{SimpleNFTMarketplace}.{Incremented number of Tenants Jacob owns from this contract}
-        // JacobsAddress.A.AddressOfContract.SimpleNFTMarketplace.0 <- would be the first one I get from this contract
-        // JacobsAddress.A.AddressOfContract.SimpleNFTMarketplace.1 <- would be the second one I get from this contract
+        // STenantID = "{Jacob's Address}.A.{Address of Contract}.{SimpleNFTMarketplace}
+        // JacobsAddress.A.AddressOfContract.SimpleNFTMarketplace
         var STenantID: String = auth.owner!.address.toString()
                                 .concat(".")
                                 .concat(self.getType().identifier)
-                                .concat(".")
-                                .concat(number.toString())
         
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
-        self.addAlias(auth: auth, original: number, new: STenantID)
+        self.addAlias(auth: auth, new: STenantID)
         
-        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        self.clientTenants[auth.owner!.address] = STenantID
         emit TenantCreated(id: STenantID)
-
-        return number
     }
 
     /**************************************** PACKAGE ****************************************/

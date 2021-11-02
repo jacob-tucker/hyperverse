@@ -32,13 +32,9 @@ export default class RewardsHarness extends LitElement {
     let content = html`
       <page-body title="${this.title}" category="${this.category}" description="${this.description}">
       
-        <action-card title="Rewards - Instance" description="Instance" action="RewardsInstance" method="post"
-          fields="signer modules">
+        <action-card title="Rewards - Instance" description="Instance" action="RewardsInstance" method="post" fields="signer">
           <account-widget field="signer" label="Signer">
           </account-widget>
-          <dictionary-widget field="modules" label="Tenant UIDs" objectLabel="Tenant UID" keyplaceholder="Contract"
-            valueplaceholder="UID">
-          </dictionary-widget>
         </action-card>
       
         <action-card title="Rewards - Get Client Tenants" description="Get all your Tenant IDs"

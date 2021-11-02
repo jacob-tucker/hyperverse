@@ -11,7 +11,6 @@ transaction(tenantOwner: Address, ids: [UInt64], price: UFix64, simpleNFTTenantO
         self.TenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(SimpleNFTMarketplace.getType().identifier)
-                        .concat(".0")
 
         let Package = signer.borrow<&SimpleNFTMarketplace.Package>(from: SimpleNFTMarketplace.PackageStoragePath)
                         ?? panic("Could not borrow the signer's Package.")
@@ -23,7 +22,7 @@ transaction(tenantOwner: Address, ids: [UInt64], price: UFix64, simpleNFTTenantO
         let simpleNFTTenantID = simpleNFTTenantOwner.toString()
                         .concat(".")
                         .concat(SimpleNFT.getType().identifier)
-                        .concat(".0")
+                        
         self.SaleCollection.listForSale(ids: ids, price: price, simpleNFTTenantID: simpleNFTTenantID)
         log("Listed all the NFTs for Sale.")
     }

@@ -12,7 +12,6 @@ transaction(tenantOwner: Address) {
         self.TenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(Rewards.getType().identifier)
-                        .concat(".0")
 
         self.TenantsRewardsPackage = getAccount(tenantOwner).getCapability(Rewards.PackagePublicPath)
                                 .borrow<&Rewards.Package{Rewards.PackagePublic}>()

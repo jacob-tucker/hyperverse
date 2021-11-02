@@ -7,7 +7,6 @@ pub fun main(account: Address, tenantOwner: Address): String {
     let tenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(Tribes.getType().identifier)
-                        .concat(".0")
                         
     let accountPackage = getAccount(account).getCapability(Tribes.PackagePublicPath)
                                 .borrow<&Tribes.Package{Tribes.PackagePublic}>()!

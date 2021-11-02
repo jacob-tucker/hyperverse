@@ -1,7 +1,7 @@
 import Rewards from "../../../contracts/Project/Rewards.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
-transaction(modules: {String: Int}) {
+transaction() {
     let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
@@ -10,7 +10,7 @@ transaction(modules: {String: Int}) {
     }
 
     execute {
-        Rewards.instance(auth: self.Auth, modules: modules)
+        Rewards.instance(auth: self.Auth)
         log("Create a new instance of a Rewards Tenant.")
     }
 }

@@ -2,8 +2,8 @@ pub contract interface IHyperverseComposable {
 
     pub event TenantCreated(id: String)
 
-    access(contract) var clientTenants: {Address: [String]}
-    pub fun getClientTenants(account: Address): [String]
+    access(contract) var clientTenants: {Address: String}
+    pub fun getClientTenantID(account: Address): String?
 
     pub resource interface ITenant {
         pub var holder: Address

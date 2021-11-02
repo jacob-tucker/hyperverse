@@ -10,8 +10,7 @@ transaction(recipient: Address, amount: UFix64, tenantOwner: Address) {
         self.TenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(SimpleFT.getType().identifier)
-                        .concat(".0")
-
+                        
         let SignerPackage = signer.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
                                 ?? panic("Could not borrow the signer's SimpleFT Package.")
 

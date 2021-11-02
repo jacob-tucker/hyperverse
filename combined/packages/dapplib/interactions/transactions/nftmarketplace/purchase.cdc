@@ -14,7 +14,6 @@ transaction(tenantOwner: Address, id: UInt64, marketplace: Address) {
         self.TenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(NFTMarketplace.getType().identifier)
-                        .concat(".0")
 
         let Package = signer.borrow<&NFTMarketplace.Package>(from: NFTMarketplace.PackageStoragePath)
                         ?? panic("Could not borrow the signer's Package.")

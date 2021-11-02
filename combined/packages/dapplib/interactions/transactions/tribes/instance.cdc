@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        Tribes.instance(auth: self.Auth, modules: {})
+        Tribes.instance(auth: self.Auth)
         log("Create a new instance of a Tribes Tenant.")
     }
 }

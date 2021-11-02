@@ -7,7 +7,6 @@ pub fun main(account: Address, tenantOwner: Address): [UInt64] {
     let tenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(SimpleNFT.getType().identifier)
-                        .concat(".0")
 
     let accountPackage = getAccount(account).getCapability(SimpleNFT.PackagePublicPath)
                                 .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()!

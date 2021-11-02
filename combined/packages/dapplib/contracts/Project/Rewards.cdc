@@ -17,21 +17,20 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
     pub event TenantCreated(id: String)
     pub event TenantReused(id: String)
-    access(contract) var clientTenants: {Address: [String]}
-    pub fun getClientTenants(account: Address): [String] {
-        return self.clientTenants[account]!
+    access(contract) var clientTenants: {Address: String}
+    pub fun getClientTenantID(account: Address): String? {
+        return self.clientTenants[account]
     }
     access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
     }
     access(contract) var aliases: {String: String}
-    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+    pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
         let original = auth.owner!.address.toString()
                         .concat(".")
                         .concat(self.getType().identifier)
-                        .concat(".")
-                        .concat(original.toString())
+
         self.aliases[new] = original
     }
 
@@ -60,34 +59,27 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     // String : the identifier of the contract
     // UInt64 : The incremented # (from 0) for that account. For example, you want your
     // 2nd Tenant from SimpleNFT, it'd be `1`.
-    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
-        var number: Int = 0
-        if self.clientTenants[auth.owner!.address] != nil {
-            number = self.clientTenants[auth.owner!.address]!.length
-        } else {
-            self.clientTenants[auth.owner!.address] = []
+    pub fun instance(auth: &HyperverseAuth.Auth) {
+        pre {
+            self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
         }
+
         var STenantID: String = auth.owner!.address.toString()
                                 .concat(".")
                                 .concat(self.getType().identifier)
-                                .concat(".")
-                                .concat(number.toString())
         
         /* Dependencies */
-        if modules[SimpleNFT.getType().identifier] == nil {
-            let tenantNumber = SimpleNFT.instance(auth: auth, modules: {})
-            SimpleNFT.addAlias(auth: auth, original: tenantNumber, new: STenantID)
-        } else {
-            SimpleNFT.addAlias(auth: auth, original: modules[SimpleNFT.getType().identifier]!, new: STenantID)
+        if SimpleNFT.getClientTenantID(account: auth.owner!.address) == nil {
+            SimpleNFT.instance(auth: auth)                   
         }
+        SimpleNFT.addAlias(auth: auth, new: STenantID)
+
 
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
-        self.addAlias(auth: auth, original: number, new: STenantID)
+        self.addAlias(auth: auth, new: STenantID)
 
-        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        self.clientTenants[auth.owner!.address] = STenantID
         emit TenantCreated(id: STenantID)
-
-        return number
     }
 
     /**************************************** PACKAGE ****************************************/

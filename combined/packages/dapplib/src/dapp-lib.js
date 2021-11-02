@@ -225,8 +225,8 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'SimpleFT Tenants',
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'Tribes TenantID',
       result: result.callData
     }
   }
@@ -261,10 +261,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'nftmarketplace_instance',
-      {
-        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int })
-      }
+      'nftmarketplace_instance'
     );
 
     return {
@@ -343,26 +340,6 @@ module.exports = class DappLib {
     }
   }
 
-  static async MarketplaceOwnsTenant(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'nftmarketplace_owns_tenant',
-      {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_STRING,
-      label: 'TenantIDs for Marketplace',
-      result: result.callData
-    }
-  }
-
   static async MarketplaceGetIDs(data) {
 
     let result = await Blockchain.get({
@@ -380,6 +357,26 @@ module.exports = class DappLib {
     return {
       type: DappLib.DAPP_RESULT_ARRAY,
       label: 'SaleCollection IDs',
+      result: result.callData
+    }
+  }
+
+  static async MarketplaceGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'nftmarketplace_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'Tribes TenantID',
       result: result.callData
     }
   }
@@ -414,10 +411,7 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'simplenftmarketplace_instance',
-      {
-        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int })
-      }
+      'simplenftmarketplace_instance'
     );
 
     return {
@@ -462,7 +456,8 @@ module.exports = class DappLib {
       {
         tenantOwner: { value: data.tenantOwner, type: t.Address },
         ids: DappLib.formatFlowArray(data.ids, t.UInt64),
-        price: { value: data.price, type: t.UFix64 }
+        price: { value: data.price, type: t.UFix64 },
+        simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
       }
     );
 
@@ -533,6 +528,26 @@ module.exports = class DappLib {
     return {
       type: DappLib.DAPP_RESULT_ARRAY,
       label: 'SaleCollection IDs',
+      result: result.callData
+    }
+  }
+
+  static async SimpleNFTMarketplaceGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simplenftmarketplace_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'Tribes TenantID',
       result: result.callData
     }
   }
@@ -720,8 +735,8 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'SimpleFT Tenants',
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'SimpleFT TenantID',
       result: result.callData
     }
   }
@@ -869,8 +884,8 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'SimpleFT Tenants',
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'SimpleNFT TenantID',
       result: result.callData
     }
   }
@@ -878,18 +893,14 @@ module.exports = class DappLib {
   /****** Rewards ******/
 
   static async RewardsInstance(data) {
-    console.log(data)
-    console.log(DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int }))
+
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
       roles: {
         proposer: data.signer
       }
     },
-      'rewards_instance',
-      {
-        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int })
-      }
+      'rewards_instance'
     );
 
     return {
@@ -1000,8 +1011,8 @@ module.exports = class DappLib {
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'Rewards Tenants',
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'Rewards TenantID',
       result: result.callData
     }
   }

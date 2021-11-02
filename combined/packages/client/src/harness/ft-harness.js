@@ -61,7 +61,7 @@ export default class FTHarness extends LitElement {
           </account-widget>
           <account-widget field="recipient" label="Recipient">
           </account-widget>
-          <text-widget field="amount" label="Amount of FT" placeholder="50">
+          <text-widget field="amount" label="Amount of FT" placeholder="50.0">
           </text-widget>
         </action-card>
       

@@ -16,9 +16,9 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
     pub event TenantCreated(id: String)
     pub event TenantReused(id: String)
-    access(contract) var clientTenants: {Address: [String]}
-    pub fun getClientTenants(account: Address): [String] {
-        return self.clientTenants[account]!
+    access(contract) var clientTenants: {Address: String}
+    pub fun getClientTenantID(account: Address): String? {
+        return self.clientTenants[account]
     }
     // Original tenantID --> actual resource
     access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
@@ -28,12 +28,11 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     // Alias to original. Original -> actual resource above
     // So if an alias exists, it already points to a Tenant
     access(contract) var aliases: {String: String}
-    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+    pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
         let original = auth.owner!.address.toString()
                         .concat(".")
                         .concat(self.getType().identifier)
-                        .concat(".")
-                        .concat(original.toString())
+    
         self.aliases[new] = original
     }
 
@@ -59,30 +58,24 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     }
 
     // If we're making a new Tenant resource
-    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
-        var number: Int = 0
-        if self.clientTenants[auth.owner!.address] != nil {
-            number = self.clientTenants[auth.owner!.address]!.length
-        } else {
-            self.clientTenants[auth.owner!.address] = []
+    pub fun instance(auth: &HyperverseAuth.Auth) {
+        pre {
+            self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
         }
+        
         var STenantID: String = auth.owner!.address.toString()
                                 .concat(".")
                                 .concat(self.getType().identifier)
-                                .concat(".")
-                                .concat(number.toString())
     
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
-        self.addAlias(auth: auth, original: number, new: STenantID)
+        self.addAlias(auth: auth, new: STenantID)
 
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
         package.depositAdmin(Admin: <- create Admin(STenantID))
         package.depositMinter(NFTMinter: <- create NFTMinter(STenantID))
 
-        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        self.clientTenants[auth.owner!.address] = STenantID
         emit TenantCreated(id: STenantID)
-
-        return number
     }
 
     /**************************************** PACKAGE ****************************************/

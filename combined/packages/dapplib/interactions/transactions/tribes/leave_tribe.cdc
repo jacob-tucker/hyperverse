@@ -9,7 +9,6 @@ transaction(tenantOwner: Address) {
         self.TenantID = tenantOwner.toString()
                         .concat(".")
                         .concat(Tribes.getType().identifier)
-                        .concat(".0")
 
         let SignerTribesPackage = signer.borrow<&Tribes.Package>(from: Tribes.PackageStoragePath)
                                         ?? panic("Could not borrow the signer's Tribes.Package.")
