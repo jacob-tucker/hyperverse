@@ -1,18 +1,16 @@
 import NFTMarketplace from "../../../contracts/Project/NFTMarketplace.cdc"
-import HyperverseModule from "../../../contracts/Hyperverse/HyperverseModule.cdc"
+import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
-transaction() {
-    let NFTMarketplacePackage: &NFTMarketplace.Package
+transaction(modules: {String: Int}) {
+    let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
-        // Get a reference to the signer's NFTMarketplace.Package
-        self.NFTMarketplacePackage = signer.borrow<&NFTMarketplace.Package>(from: NFTMarketplace.PackageStoragePath)
-                                ?? panic("Could not get the NFTMarketplace.Package from the signer.")
+        self.Auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
+                                ?? panic("Could not get the Auth from the signer.")
     }
 
     execute {
-        // Create a new instance of a Tenant using your Package as a key.
-        self.NFTMarketplacePackage.instance(tenantID: self.NFTMarketplacePackage.uuid)
-        log("Create a new instance of a Tenant using your Package as a key.")
+        NFTMarketplace.instance(auth: self.Auth, modules: modules)
+        log("Create a new instance of a NFTMarketplace Tenant.")
     }
 }

@@ -1,16 +1,16 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
+import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
 transaction() {
-    let SNFTPackage: &SimpleNFT.Package
+    let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
-        // Get a reference to the signer's SimpleNFT.Package
-        self.SNFTPackage = signer.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
-                                ?? panic("Could not get the SimpleNFT.Package from the signer.")
+        self.Auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
+                                ?? panic("Could not get the Auth from the signer.")
     }
 
     execute {
-        self.SNFTPackage.instance(tenantID: self.SNFTPackage.uuid)
-        log("Create a new instance of a Tenant using your Package as a key.")
+        SimpleNFT.instance(auth: self.Auth, modules: {})
+        log("Create a new instance of a SimpleNFT Tenant.")
     }
 }

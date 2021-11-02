@@ -1,6 +1,7 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
 import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
+import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
 pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
@@ -14,13 +15,26 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
+    pub event TenantReused(id: String)
     access(contract) var clientTenants: {Address: [String]}
     pub fun getClientTenants(account: Address): [String] {
         return self.clientTenants[account]!
     }
+    // Original tenantID --> actual resource
     access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+    }
+    // Alias to original. Original -> actual resource above
+    // So if an alias exists, it already points to a Tenant
+    access(contract) var aliases: {String: String}
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+        let original = auth.owner!.address.toString()
+                        .concat(".")
+                        .concat(self.getType().identifier)
+                        .concat(".")
+                        .concat(original.toString())
+        self.aliases[new] = original
     }
 
     pub resource interface IState {
@@ -28,19 +42,47 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub var totalSupply: UInt64
         access(contract) fun updateTotalSupply()
     }
+
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
         pub let tenantID: String
-        pub var holder: Address
         pub var totalSupply: UInt64
-        pub fun updateTotalSupply() {
+        access(contract) fun updateTotalSupply() {
             self.totalSupply = self.totalSupply + (1 as UInt64)
         }
+        pub var holder: Address
 
         init(_tenantID: String, _holder: Address) {
             self.tenantID = _tenantID
-            self.holder = _holder
             self.totalSupply = 0
+            self.holder = _holder
         }
+    }
+
+    // If we're making a new Tenant resource
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
+        var number: Int = 0
+        if self.clientTenants[auth.owner!.address] != nil {
+            number = self.clientTenants[auth.owner!.address]!.length
+        } else {
+            self.clientTenants[auth.owner!.address] = []
+        }
+        var STenantID: String = auth.owner!.address.toString()
+                                .concat(".")
+                                .concat(self.getType().identifier)
+                                .concat(".")
+                                .concat(number.toString())
+    
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.addAlias(auth: auth, original: number, new: STenantID)
+
+        let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
+        package.depositAdmin(Admin: <- create Admin(STenantID))
+        package.depositMinter(NFTMinter: <- create NFTMinter(STenantID))
+
+        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        emit TenantCreated(id: STenantID)
+
+        return number
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -54,24 +96,11 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub fun depositMinter(NFTMinter: @NFTMinter)
     }
 
+    // All of the getAlias stuff only happens in this Package :)
     pub resource Package: PackagePublic {
         pub var collections: @{String: Collection}
         pub var admins: @{String: Admin}
         pub var minters: @{String: NFTMinter}
-
-        pub fun instance(tenantID: UInt64) {
-            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            SimpleNFT.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            self.depositAdmin(Admin: <- create Admin(tenantID))
-            self.depositMinter(NFTMinter: <- create NFTMinter(tenantID))
-            emit TenantCreated(id: tenantID)
-
-            if SimpleNFT.clientTenants[self.owner!.address] != nil {
-                SimpleNFT.clientTenants[self.owner!.address]!.append(tenantID)
-            } else {
-                SimpleNFT.clientTenants[self.owner!.address] = [tenantID]
-            }
-        }
 
         pub fun setup(tenantID: String) {
             pre {
@@ -85,7 +114,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
 
         pub fun borrowAdmin(tenantID: String): &Admin {
-            return &self.admins[tenantID] as &Admin
+            return &self.admins[SimpleNFT.aliases[tenantID]!] as &Admin
         }
 
         pub fun depositMinter(NFTMinter: @NFTMinter) {
@@ -93,14 +122,15 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
 
          pub fun borrowMinter(tenantID: String): &NFTMinter {
-            return &self.minters[tenantID] as &NFTMinter
+            return &self.minters[SimpleNFT.aliases[tenantID]!] as &NFTMinter
         }
 
         pub fun borrowCollection(tenantID: String): &Collection {
-            if self.collections[tenantID] == nil {
-                self.setup(tenantID: tenantID)
+            let original = SimpleNFT.aliases[tenantID]!
+            if self.collections[original] == nil {
+                self.setup(tenantID: original)
             }
-            return &self.collections[tenantID] as &Collection
+            return &self.collections[original] as &Collection
         }
 
         pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic} {
@@ -155,7 +185,6 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
     pub resource Collection: CollectionPublic {
         pub let tenantID: String
-
         pub var ownedNFTs: @{UInt64: NFT}
 
         pub fun deposit(token: @NFT) {
@@ -220,6 +249,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     init() {
         self.clientTenants = {}
         self.tenants <- {}
+        self.aliases = {}
 
         self.PackageStoragePath = /storage/SimpleNFTPackage
         self.PackagePrivatePath = /private/SimpleNFTPackage

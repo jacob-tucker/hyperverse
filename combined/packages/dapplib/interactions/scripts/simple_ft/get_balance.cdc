@@ -1,7 +1,11 @@
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
 import IHyperverseComposable from "../../../contracts/Hyperverse/IHyperverseComposable.cdc"
 
-pub fun main(account: Address, tenantID: String): UFix64 {
+pub fun main(account: Address, tenantOwner: Address): UFix64 {
+    let tenantID = tenantOwner.toString()
+                        .concat(".")
+                        .concat(SimpleFT.getType().identifier)
+                        .concat(".0")
 
     let accountPackage = getAccount(account).getCapability(SimpleFT.PackagePublicPath)
                             .borrow<&SimpleFT.Package{SimpleFT.PackagePublic}>()

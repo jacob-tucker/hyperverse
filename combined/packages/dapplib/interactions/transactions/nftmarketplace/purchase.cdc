@@ -3,25 +3,30 @@ import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
 
 // Needs to be called every time a user comes into a new tenant of this contract
-transaction(tenantID: String, id: UInt64, marketplace: Address) {
+transaction(tenantOwner: Address, id: UInt64, marketplace: Address) {
 
+    let TenantID: String
     let NFTCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
     let Vault: @SimpleFT.Vault
     let SaleCollection: &NFTMarketplace.SaleCollection{NFTMarketplace.SalePublic}
 
     prepare(signer: AuthAccount) {
+        self.TenantID = tenantOwner.toString()
+                        .concat(".")
+                        .concat(NFTMarketplace.getType().identifier)
+                        .concat(".0")
 
         let Package = signer.borrow<&NFTMarketplace.Package>(from: NFTMarketplace.PackageStoragePath)
                         ?? panic("Could not borrow the signer's Package.")
 
-        self.NFTCollection = Package.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: tenantID)
+        self.NFTCollection = Package.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: self.TenantID)
 
         let PackagePublic = getAccount(marketplace).getCapability(NFTMarketplace.PackagePublicPath)
                                 .borrow<&NFTMarketplace.Package{NFTMarketplace.PackagePublic}>()
                                 ?? panic("Could not get the public Package of the marketplace account.")
 
-        self.SaleCollection = PackagePublic.borrowSaleCollectionPublic(tenantID: tenantID)
-        self.Vault <- Package.SimpleFTPackage.borrow()!.borrowVault(tenantID: tenantID).withdraw(amount: self.SaleCollection.idPrice(id: id)!)
+        self.SaleCollection = PackagePublic.borrowSaleCollectionPublic(tenantID: self.TenantID)
+        self.Vault <- Package.SimpleFTPackage.borrow()!.borrowVault(tenantID: self.TenantID).withdraw(amount: self.SaleCollection.idPrice(id: id)!)
     }
 
     execute {

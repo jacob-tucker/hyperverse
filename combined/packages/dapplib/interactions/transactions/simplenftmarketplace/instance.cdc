@@ -1,4 +1,4 @@
-import Tribes from "../../../contracts/Project/Tribes.cdc"
+import SimpleNFTMarketplace from "../../../contracts/Project/SimpleNFTMarketplace.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
 transaction() {
@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        Tribes.instance(auth: self.Auth, modules: {})
-        log("Create a new instance of a Tribes Tenant.")
+        SimpleNFTMarketplace.instance(auth: self.Auth, modules: {})
+        log("Create a new instance of a SimpleNFTMarketplace Tenant.")
     }
 }

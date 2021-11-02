@@ -9,15 +9,15 @@ const t = require('@onflow/types');
 
 module.exports = class DappLib {
 
-  /****** SETUP ALL PACKAGES ******/
-  static async SETUPPACKAGES(data) {
+  /****** AUTH ******/
+  static async GetAuth(data) {
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
       roles: {
         proposer: data.signer
       }
     },
-      'setupall_setup_all_packages'
+      'auth_get_auth'
     )
 
     return {
@@ -27,13 +27,31 @@ module.exports = class DappLib {
     }
   }
 
-  static async HasAllPackages(data) {
+  /****** SETUP ALL ******/
+  static async SETUPALL(data) {
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'setupall_setup_all'
+    )
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async HasAll(data) {
     let result = await Blockchain.get({
       config: DappLib.getConfig(),
       roles: {
       }
     },
-      'setupall_has_all_packages',
+      'setupall_has_all',
       {
         account: { value: data.account, type: t.Address }
       }
@@ -97,8 +115,7 @@ module.exports = class DappLib {
     },
       'tribes_add_tribe',
       {
-        newTribeName: { value: data.newTribeName, type: t.String },
-        tenantID: { value: data.tenantID, type: t.String }
+        newTribeName: { value: data.newTribeName, type: t.String }
       }
     );
 
@@ -120,7 +137,7 @@ module.exports = class DappLib {
     },
       'tribes_join_tribe',
       {
-        tenantID: { value: data.tenantID, type: t.String },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         tribeName: { value: data.tribeName, type: t.String }
       }
     );
@@ -142,7 +159,7 @@ module.exports = class DappLib {
     },
       'tribes_leave_tribe',
       {
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -183,13 +200,33 @@ module.exports = class DappLib {
       'tribes_get_current_tribe',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
       type: DappLib.DAPP_RESULT_STRING,
       label: 'The identitys current tribe',
+      result: result.callData
+    }
+  }
+
+  static async TribesGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'tribes_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SimpleFT Tenants',
       result: result.callData
     }
   }
@@ -224,7 +261,10 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'nftmarketplace_instance'
+      'nftmarketplace_instance',
+      {
+        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int })
+      }
     );
 
     return {
@@ -245,7 +285,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_unlist_sale',
       {
-        tenantID: { value: data.tenantID, type: t.String },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         id: { value: parseInt(data.id), type: t.UInt64 }
       }
     );
@@ -267,7 +307,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_list_for_sale',
       {
-        tenantID: { value: data.tenantID, type: t.String },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         ids: DappLib.formatFlowArray(data.ids, t.UInt64),
         price: { value: data.price, type: t.UFix64 }
       }
@@ -290,7 +330,7 @@ module.exports = class DappLib {
     },
       'nftmarketplace_purchase',
       {
-        tenantID: { value: data.tenantID, type: t.String },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         id: { value: parseInt(data.id), type: t.UInt64 },
         marketplace: { value: data.marketplace, type: t.Address }
       }
@@ -333,12 +373,185 @@ module.exports = class DappLib {
       'nftmarketplace_get_ids',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantID: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
       type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SaleCollection IDs',
+      result: result.callData
+    }
+  }
+
+  /****** SimpleNFTMarketplace ******/
+
+  // Run by a user (like someone who wants a collection)
+  static async SimpleNFTMarketplaceGetPackage(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'simplenftmarketplace_get_package'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async SimpleNFTMarketplaceInstance(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'simplenftmarketplace_instance',
+      {
+        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int })
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+
+  }
+
+  static async SimpleNFTMarketplaceUnlist(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'simplenftmarketplace_unlist_sale',
+      {
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        id: { value: parseInt(data.id), type: t.UInt64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async SimpleNFTMarketplaceList(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'simplenftmarketplace_list_for_sale',
+      {
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        ids: DappLib.formatFlowArray(data.ids, t.UInt64),
+        price: { value: data.price, type: t.UFix64 }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async SimpleNFTMarketplacePurchase(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'simplenftmarketplace_purchase',
+      {
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        id: { value: parseInt(data.id), type: t.UInt64 },
+        marketplace: { value: data.marketplace, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async SimpleNFTMarketplaceOwnsTenant(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simplenftmarketplace_owns_tenant',
+      {
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'TenantIDs for Marketplace',
+      result: result.callData
+    }
+  }
+
+  static async SimpleNFTMarketplaceGetIDs(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simplenftmarketplace_get_ids',
+      {
+        account: { value: data.account, type: t.Address },
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SaleCollection IDs',
+      result: result.callData
+    }
+  }
+
+  static async FlowTokenGetBalance(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simplenftmarketplace_flowtoken_get_balance',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_BIG_NUMBER,
       label: 'SaleCollection IDs',
       result: result.callData
     }
@@ -395,7 +608,6 @@ module.exports = class DappLib {
     },
       'simple_ft_give_minter',
       {
-        tenantID: { value: data.tenantID, type: t.String },
         recipient: { value: data.recipient, type: t.Address }
       }
     );
@@ -418,7 +630,7 @@ module.exports = class DappLib {
       'simple_ft_mint_ft',
       {
         recipient: { value: data.recipient, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         amount: { value: data.amount, type: t.UFix64 }
       }
     );
@@ -442,7 +654,7 @@ module.exports = class DappLib {
       {
         recipient: { value: data.recipient, type: t.Address },
         amount: { value: data.amount, type: t.UFix64 },
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -483,13 +695,33 @@ module.exports = class DappLib {
       'simple_ft_get_balance',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
     return {
       type: DappLib.DAPP_RESULT_BIG_NUMBER,
       label: 'Has SimpleFT Tenant',
+      result: result.callData
+    }
+  }
+
+  static async SimpleFTGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simple_ft_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SimpleFT Tenants',
       result: result.callData
     }
   }
@@ -545,7 +777,6 @@ module.exports = class DappLib {
     },
       'simple_nft_give_minter',
       {
-        tenantID: { value: data.tenantID, type: t.String },
         recipient: { value: data.recipient, type: t.Address }
       }
     );
@@ -568,7 +799,7 @@ module.exports = class DappLib {
       'simple_nft_mint_nft',
       {
         recipient: { value: data.recipient, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String },
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
         name: { value: data.name, type: t.String }
       }
     );
@@ -592,7 +823,7 @@ module.exports = class DappLib {
       {
         recipient: { value: data.recipient, type: t.Address },
         withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 },
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -600,26 +831,6 @@ module.exports = class DappLib {
       type: DappLib.DAPP_RESULT_TX_HASH,
       label: 'Transaction Hash',
       result: result.callData.transactionId
-    }
-  }
-
-  static async SimpleNFTOwnsTenant(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'simple_nft_owns_tenant',
-      {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_STRING,
-      label: 'TenantID',
-      result: result.callData
     }
   }
 
@@ -633,7 +844,7 @@ module.exports = class DappLib {
       'simple_nft_get_nft_ids',
       {
         account: { value: data.account, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -644,17 +855,41 @@ module.exports = class DappLib {
     }
   }
 
+  static async SimpleNFTGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'simple_nft_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'SimpleFT Tenants',
+      result: result.callData
+    }
+  }
+
   /****** Rewards ******/
 
   static async RewardsInstance(data) {
-
+    console.log(data)
+    console.log(DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int }))
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
       roles: {
         proposer: data.signer
       }
     },
-      'rewards_instance'
+      'rewards_instance',
+      {
+        modules: DappLib.formatFlowDictionary(data.modules, { key: t.String, value: t.Int })
+      }
     );
 
     return {
@@ -685,26 +920,6 @@ module.exports = class DappLib {
 
   }
 
-  static async RewardsOwnsTenant(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'rewards_owns_tenant',
-      {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_STRING,
-      label: 'TenantID',
-      result: result.callData
-    }
-  }
-
   static async RewardsMintNFT(data) {
     console.log(data)
 
@@ -716,8 +931,7 @@ module.exports = class DappLib {
     },
       'rewards_mint_nft',
       {
-        recipient: { value: data.recipient, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String }
+        recipient: { value: data.recipient, type: t.Address }
       }
     );
 
@@ -739,8 +953,7 @@ module.exports = class DappLib {
     },
       'rewards_give_reward',
       {
-        tenantOwner: { value: data.tenantOwner, type: t.Address },
-        tenantID: { value: data.tenantID, type: t.String }
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
       }
     );
 
@@ -750,6 +963,47 @@ module.exports = class DappLib {
       result: result.callData.transactionId
     }
 
+  }
+
+  static async RewardsGetNFTIDs(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'rewards_get_nft_ids',
+      {
+        account: { value: data.account, type: t.Address },
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'NFT IDs in Account Collection',
+      result: result.callData
+    }
+  }
+
+  static async RewardsGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'rewards_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'Rewards Tenants',
+      result: result.callData
+    }
   }
 
   /****** Helpers ******/
@@ -770,7 +1024,8 @@ module.exports = class DappLib {
       if (types.key.label.includes("Int")) key = parseInt(key)
       else if (types.key == t.Bool) key = (key === 'true');
 
-      if (types.value.label.includes("Int")) data[key] = parseInt(data[key])
+      if (isNaN(data[key])) continue;
+      else if (types.value.label.includes("Int")) data[key] = parseInt(data[key])
       else if (types.value == t.Bool) data[key] = (data[key] === 'true');
       newData.push({ key: key, value: data[key] })
     }

@@ -1,6 +1,7 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
 import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
+import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
 pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
 
@@ -14,6 +15,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
+    pub event TenantReused(id: String)
     access(contract) var clientTenants: {Address: [String]}
     pub fun getClientTenants(account: Address): [String] {
         return self.clientTenants[account]!
@@ -21,6 +23,15 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
         return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+    }
+    access(contract) var aliases: {String: String}
+    pub fun addAlias(auth: &HyperverseAuth.Auth, original: Int, new: String) {
+        let original = auth.owner!.address.toString()
+                        .concat(".")
+                        .concat(self.getType().identifier)
+                        .concat(".")
+                        .concat(original.toString())
+        self.aliases[new] = original
     }
 
     pub resource interface IState {
@@ -43,6 +54,32 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         }
     }
 
+    pub fun instance(auth: &HyperverseAuth.Auth, modules: {String: Int}): Int {
+        var number: Int = 0
+        if self.clientTenants[auth.owner!.address] != nil {
+            number = self.clientTenants[auth.owner!.address]!.length
+        } else {
+            self.clientTenants[auth.owner!.address] = []
+        }
+        var STenantID: String = auth.owner!.address.toString()
+                                .concat(".")
+                                .concat(self.getType().identifier)
+                                .concat(".")
+                                .concat(number.toString())
+        
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.addAlias(auth: auth, original: number, new: STenantID)
+        
+        let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
+        package.depositAdministrator(Administrator: <- create Administrator(STenantID))
+        package.depositMinter(Minter: <- create Minter(STenantID))
+        
+        self.clientTenants[auth.owner!.address]!.append(STenantID)
+        emit TenantCreated(id: STenantID)
+
+        return number
+    }
+
     /**************************************** PACKAGE ****************************************/
 
     pub let PackageStoragePath: StoragePath
@@ -59,21 +96,6 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         pub var minters: @{String: Minter}
         pub var vaults: @{String: Vault}
 
-        pub fun instance(tenantID: UInt64) {
-            var tenantID: String = self.owner!.address.toString().concat(".").concat(tenantID.toString())
-            SimpleFT.tenants[tenantID] <-! create Tenant(_tenantID: tenantID, _holder: self.owner!.address)
-            self.depositAdministrator(Administrator: <- create Administrator(tenantID))
-            self.depositMinter(Minter: <- create Minter(tenantID))
-            emit TenantCreated(id: tenantID)
-
-            if SimpleFT.clientTenants[self.owner!.address] != nil {
-                SimpleFT.clientTenants[self.owner!.address]!.append(tenantID)
-            } else {
-                SimpleFT.clientTenants[self.owner!.address] = [tenantID]
-            }
-            
-        }
-
         pub fun setup(tenantID: String) {
             pre {
                 SimpleFT.tenants[tenantID] != nil: "This tenantID does not exist."
@@ -85,21 +107,22 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
             self.admins[Administrator.tenantID] <-! Administrator
         }
         pub fun borrowAdministrator(tenantID: String): &Administrator {
-            return &self.admins[tenantID] as &Administrator
+            return &self.admins[SimpleFT.aliases[tenantID]!] as &Administrator
         }
 
         pub fun depositMinter(Minter: @Minter) {
             self.minters[Minter.tenantID] <-! Minter
         }
         pub fun borrowMinter(tenantID: String): &Minter {
-            return &self.minters[tenantID] as &Minter
+            return &self.minters[SimpleFT.aliases[tenantID]!] as &Minter
         }
         
         pub fun borrowVault(tenantID: String): &Vault {
-            if self.vaults[tenantID] == nil {
-                self.setup(tenantID: tenantID)
+            let original = SimpleFT.aliases[tenantID]!
+            if self.vaults[original] == nil {
+                self.setup(tenantID: original)
             }
-            return &self.vaults[tenantID] as &Vault
+            return &self.vaults[original] as &Vault
         }
         pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic} {
             return self.borrowVault(tenantID: tenantID)
@@ -196,6 +219,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
     init() {
         self.clientTenants = {}
         self.tenants <- {}
+        self.aliases = {}
 
         self.PackageStoragePath = /storage/SimpleFTPackage
         self.PackagePrivatePath = /private/SimpleFTPackage
