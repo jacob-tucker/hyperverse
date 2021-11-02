@@ -3,7 +3,7 @@ import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 import FlowToken from "../../../contracts/Flow/FlowToken.cdc"
 
 // Needs to be called every time a user comes into a new tenant of this contract
-transaction(tenantOwner: Address, id: UInt64, marketplace: Address) {
+transaction(tenantOwner: Address, id: UInt64, marketplace: Address, simpleNFTTenantOwner: Address) {
 
     let TenantID: String
     let NFTCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
@@ -30,8 +30,11 @@ transaction(tenantOwner: Address, id: UInt64, marketplace: Address) {
     }
 
     execute {
+        let simpleNFTTenantID = simpleNFTTenantOwner.toString()
+                        .concat(".")
+                        .concat(SimpleNFT.getType().identifier)
 
-        self.SaleCollection.purchase(id: id, recipient: self.NFTCollection, buyTokens: <- self.Vault.withdraw(amount: self.SaleCollection.idPrice(id: id)!))
+        self.SaleCollection.purchase(simpleNFTTenantID: simpleNFTTenantID, id: id, recipient: self.NFTCollection, buyTokens: <- self.Vault.withdraw(amount: self.SaleCollection.idPrice(simpleNFTTenantID: simpleNFTTenantID, id: id)!))
         log("Listed all the NFTs for Sale.")
     }
 }

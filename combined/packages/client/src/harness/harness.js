@@ -39,53 +39,46 @@ export default class HarnessPage extends LitElement {
     return [
       {
         "name": "core-nft",
-        "title": "Hyperverse SimpleNFT Module",
+        "title": "SimpleNFT Module",
         "description": "Mint, own, and trade Simple NFTs with a name field.",
         "category": "Hyperverse",
         "route": "/core-nft"
       },
       {
         "name": "core-ft",
-        "title": "Hyperverse SimpleFT Module",
+        "title": "SimpleFT Module",
         "description": "Mint, own, and trade Simple Fungible Tokens.",
         "category": "Hyperverse",
         "route": "/core-ft"
       },
       {
         "name": "core-tribes",
-        "title": "Hyperverse Tribes Module",
+        "title": "Tribes Module",
         "description": "Join tribes and become part of a group.",
         "category": "Hyperverse",
         "route": "/core-tribes"
       },
       {
         "name": "core-simplenftmarketplace",
-        "title": "Hyperverse SimpleNFT Marketplace Module",
-        "description": "Buy/sell SimpleNFTs using FlowToken",
+        "title": "SimpleNFT Marketplace Module",
+        "description": "Buy/sell SimpleNFTs using FlowToken.",
         "category": "Hyperverse",
         "route": "/core-simplenftmarketplace"
       },
       {
         "name": "core-rewards",
-        "title": "Hyperverse Rewards Module",
-        "description": "Mint, own, and trade Simple NFTs, and get rewards when you have enough.",
+        "title": "Rewards Module",
+        "description": "Mint, own, and trade Simple NFTs, and get a reward when you have 3 SimpleNFTs.",
         "category": "Hyperverse",
         "route": "/core-rewards"
       },
       {
         "name": "core-marketplace",
-        "title": "Hyperverse Marketplace Module",
+        "title": "Marketplace Module",
         "description": "Buy/sell SimpleNFTs using SimpleFTs.",
         "category": "Hyperverse",
         "route": "/core-marketplace"
-      },
-      {
-        "name": "core-setup",
-        "title": "Hyperverse Setup - SETUP",
-        "description": "Already done for you.",
-        "category": "Hyperverse",
-        "route": "/core-setup"
-      },
+      }
     ];
   }
 

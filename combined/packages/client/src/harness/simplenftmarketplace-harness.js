@@ -38,12 +38,6 @@ export default class SimpleNFTMarketplaceHarness extends LitElement {
             </account-widget>
         </action-card>
     
-        <action-card title="SimpleNFTMarketplace - Owns Tenant" description="Owns the SimpleNFTMarketplace Tenant"
-            action="SimpleNFTMarketplaceOwnsTenant" method="get" fields="tenantOwner">
-            <account-widget field="tenantOwner" label="Tenant Owner">
-            </account-widget>
-        </action-card>
-    
         <action-card title="SimpleNFTMarketplace - Get Client Tenants" description="Get all your Tenant IDs"
             action="SimpleNFTMarketplaceGetClientTenants" method="get" fields="account">
             <account-widget field="account" label="Account">
@@ -53,6 +47,14 @@ export default class SimpleNFTMarketplaceHarness extends LitElement {
         <action-card title="SimpleNFTMarketplace - Get Balance" description="Get Balance" action="FlowTokenGetBalance"
             method="get" fields="account">
             <account-widget field="account" label="Account">
+            </account-widget>
+        </action-card>
+    
+        <action-card title="SimpleNFT - Give Minter" description="Give a SimpleNFT Minter to the recipient account"
+            action="SimpleNFTGiveMinter" method="post" fields="tenantOwner recipient">
+            <account-widget field="tenantOwner" label="Tenant Owner">
+            </account-widget>
+            <account-widget field="recipient" label="Recipient">
             </account-widget>
         </action-card>
     
@@ -83,8 +85,10 @@ export default class SimpleNFTMarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="SimpleNFTMarketplace - Unlist Sale" description="Unlist an NFT for sale"
-            action="SimpleNFTMarketplaceUnlist" method="post" fields="signer tenantOwner id">
+            action="SimpleNFTMarketplaceUnlist" method="post" fields="signer tenantOwner id simpleNFTTenantOwner">
             <account-widget field="tenantOwner" label="Tenant Owner">
+            </account-widget>
+            <account-widget field="simpleNFTTenantOwner" label="SimpleNFT Tenant Owner">
             </account-widget>
             <account-widget field="signer" label="Signer">
             </account-widget>
@@ -93,8 +97,11 @@ export default class SimpleNFTMarketplaceHarness extends LitElement {
         </action-card>
     
         <action-card title="SimpleNFTMarketplace - Purchase" description="Purchase an NFT from the SimpleNFTMarketplace."
-            action="SimpleNFTMarketplacePurchase" method="post" fields="signer tenantOwner id marketplace">
+            action="SimpleNFTMarketplacePurchase" method="post"
+            fields="signer tenantOwner id marketplace simpleNFTTenantOwner">
             <account-widget field="tenantOwner" label="Tenant Owner">
+            </account-widget>
+            <account-widget field="simpleNFTTenantOwner" label="SimpleNFT Tenant Owner">
             </account-widget>
             <account-widget field="signer" label="Signer">
             </account-widget>
@@ -106,8 +113,10 @@ export default class SimpleNFTMarketplaceHarness extends LitElement {
     
         <action-card title="SimpleNFTMarketplace - Get IDs"
             description="Get all the NFTs for sale in this SimpleNFTMarketplace.SaleCollection."
-            action="SimpleNFTMarketplaceGetIDs" method="post" fields="account tenantOwner">
+            action="SimpleNFTMarketplaceGetIDs" method="get" fields="account tenantOwner simpleNFTTenantOwner">
             <account-widget field="tenantOwner" label="Tenant Owner">
+            </account-widget>
+            <account-widget field="simpleNFTTenantOwner" label="SimpleNFT Tenant Owner">
             </account-widget>
             <account-widget field="account" label="Account">
             </account-widget>

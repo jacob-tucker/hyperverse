@@ -63,6 +63,12 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         var STenantID: String = auth.owner!.address.toString()
                                 .concat(".")
                                 .concat(self.getType().identifier)
+
+        /* Dependencies */
+        if SimpleNFT.getClientTenantID(account: auth.owner!.address) == nil {
+            SimpleNFT.instance(auth: auth)                   
+        }
+        SimpleNFT.addAlias(auth: auth, new: STenantID)
         
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
         self.addAlias(auth: auth, new: STenantID)
@@ -148,14 +154,14 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
     pub event SaleWithdrawn(id: UInt64)
 
     pub resource interface SalePublic {
-        pub fun purchase(id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @FungibleToken.Vault)
-        pub fun idPrice(id: UInt64): UFix64?
-        pub fun getIDs(): [UInt64]
+        pub fun purchase(simpleNFTTenantID: String, id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @FungibleToken.Vault)
+        pub fun idPrice(simpleNFTTenantID: String, id: UInt64): UFix64?
+        pub fun getIDs(simpleNFTTenantID: String): [UInt64]
     }
 
     pub resource SaleCollection: SalePublic {
         pub let tenantID: String
-        pub var forSale: {UInt64: UFix64}
+        pub var forSale: {String: {UInt64: UFix64}}
         access(self) let FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
         access(self) let SimpleNFTPackage: Capability<&SimpleNFT.Package>
 
@@ -166,52 +172,58 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
             self.SimpleNFTPackage = _nftPackage
         }
 
-        pub fun unlistSale(id: UInt64) {
-            self.forSale[id] = nil
+        pub fun unlistSale(simpleNFTTenantID: String, id: UInt64) {
+            self.forSale[simpleNFTTenantID]!.remove(key: id)
 
             emit SaleWithdrawn(id: id)
         }
 
         // You pass in the tenantID of the SimpleNFT you'll be listing for sale.
-        pub fun listForSale(ids: [UInt64], price: UFix64, simpleNFTTenantID: String) {
+        pub fun listForSale(simpleNFTTenantID: String, ids: [UInt64], price: UFix64) {
             pre {
                 price > 0.0:
                     "Cannot list a NFT for 0.0"
+            }
+            if self.forSale[simpleNFTTenantID] == nil {
+                self.forSale[simpleNFTTenantID] = {}
             }
 
             var ownedNFTs = self.SimpleNFTPackage.borrow()!.borrowCollection(tenantID: simpleNFTTenantID).getIDs()
             for id in ids {
                 if (ownedNFTs.contains(id)) {
-                    self.forSale[id] = price
+                    self.forSale[simpleNFTTenantID]!.insert(key: id, price)
 
                     emit ForSale(id: id, price: price)
                 }
             }
         }
 
-        pub fun purchase(id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @FungibleToken.Vault) {
+        pub fun purchase(simpleNFTTenantID: String, id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @FungibleToken.Vault) {
             pre {
-                self.forSale[id] != nil:
+                self.forSale[simpleNFTTenantID]![id] != nil:
                     "No NFT matching this id for sale!"
-                buyTokens.balance >= (self.forSale[id]!):
+                buyTokens.balance >= (self.forSale[simpleNFTTenantID]![id]!):
                     "Not enough tokens to buy the NFT!"
             }
             let buyTokens <- buyTokens as! @FlowToken.Vault
-            let price = self.forSale[id]!
+            let price = self.forSale[simpleNFTTenantID]![id]!
             let vaultRef = self.FlowTokenVault.borrow()!
             vaultRef.deposit(from: <-buyTokens)
             let token <- self.SimpleNFTPackage.borrow()!.borrowCollection(tenantID: self.tenantID).withdraw(withdrawID: id)
             recipient.deposit(token: <-token)
-            self.unlistSale(id: id)
+            self.unlistSale(simpleNFTTenantID: simpleNFTTenantID, id: id)
             emit NFTPurchased(id: id, price: price)
         }
 
-        pub fun idPrice(id: UInt64): UFix64? {
-            return self.forSale[id]
+        pub fun idPrice(simpleNFTTenantID: String, id: UInt64): UFix64? {
+            return self.forSale[simpleNFTTenantID]![id]
         }
 
-        pub fun getIDs(): [UInt64] {
-            return self.forSale.keys
+        pub fun getIDs(simpleNFTTenantID: String): [UInt64] {
+            if self.forSale[simpleNFTTenantID] == nil {
+                self.forSale[simpleNFTTenantID] = {}
+            }
+            return self.forSale[simpleNFTTenantID]!.keys
         }
     }
 

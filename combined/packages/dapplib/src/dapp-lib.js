@@ -170,26 +170,6 @@ module.exports = class DappLib {
     }
   }
 
-  static async TribesOwnsTenant(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'tribes_owns_tenant',
-      {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_STRING,
-      label: 'TenantID',
-      result: result.callData
-    }
-  }
-
   static async TribesGetCurrentTribe(data) {
 
     let result = await Blockchain.get({
@@ -376,7 +356,7 @@ module.exports = class DappLib {
 
     return {
       type: DappLib.DAPP_RESULT_STRING,
-      label: 'Tribes TenantID',
+      label: 'Marketplace TenantID',
       result: result.callData
     }
   }
@@ -433,7 +413,8 @@ module.exports = class DappLib {
       'simplenftmarketplace_unlist_sale',
       {
         tenantOwner: { value: data.tenantOwner, type: t.Address },
-        id: { value: parseInt(data.id), type: t.UInt64 }
+        id: { value: parseInt(data.id), type: t.UInt64 },
+        simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
       }
     );
 
@@ -480,7 +461,8 @@ module.exports = class DappLib {
       {
         tenantOwner: { value: data.tenantOwner, type: t.Address },
         id: { value: parseInt(data.id), type: t.UInt64 },
-        marketplace: { value: data.marketplace, type: t.Address }
+        marketplace: { value: data.marketplace, type: t.Address },
+        simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
       }
     );
 
@@ -488,26 +470,6 @@ module.exports = class DappLib {
       type: DappLib.DAPP_RESULT_TX_HASH,
       label: 'Transaction Hash',
       result: result.callData.transactionId
-    }
-  }
-
-  static async SimpleNFTMarketplaceOwnsTenant(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'simplenftmarketplace_owns_tenant',
-      {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_STRING,
-      label: 'TenantIDs for Marketplace',
-      result: result.callData
     }
   }
 
@@ -521,7 +483,8 @@ module.exports = class DappLib {
       'simplenftmarketplace_get_ids',
       {
         account: { value: data.account, type: t.Address },
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
+        tenantOwner: { value: data.tenantOwner, type: t.Address },
+        simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
       }
     );
 
@@ -547,7 +510,7 @@ module.exports = class DappLib {
 
     return {
       type: DappLib.DAPP_RESULT_STRING,
-      label: 'Tribes TenantID',
+      label: 'SimpleNFTMarketplace TenantID',
       result: result.callData
     }
   }
@@ -677,26 +640,6 @@ module.exports = class DappLib {
       type: DappLib.DAPP_RESULT_TX_HASH,
       label: 'Transaction Hash',
       result: result.callData.transactionId
-    }
-  }
-
-  static async SimpleFTOwnsTenant(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'simple_ft_owns_tenant',
-      {
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_STRING,
-      label: 'TenantID SimpleFT',
-      result: result.callData
     }
   }
 

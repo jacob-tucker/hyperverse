@@ -1,7 +1,8 @@
 import SimpleNFTMarketplace from "../../../contracts/Project/SimpleNFTMarketplace.cdc"
+import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 
 // Needs to be called every time a user comes into a new tenant of this contract
-transaction(tenantOwner: Address, id: UInt64) {
+transaction(tenantOwner: Address, id: UInt64, simpleNFTTenantOwner: Address) {
 
     let TenantID: String
     let SaleCollection: &SimpleNFTMarketplace.SaleCollection
@@ -18,7 +19,10 @@ transaction(tenantOwner: Address, id: UInt64) {
     }
 
     execute {
-        self.SaleCollection.unlistSale(id: id)
+        let simpleNFTTenantID = simpleNFTTenantOwner.toString()
+                        .concat(".")
+                        .concat(SimpleNFT.getType().identifier)
+        self.SaleCollection.unlistSale(simpleNFTTenantID: simpleNFTTenantID, id: id)
         log("Unlisted the NFT with id from Sale.")
     }
 }

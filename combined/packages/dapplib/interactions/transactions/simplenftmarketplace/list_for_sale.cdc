@@ -23,7 +23,7 @@ transaction(tenantOwner: Address, ids: [UInt64], price: UFix64, simpleNFTTenantO
                         .concat(".")
                         .concat(SimpleNFT.getType().identifier)
                         
-        self.SaleCollection.listForSale(ids: ids, price: price, simpleNFTTenantID: simpleNFTTenantID)
+        self.SaleCollection.listForSale(simpleNFTTenantID: simpleNFTTenantID, ids: ids, price: price)
         log("Listed all the NFTs for Sale.")
     }
 }

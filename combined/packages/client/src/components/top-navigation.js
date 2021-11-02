@@ -28,7 +28,7 @@ export default class TopNavigation extends LitElement {
       },
       {
         name: "harness",
-        title: "UI Harness",
+        title: "Playground",
         route: "/harness"
       }      
     ];
