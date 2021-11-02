@@ -10,12 +10,12 @@ export default class TopNavigation extends LitElement {
 
   constructor(args) {
     super(args);
-    let page = localStorage.getItem('dappstarter-page');
-    if (page && page.includes('-')) {
-      page = 'harness';
-    }
+    let pathname = location.pathname;
+    if (pathname !== "/") {
+      pathname = pathname.replace("/", "");
+    } else pathname = null;
     setTimeout(() => {
-      this.setPageLoader(page ? page : 'dapp');
+      this.setPageLoader(pathname || "dapp");
     }, 0);
   }
 
