@@ -36,6 +36,7 @@ export default class PageLoader extends LitElement {
     if (!pageItem) {
       return;
     }
+    window.history.pushState(null, pageItem.title, pageItem.route);
 
 
     if (pageItem == null) {
