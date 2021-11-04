@@ -27,12 +27,6 @@ export default class HarnessPage extends LitElement {
   }
   constructor(args) {
     super(args);
-    let page = localStorage.getItem('dappstarter-page');
-    if (page.includes('-')) {
-      setTimeout(() => {
-        this.setPageLoader(page);
-      }, 0);
-    }
   }
 
   getPages() {
@@ -84,7 +78,6 @@ export default class HarnessPage extends LitElement {
 
   handleClick = e => {
     e.preventDefault();
-    localStorage.setItem('dappstarter-page', e.target.dataset.link);
     this.setPageLoader(e.target.dataset.link);
   };
 

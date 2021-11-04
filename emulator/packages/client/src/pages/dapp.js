@@ -34,7 +34,7 @@ export default class DappPage extends LitElement {
     let content = html`
       <div class="container m-auto">
         <div class="row fadeIn mt-3 p-2 block">
-          <h2 class="text-6xl">🎉 Dappiness!</h2>
+          <h2 class="text-6xl">🎉 Welcome to HyperHack!</h2>
           <p class="mt-3">
             Your Dapp is ready, and the world is waiting for you to create
             something amazing.
@@ -51,6 +51,11 @@ export default class DappPage extends LitElement {
             <li class="mt-3">Customize modules that support customization using the Customizer</li>
             <li class="mt-3">Interact with the feature modules you selected with the UI Harness</li>
             <li class="mt-3">Customize this page by editing <i>packages/client/src/pages/dapp.js</i></li>
+          </ul>
+          <h3 class="mt-3 text-3xl">Sample Projects</h3>
+          <ul>
+            <li class="mt-3"><a href="/tribessample-page">Tribes Sample</a></li>
+
           </ul>
         </div>
       </div>

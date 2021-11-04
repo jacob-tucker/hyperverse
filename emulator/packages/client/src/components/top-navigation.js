@@ -1,4 +1,5 @@
 import { LitElement, html, customElement, property } from "lit-element";
+import { staticPages } from "./routes";
 @customElement('top-navigation')
 export default class TopNavigation extends LitElement {
   @property()
@@ -20,34 +21,11 @@ export default class TopNavigation extends LitElement {
   }
 
   getPages() {
-    let staticPages = [
-      {
-        name: "dapp",
-        title: "Home",
-        route: "/"
-      },
-      {
-        name: "harness",
-        title: "Playground",
-        route: "/harness"
-      }      
-    ];
-
-    // Add Customizer menu only if there are modules
-    let customizableModules = []; 
-    if (customizableModules.length > 0) {
-      staticPages.push({
-        name: "customizer",
-        title: "Customizer",
-        route: "/customizer"
-      });
-    }
     return staticPages;
   }
 
   handleClick = e => {
     e.preventDefault();
-    localStorage.setItem('dappstarter-page', e.target.dataset.link);
     this.setPageLoader(e.target.dataset.link);
   };
 
@@ -93,7 +71,7 @@ export default class TopNavigation extends LitElement {
         </div>
       </nav>
     `;
-    return content;
+    return null;
   }
 }
 

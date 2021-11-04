@@ -1,6 +1,8 @@
 import DOM from "./dom";
 import { LitElement, html, customElement, property } from "lit-element";
-
+import { staticPages } from "./routes";
+import React from 'react';
+import ReactDOM from 'react-dom';
 @customElement("page-loader")
 export default class PageLoader extends LitElement {
   @property()
@@ -10,6 +12,13 @@ export default class PageLoader extends LitElement {
 
   createRenderRoot() {
     return this;
+  }
+
+  constructor(args) {
+    super(args)
+    window.addEventListener("popstate", e => {
+      this.load(location.href.split("/").pop(), staticPages);
+    })
   }
 
   pageContent = null;
@@ -28,7 +37,6 @@ export default class PageLoader extends LitElement {
       return;
     }
 
-    window.history.pushState(null, pageItem.title, pageItem.route);
 
     if (pageItem == null) {
       let pageName = location.href.split("/").pop();
@@ -47,6 +55,14 @@ export default class PageLoader extends LitElement {
       let modulePage = pageItem.name.replace(pagePrefix, ''); // Removes the module source
       let suffix = '-page';
       if (modulePage === 'dapp') {
+        await import(`../pages/${modulePage}.js`);
+      }else if(pageItem.name.includes(suffix)){
+        const LoadedComponent = await import(`../pages/${pageItem.name}.jsx`);
+        let element
+        ReactDOM.render(React.createElement(LoadedComponent.default), document.getElementById('content'));
+        this.requestUpdate();
+        return;
+      } else if(pagePrefix === 'dapp') {
         await import(`../pages/${modulePage}.js`);
       } else if (modulePage === 'harness') {
         await import(`../harness/harness.js`);
