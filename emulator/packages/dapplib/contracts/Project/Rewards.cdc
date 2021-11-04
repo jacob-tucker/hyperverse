@@ -16,7 +16,6 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
-    pub event TenantReused(id: String)
     access(contract) var clientTenants: {Address: String}
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
@@ -73,7 +72,6 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
             SimpleNFT.instance(auth: auth)                   
         }
         SimpleNFT.addAlias(auth: auth, new: STenantID)
-
 
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
         self.addAlias(auth: auth, new: STenantID)

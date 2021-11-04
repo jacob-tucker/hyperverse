@@ -38,6 +38,13 @@ export default class HarnessPage extends LitElement {
   getPages() {
     return [
       {
+        "name": "core-helloworld",
+        "title": "Hello World Module",
+        "description": "Hello, World!",
+        "category": "Hyperverse",
+        "route": "/core-helloworld"
+      },
+      {
         "name": "core-nft",
         "title": "SimpleNFT Module",
         "description": "Mint, own, and trade Simple NFTs with a name field.",
