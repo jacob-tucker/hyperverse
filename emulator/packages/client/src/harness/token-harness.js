@@ -11,8 +11,8 @@ import "../components/dictionary-widget.js"
 import DappLib from "@decentology/dappstarter-dapplib";
 import { LitElement, html, customElement, property } from "lit-element";
 
-@customElement('ft-harness')
-export default class FTHarness extends LitElement {
+@customElement('token-harness')
+export default class TokenHarness extends LitElement {
   @property()
   title;
   @property()
@@ -32,28 +32,27 @@ export default class FTHarness extends LitElement {
     let content = html`
       <page-body title="${this.title}" category="${this.category}" description="${this.description}">
       
-        <action-card title="SimpleFT - Instance" description="Instance. **You need a SimpleFT.Package to do this. **"
-          action="SimpleFTInstance" method="post" fields="signer">
+        <action-card title="SimpleToken - Instance" description="Create your own Tenant" action="SimpleTokenInstance"
+          method="post" fields="signer">
           <account-widget field="signer" label="Signer">
           </account-widget>
         </action-card>
       
-        <action-card title="SimpleFT - Get Client Tenants" description="Get the client tenants for this account"
-          action="SimpleFTGetClientTenants" method="get" fields="account">
+        <action-card title="SimpleToken - Get Client Tenants" description="Get the client tenants for this account"
+          action="SimpleTokenGetClientTenants" method="get" fields="account">
           <account-widget field="account" label="Account">
           </account-widget>
         </action-card>
       
-        <action-card title="SimpleFT - Give Minter"
-          description="Give Minter (Receiving a SimpleFT.Minter). ** 'Recipient' MUST have a SimpleFT.Package **"
-          action="SimpleFTGiveMinter" method="post" fields="tenantOwner recipient">
+        <action-card title="SimpleToken - Give Minter" description="Give a SimpleToken minter" action="SimpleTokenGiveMinter"
+          method="post" fields="tenantOwner recipient">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
           </account-widget>
         </action-card>
       
-        <action-card title="SimpleFT - Mint FT" description="Mint FT" action="SimpleFTMintFT" method="post"
+        <action-card title="SimpleToken - Mint Tokens" description="Mint Tokens" action="SimpleTokenMintFT" method="post"
           fields="tenantOwner signer recipient amount">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
@@ -61,23 +60,23 @@ export default class FTHarness extends LitElement {
           </account-widget>
           <account-widget field="recipient" label="Recipient">
           </account-widget>
-          <text-widget field="amount" label="Amount of FT" placeholder="50.0">
+          <text-widget field="amount" label="Amount of Tokens" placeholder="50.0">
           </text-widget>
         </action-card>
       
-        <action-card title="SimpleFT - Transfer FT" description="Transfer FT" action="SimpleFTTransferFT" method="post"
-          fields="tenantOwner signer recipient amount">
+        <action-card title="SimpleToken - Transfer Tokens" description="Transfer Tokens" action="SimpleTokenTransferFT"
+          method="post" fields="tenantOwner signer recipient amount">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="signer" label="Signer">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
           </account-widget>
-          <text-widget field="amount" label="Amount of FT" placeholder="50">
+          <text-widget field="amount" label="Amount of Tokens" placeholder="50">
           </text-widget>
         </action-card>
       
-        <action-card title="SimpleFT - Get Balance" description="Get Balance" action="SimpleFTGetBalance" method="get"
+        <action-card title="SimpleToken - Get Balance" description="Get Balance" action="SimpleTokenGetBalance" method="get"
           fields="tenantOwner account">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>

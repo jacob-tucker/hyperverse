@@ -1,13 +1,13 @@
 import NFTMarketplace from "../../../contracts/Project/NFTMarketplace.cdc"
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
-import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 
 // Needs to be called every time a user comes into a new tenant of this contract
 transaction(tenantOwner: Address, id: UInt64, marketplace: Address) {
 
     let TenantID: String
     let NFTCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
-    let Vault: @SimpleFT.Vault
+    let Vault: @SimpleToken.Vault
     let SaleCollection: &NFTMarketplace.SaleCollection{NFTMarketplace.SalePublic}
 
     prepare(signer: AuthAccount) {
@@ -25,7 +25,7 @@ transaction(tenantOwner: Address, id: UInt64, marketplace: Address) {
                                 ?? panic("Could not get the public Package of the marketplace account.")
 
         self.SaleCollection = PackagePublic.borrowSaleCollectionPublic(tenantID: self.TenantID)
-        self.Vault <- Package.SimpleFTPackage.borrow()!.borrowVault(tenantID: self.TenantID).withdraw(amount: self.SaleCollection.idPrice(id: id)!)
+        self.Vault <- Package.SimpleTokenPackage.borrow()!.borrowVault(tenantID: self.TenantID).withdraw(amount: self.SaleCollection.idPrice(id: id)!)
     }
 
     execute {

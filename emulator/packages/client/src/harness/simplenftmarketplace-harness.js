@@ -32,8 +32,8 @@ export default class SimpleNFTMarketplaceHarness extends LitElement {
         let content = html`
     <page-body title="${this.title}" category="${this.category}" description="${this.description}">
     
-        <action-card title="SimpleNFTMarketplace - Instance" description="Instance" action="SimpleNFTMarketplaceInstance"
-            method="post" fields="signer">
+        <action-card title="SimpleNFTMarketplace - Instance" description="Create your own Tenant"
+            action="SimpleNFTMarketplaceInstance" method="post" fields="signer">
             <account-widget field="signer" label="Signer">
             </account-widget>
         </action-card>
@@ -111,8 +111,7 @@ export default class SimpleNFTMarketplaceHarness extends LitElement {
             </account-widget>
         </action-card>
     
-        <action-card title="SimpleNFTMarketplace - Get IDs"
-            description="Get all the NFTs for sale in this SimpleNFTMarketplace.SaleCollection."
+        <action-card title="SimpleNFTMarketplace - Get IDs" description="Get all the NFTs for sale in this SaleCollection."
             action="SimpleNFTMarketplaceGetIDs" method="get" fields="account tenantOwner simpleNFTTenantOwner">
             <account-widget field="tenantOwner" label="Tenant Owner">
             </account-widget>

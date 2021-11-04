@@ -1,4 +1,4 @@
-import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
 transaction() {
@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        SimpleFT.instance(auth: self.Auth)
-        log("Create a new instance of a SimpleFT Tenant.")
+        SimpleToken.instance(auth: self.Auth)
+        log("Create a new instance of a SimpleToken Tenant.")
     }
 }

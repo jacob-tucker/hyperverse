@@ -1,17 +1,17 @@
-import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 
 // Will only be run 1 time per user - ever. So even if they need this
 // collection as dependencies, etc.
 transaction() {
 
     prepare(signer: AuthAccount) {
-        signer.save(<- SimpleFT.getPackage(), to: SimpleFT.PackageStoragePath)
-        signer.link<&SimpleFT.Package>(SimpleFT.PackagePrivatePath, target: SimpleFT.PackageStoragePath)
-        signer.link<&SimpleFT.Package{SimpleFT.PackagePublic}>(SimpleFT.PackagePublicPath, target: SimpleFT.PackageStoragePath)
+        signer.save(<- SimpleToken.getPackage(), to: SimpleToken.PackageStoragePath)
+        signer.link<&SimpleToken.Package>(SimpleToken.PackagePrivatePath, target: SimpleToken.PackageStoragePath)
+        signer.link<&SimpleToken.Package{SimpleToken.PackagePublic}>(SimpleToken.PackagePublicPath, target: SimpleToken.PackageStoragePath)
     }
 
     execute {
-        log("Signer has a SimpleFT.Package.")
+        log("Signer has a SimpleToken.Package.")
     }
 }
 

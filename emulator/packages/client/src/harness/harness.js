@@ -33,50 +33,50 @@ export default class HarnessPage extends LitElement {
     return [
       {
         "name": "core-helloworld",
-        "title": "Hello World Module",
+        "title": "Hello World",
         "description": "Hello, World!",
         "category": "Hyperverse",
         "route": "/core-helloworld"
       },
       {
         "name": "core-nft",
-        "title": "SimpleNFT Module",
+        "title": "SimpleNFT",
         "description": "Mint, own, and trade Simple NFTs with a name field.",
         "category": "Hyperverse",
         "route": "/core-nft"
       },
       {
-        "name": "core-ft",
-        "title": "SimpleFT Module",
+        "name": "core-token",
+        "title": "SimpleToken",
         "description": "Mint, own, and trade Simple Fungible Tokens.",
         "category": "Hyperverse",
-        "route": "/core-ft"
+        "route": "/core-token"
       },
       {
         "name": "core-tribes",
-        "title": "Tribes Module",
+        "title": "Tribes",
         "description": "Join tribes and become part of a group.",
         "category": "Hyperverse",
         "route": "/core-tribes"
       },
       {
         "name": "core-simplenftmarketplace",
-        "title": "SimpleNFT Marketplace Module",
+        "title": "SimpleNFT Marketplace",
         "description": "Buy/sell SimpleNFTs using FlowToken.",
         "category": "Hyperverse",
         "route": "/core-simplenftmarketplace"
       },
       {
         "name": "core-rewards",
-        "title": "Rewards Module",
+        "title": "Rewards",
         "description": "Mint, own, and trade Simple NFTs, and get a reward when you have 3 SimpleNFTs.",
         "category": "Hyperverse",
         "route": "/core-rewards"
       },
       {
         "name": "core-marketplace",
-        "title": "Marketplace Module",
-        "description": "Buy/sell SimpleNFTs using SimpleFTs.",
+        "title": "Marketplace",
+        "description": "Buy/sell SimpleNFTs using SimpleTokens.",
         "category": "Hyperverse",
         "route": "/core-marketplace"
       }

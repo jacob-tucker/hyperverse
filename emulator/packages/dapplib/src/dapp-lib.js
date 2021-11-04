@@ -119,7 +119,7 @@ module.exports = class DappLib {
 
     return {
       type: DappLib.DAPP_RESULT_STRING,
-      label: '',
+      label: 'Greeting',
       result: result.callData
     }
   }
@@ -246,7 +246,7 @@ module.exports = class DappLib {
 
     return {
       type: DappLib.DAPP_RESULT_STRING,
-      label: 'The identitys current tribe',
+      label: 'Current Tribe',
       result: result.callData
     }
   }
@@ -610,14 +610,14 @@ module.exports = class DappLib {
 
     return {
       type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'SaleCollection IDs',
+      label: 'FlowToken Balance',
       result: result.callData
     }
   }
 
-  /****** SimpleFT ******/
+  /****** SimpleToken ******/
 
-  static async SimpleFTInstance(data) {
+  static async SimpleTokenInstance(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -637,7 +637,7 @@ module.exports = class DappLib {
   }
 
   // Run by a user (like someone who wants a collection)
-  static async SimpleFTGetPackage(data) {
+  static async SimpleTokenGetPackage(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -656,7 +656,7 @@ module.exports = class DappLib {
 
   }
 
-  static async SimpleFTGiveMinter(data) {
+  static async SimpleTokenGiveMinter(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -677,7 +677,7 @@ module.exports = class DappLib {
     }
   }
 
-  static async SimpleFTMintFT(data) {
+  static async SimpleTokenMintFT(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -700,7 +700,7 @@ module.exports = class DappLib {
     }
   }
 
-  static async SimpleFTTransferFT(data) {
+  static async SimpleTokenTransferFT(data) {
 
     let result = await Blockchain.post({
       config: DappLib.getConfig(),
@@ -723,7 +723,7 @@ module.exports = class DappLib {
     }
   }
 
-  static async SimpleFTGetBalance(data) {
+  static async SimpleTokenGetBalance(data) {
 
     let result = await Blockchain.get({
       config: DappLib.getConfig(),
@@ -739,12 +739,12 @@ module.exports = class DappLib {
 
     return {
       type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'Has SimpleFT Tenant',
+      label: 'SimpleToken Balance',
       result: result.callData
     }
   }
 
-  static async SimpleFTGetClientTenants(data) {
+  static async SimpleTokenGetClientTenants(data) {
 
     let result = await Blockchain.get({
       config: DappLib.getConfig(),
@@ -759,7 +759,7 @@ module.exports = class DappLib {
 
     return {
       type: DappLib.DAPP_RESULT_STRING,
-      label: 'SimpleFT TenantID',
+      label: 'SimpleToken TenantID',
       result: result.callData
     }
   }
@@ -997,27 +997,6 @@ module.exports = class DappLib {
       result: result.callData.transactionId
     }
 
-  }
-
-  static async RewardsGetNFTIDs(data) {
-
-    let result = await Blockchain.get({
-      config: DappLib.getConfig(),
-      roles: {
-      }
-    },
-      'rewards_get_nft_ids',
-      {
-        account: { value: data.account, type: t.Address },
-        tenantOwner: { value: data.tenantOwner, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'NFT IDs in Account Collection',
-      result: result.callData
-    }
   }
 
   static async RewardsGetClientTenants(data) {

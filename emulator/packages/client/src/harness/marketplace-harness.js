@@ -32,8 +32,8 @@ export default class MarketplaceHarness extends LitElement {
         let content = html`
     <page-body title="${this.title}" category="${this.category}" description="${this.description}">
     
-        <action-card title="Marketplace - Instance" description="Instance" action="MarketplaceInstance" method="post"
-            fields="signer">
+        <action-card title="Marketplace - Instance" description="Create your own Tenant" action="MarketplaceInstance"
+            method="post" fields="signer">
             <account-widget field="signer" label="Signer">
             </account-widget>
         </action-card>
@@ -44,7 +44,7 @@ export default class MarketplaceHarness extends LitElement {
             </account-widget>
         </action-card>
     
-        <action-card title="Marketplace - Mint FT" description="Mint FT" action="SimpleFTMintFT" method="post"
+        <action-card title="Marketplace - Mint Tokens" description="Mint Tokens" action="SimpleTokenMintFT" method="post"
             fields="tenantOwner signer recipient amount">
             <account-widget field="tenantOwner" label="Tenant Owner">
             </account-widget>
@@ -52,11 +52,11 @@ export default class MarketplaceHarness extends LitElement {
             </account-widget>
             <account-widget field="recipient" label="Recipient">
             </account-widget>
-            <text-widget field="amount" label="Amount of FT" placeholder="50.0">
+            <text-widget field="amount" label="Amount of Tokens" placeholder="50.0">
             </text-widget>
         </action-card>
     
-        <action-card title="Marketplace - Get Balance" description="Get Balance" action="SimpleFTGetBalance" method="get"
+        <action-card title="Marketplace - Get Balance" description="Get Balance" action="SimpleTokenGetBalance" method="get"
             fields="tenantOwner account">
             <account-widget field="tenantOwner" label="Tenant Owner">
             </account-widget>
@@ -110,9 +110,8 @@ export default class MarketplaceHarness extends LitElement {
             </account-widget>
         </action-card>
     
-        <action-card title="Marketplace - Get IDs"
-            description="Get all the NFTs for sale in this NFTMarketplace.SaleCollection." action="MarketplaceGetIDs"
-            method="post" fields="account tenantOwner">
+        <action-card title="Marketplace - Get IDs" description="Get all the NFTs for sale in this SaleCollection."
+            action="MarketplaceGetIDs" method="post" fields="account tenantOwner">
             <account-widget field="tenantOwner" label="Tenant Owner">
             </account-widget>
             <account-widget field="account" label="Account">

@@ -1,5 +1,5 @@
-import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 
 pub fun main(account: Address): String {
-    return SimpleFT.getClientTenantID(account: account)!
+    return SimpleToken.getClientTenantID(account: account)!
 }
