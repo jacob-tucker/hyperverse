@@ -5,7 +5,7 @@ import './pages/dapp';
 import TribesPage from './pages/tribessample-page';
 
 class App extends Component {
-  
+
   render() {
     return (
         <div className="flexible-content">

@@ -18,7 +18,6 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
-    pub event TenantReused(id: String)
     access(contract) var clientTenants: {Address: String}
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]

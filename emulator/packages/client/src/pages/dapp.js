@@ -29,7 +29,6 @@ export default class DappPage extends LitElement {
     super(args);
   }
 
-
   render() {
     let content = html`
       <div class="container m-auto">

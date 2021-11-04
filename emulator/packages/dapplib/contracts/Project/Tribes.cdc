@@ -15,7 +15,6 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
-    pub event TenantReused(id: String)
     access(contract) var clientTenants: {Address: String}
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
@@ -37,6 +36,7 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         access(contract) var participants: {Address: Bool}
         access(contract) var tribes: {String: TribeData}
 
+        pub fun getAllTribes(): [String]
         access(contract) fun addNewTribe(newTribeName: String)
         access(contract) fun addMember(tribe: String, member: Address)
         access(contract) fun removeMember(currentTribe: String, member: Address)
@@ -48,6 +48,10 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
 
         pub var tribes: {String: TribeData}
         pub var participants: {Address: Bool}
+
+        pub fun getAllTribes(): [String] {
+            return self.tribes.keys
+        }
 
         pub fun addNewTribe(newTribeName: String) {
             self.tribes[newTribeName] = TribeData()

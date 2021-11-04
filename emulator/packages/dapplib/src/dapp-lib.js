@@ -64,6 +64,66 @@ module.exports = class DappLib {
     }
   }
 
+  /****** HelloWorld ******/
+
+  static async HelloWorldInstance(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'helloworld_instance'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async HelloWorldGetClientTenants(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'helloworld_get_client_tenants',
+      {
+        account: { value: data.account, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'HelloWorld TenantID',
+      result: result.callData
+    }
+  }
+
+  static async HelloWorldGreeting(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'helloworld_hello',
+      {
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_STRING,
+      label: '',
+      result: result.callData
+    }
+  }
+
   /****** Tribes ******/
 
   // Run by a user (like someone who wants a collection)
@@ -187,6 +247,26 @@ module.exports = class DappLib {
     return {
       type: DappLib.DAPP_RESULT_STRING,
       label: 'The identitys current tribe',
+      result: result.callData
+    }
+  }
+
+  static async TribesGetAllTribes(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'tribes_get_all_tribes',
+      {
+        tenantOwner: { value: data.tenantOwner, type: t.Address }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_STRING,
+      label: 'All the Tribes',
       result: result.callData
     }
   }
