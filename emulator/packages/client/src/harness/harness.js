@@ -69,7 +69,7 @@ export default class HarnessPage extends LitElement {
       {
         "name": "core-rewards",
         "title": "Rewards",
-        "description": "Mint, own, and trade Simple NFTs, and get a reward when you have 3 SimpleNFTs.",
+        "description": "Mint, own, and trade Simple NFTs, and get a reward when you have __ SimpleNFTs.",
         "category": "Hyperverse",
         "route": "/core-rewards"
       },

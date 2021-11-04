@@ -33,9 +33,11 @@ export default class RewardsHarness extends LitElement {
       <page-body title="${this.title}" category="${this.category}" description="${this.description}">
       
         <action-card title="Rewards - Instance" description="Create your own Tenant" action="RewardsInstance" method="post"
-          fields="signer">
+          fields="signer numForReward">
           <account-widget field="signer" label="Signer">
           </account-widget>
+          <text-widget field="numForReward" label="Number of NFTs for Reward" placeholder="3">
+          </text-widget>
         </action-card>
       
         <action-card title="Rewards - Get Client Tenants" description="Get all your Tenant IDs"

@@ -923,7 +923,10 @@ module.exports = class DappLib {
         proposer: data.signer
       }
     },
-      'rewards_instance'
+      'rewards_instance',
+      {
+        numForReward: { value: parseInt(data.numForReward), type: t.Int }
+      }
     );
 
     return {
