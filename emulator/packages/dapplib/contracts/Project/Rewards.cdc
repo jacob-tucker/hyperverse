@@ -36,6 +36,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     pub resource interface IState {
        access(contract) var recipients: {Address: Bool}
        access(contract) fun addRecipient(recipient: Address)
+       pub let numForReward: Int
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
@@ -46,11 +47,13 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         pub fun addRecipient(recipient: Address) {
             self.recipients[recipient] = true
         }
+        pub let numForReward: Int
 
-        init(_tenantID: String, _holder: Address) {
+        init(_tenantID: String, _holder: Address, _numForReward: Int) {
             self.tenantID = _tenantID
             self.holder = _holder
             self.recipients = {}
+            self.numForReward = _numForReward
         }
     }
 
@@ -58,7 +61,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     // String : the identifier of the contract
     // UInt64 : The incremented # (from 0) for that account. For example, you want your
     // 2nd Tenant from SimpleNFT, it'd be `1`.
-    pub fun instance(auth: &HyperverseAuth.Auth) {
+    pub fun instance(auth: &HyperverseAuth.Auth, numForReward: Int) {
         pre {
             self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
         }
@@ -73,7 +76,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         }
         SimpleNFT.addAlias(auth: auth, new: STenantID)
 
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address, _numForReward: numForReward)
         self.addAlias(auth: auth, new: STenantID)
 
         self.clientTenants[auth.owner!.address] = STenantID
@@ -129,7 +132,7 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         // Proof that we need alias at the contract level so we can do that here wait nvm LUL
         let nftCollection = recipientPackage.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: tenantID)
         let ids = nftCollection.getIDs()
-        if ids.length > 2 {
+        if ids.length >= TenantState.numForReward {
             let nftMinter = minterPackage.getMinterInContract(tenantID: tenantID)
             nftCollection.deposit(token: <- nftMinter.mintNFT(metadata: {"name": "Super Legendary Reward"}))
             TenantState.addRecipient(recipient: recipientPackage.owner!.address)

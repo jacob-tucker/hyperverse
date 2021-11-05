@@ -11,8 +11,8 @@ import "../components/dictionary-widget.js"
 import DappLib from "@decentology/dappstarter-dapplib";
 import { LitElement, html, customElement, property } from "lit-element";
 
-@customElement('rewards-harness')
-export default class RewardsHarness extends LitElement {
+@customElement('token-harness')
+export default class TokenHarness extends LitElement {
   @property()
   title;
   @property()
@@ -32,38 +32,52 @@ export default class RewardsHarness extends LitElement {
     let content = html`
       <page-body title="${this.title}" category="${this.category}" description="${this.description}">
       
-        <action-card title="Rewards - Instance" description="Create your own Tenant" action="RewardsInstance" method="post"
-          fields="signer numForReward">
+        <action-card title="SimpleToken - Instance" description="Create your own Tenant" action="SimpleTokenInstance"
+          method="post" fields="signer">
           <account-widget field="signer" label="Signer">
           </account-widget>
-          <text-widget field="numForReward" label="Number of NFTs for Reward" placeholder="3">
-          </text-widget>
         </action-card>
       
-        <action-card title="Rewards - Get Client Tenants" description="Get all your Tenant IDs"
-          action="RewardsGetClientTenants" method="get" fields="account">
+        <action-card title="SimpleToken - Get Client Tenants" description="Get the client tenants for this account"
+          action="SimpleTokenGetClientTenants" method="get" fields="account">
           <account-widget field="account" label="Account">
           </account-widget>
         </action-card>
       
-        <action-card title="Rewards - Mint NFT" description="Mint NFT" action="RewardsMintNFT" method="post"
-          fields="tenantOwner recipient">
+        <action-card title="SimpleToken - Give Minter" description="Give a SimpleToken minter" action="SimpleTokenGiveMinter"
+          method="post" fields="tenantOwner recipient">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="recipient" label="Recipient">
           </account-widget>
         </action-card>
       
-        <action-card title="Rewards - Give Reward" description="Give Reward" action="RewardsGiveReward" method="post"
-          fields="tenantOwner signer">
+        <action-card title="SimpleToken - Mint Tokens" description="Mint Tokens" action="SimpleTokenMintFT" method="post"
+          fields="tenantOwner signer recipient amount">
+          <account-widget field="tenantOwner" label="Tenant Owner">
+          </account-widget>
+          <account-widget field="signer" label="FTMinter">
+          </account-widget>
+          <account-widget field="recipient" label="Recipient">
+          </account-widget>
+          <text-widget field="amount" label="Amount of Tokens" placeholder="50.0">
+          </text-widget>
+        </action-card>
+      
+        <action-card title="SimpleToken - Transfer Tokens" description="Transfer Tokens" action="SimpleTokenTransferFT"
+          method="post" fields="tenantOwner signer recipient amount">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="signer" label="Signer">
           </account-widget>
+          <account-widget field="recipient" label="Recipient">
+          </account-widget>
+          <text-widget field="amount" label="Amount of Tokens" placeholder="50">
+          </text-widget>
         </action-card>
       
-        <action-card title="Rewards - Get NFT IDs" description="Get an account's NFT IDs" action="SimpleNFTGetNFTIDs"
-          method="get" fields="account tenantOwner">
+        <action-card title="SimpleToken - Get Balance" description="Get Balance" action="SimpleTokenGetBalance" method="get"
+          fields="tenantOwner account">
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="account" label="Account">

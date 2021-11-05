@@ -3,7 +3,7 @@ import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 
-pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
+pub contract SimpleToken: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** METADATA ****************************************/
 
@@ -89,7 +89,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
 
         pub fun setup(tenantID: String) {
             pre {
-                SimpleFT.tenants[tenantID] != nil: "This tenantID does not exist."
+                SimpleToken.tenants[tenantID] != nil: "This tenantID does not exist."
             }
             self.vaults[tenantID] <-! create Vault(tenantID, _balance: 0.0)
         }
@@ -98,18 +98,18 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
             self.admins[Administrator.tenantID] <-! Administrator
         }
         pub fun borrowAdministrator(tenantID: String): &Administrator {
-            return &self.admins[SimpleFT.aliases[tenantID]!] as &Administrator
+            return &self.admins[SimpleToken.aliases[tenantID]!] as &Administrator
         }
 
         pub fun depositMinter(Minter: @Minter) {
             self.minters[Minter.tenantID] <-! Minter
         }
         pub fun borrowMinter(tenantID: String): &Minter {
-            return &self.minters[SimpleFT.aliases[tenantID]!] as &Minter
+            return &self.minters[SimpleToken.aliases[tenantID]!] as &Minter
         }
         
         pub fun borrowVault(tenantID: String): &Vault {
-            let original = SimpleFT.aliases[tenantID]!
+            let original = SimpleToken.aliases[tenantID]!
             if self.vaults[original] == nil {
                 self.setup(tenantID: original)
             }
@@ -155,7 +155,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         pub let tenantID: String
         pub var balance: UFix64
 
-        pub fun withdraw(amount: UFix64): @SimpleFT.Vault {
+        pub fun withdraw(amount: UFix64): @SimpleToken.Vault {
             self.balance = self.balance - amount
             return <-create Vault(self.tenantID, _balance: amount)
         }
@@ -163,7 +163,7 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         pub fun deposit(vault: @Vault) {
             pre {
                 vault.tenantID == self.tenantID:
-                    "Trying to deposit SimpleFT that belongs to another Tenant"
+                    "Trying to deposit SimpleToken that belongs to another Tenant"
             }
             self.balance = self.balance + vault.balance
             vault.balance = 0.0
@@ -174,11 +174,11 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
             self.balance = _balance
             self.tenantID = tenantID
 
-            SimpleFT.getTenant(id: self.tenantID).updateTotalSupply(delta: Fix64(_balance))
+            SimpleToken.getTenant(id: self.tenantID).updateTotalSupply(delta: Fix64(_balance))
         }
 
         destroy() {
-            SimpleFT.getTenant(id: self.tenantID).updateTotalSupply(delta: -Fix64(self.balance))
+            SimpleToken.getTenant(id: self.tenantID).updateTotalSupply(delta: -Fix64(self.balance))
         }
     }
 
@@ -212,12 +212,12 @@ pub contract SimpleFT: IHyperverseModule, IHyperverseComposable {
         self.tenants <- {}
         self.aliases = {}
 
-        self.PackageStoragePath = /storage/SimpleFTPackage
-        self.PackagePrivatePath = /private/SimpleFTPackage
-        self.PackagePublicPath = /public/SimpleFTPackage
+        self.PackageStoragePath = /storage/SimpleTokenPackage
+        self.PackagePrivatePath = /private/SimpleTokenPackage
+        self.PackagePublicPath = /public/SimpleTokenPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
-            _title: "SimpleFT", 
+            _title: "SimpleToken", 
             _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
             _version: "0.0.1", 
             _publishedAt: getCurrentBlock().timestamp,

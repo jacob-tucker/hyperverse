@@ -1,6 +1,6 @@
 import NFTMarketplace from "../../../contracts/Project/NFTMarketplace.cdc"
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
-import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 
 // THIS IS THE FIRST THING YOU RUN - EVEN BEFORE GETTING A TENANT IN 'instance.cdc'
 // Will only be run 1 time per user - ever. So even if they need this
@@ -16,16 +16,16 @@ transaction() {
         }
         let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
 
-        /* SimpleFT */
-        if signer.getCapability<&SimpleFT.Package>(SimpleFT.PackagePrivatePath).borrow() == nil {
-            signer.save(<- SimpleFT.getPackage(), to: SimpleFT.PackageStoragePath)
-            signer.link<&SimpleFT.Package>(SimpleFT.PackagePrivatePath, target: SimpleFT.PackageStoragePath)
-            signer.link<&SimpleFT.Package{SimpleFT.PackagePublic}>(SimpleFT.PackagePublicPath, target: SimpleFT.PackageStoragePath)
+        /* SimpleToken */
+        if signer.getCapability<&SimpleToken.Package>(SimpleToken.PackagePrivatePath).borrow() == nil {
+            signer.save(<- SimpleToken.getPackage(), to: SimpleToken.PackageStoragePath)
+            signer.link<&SimpleToken.Package>(SimpleToken.PackagePrivatePath, target: SimpleToken.PackageStoragePath)
+            signer.link<&SimpleToken.Package{SimpleToken.PackagePublic}>(SimpleToken.PackagePublicPath, target: SimpleToken.PackageStoragePath)
         }
-        let SimpleFTPackage = signer.getCapability<&SimpleFT.Package>(SimpleFT.PackagePrivatePath)
+        let SimpleTokenPackage = signer.getCapability<&SimpleToken.Package>(SimpleToken.PackagePrivatePath)
 
         /* NFTMarketplace */
-        signer.save(<- NFTMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, SimpleFTPackage: SimpleFTPackage), to: NFTMarketplace.PackageStoragePath)
+        signer.save(<- NFTMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, SimpleTokenPackage: SimpleTokenPackage), to: NFTMarketplace.PackageStoragePath)
         signer.link<&NFTMarketplace.Package>(NFTMarketplace.PackagePrivatePath, target: NFTMarketplace.PackageStoragePath)
         signer.link<&NFTMarketplace.Package{NFTMarketplace.PackagePublic}>(NFTMarketplace.PackagePublicPath, target: NFTMarketplace.PackageStoragePath)
     }

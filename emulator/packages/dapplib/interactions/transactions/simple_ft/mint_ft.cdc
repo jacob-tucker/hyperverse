@@ -1,31 +1,31 @@
-import SimpleFT from "../../../contracts/Project/SimpleFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 
 transaction(recipient: Address, tenantOwner: Address, amount: UFix64) {
 
     let TenantID: String
-    let SimpleFTMinter: &SimpleFT.Minter
-    let RecipientCollection: &SimpleFT.Vault{SimpleFT.VaultPublic}
+    let SimpleTokenMinter: &SimpleToken.Minter
+    let RecipientCollection: &SimpleToken.Vault{SimpleToken.VaultPublic}
 
     prepare(signer: AuthAccount) {
         self.TenantID = tenantOwner.toString()
                         .concat(".")
-                        .concat(SimpleFT.getType().identifier)
+                        .concat(SimpleToken.getType().identifier)
 
-        let SignerSimpleFTPackage = signer.borrow<&SimpleFT.Package>(from: SimpleFT.PackageStoragePath)
-                                        ?? panic("Could not borrow the signer's SimpleFT.Package.")
+        let SignerSimpleTokenPackage = signer.borrow<&SimpleToken.Package>(from: SimpleToken.PackageStoragePath)
+                                        ?? panic("Could not borrow the signer's SimpleToken.Package.")
 
-        self.SimpleFTMinter = SignerSimpleFTPackage.borrowMinter(tenantID: self.TenantID)
+        self.SimpleTokenMinter = SignerSimpleTokenPackage.borrowMinter(tenantID: self.TenantID)
 
-        let RecipientSimpleFTPackage = getAccount(recipient).getCapability(SimpleFT.PackagePublicPath)
-                                            .borrow<&SimpleFT.Package{SimpleFT.PackagePublic}>()
-                                            ?? panic("Could not borrow the recipient's SimpleFT.Package.")
-        self.RecipientCollection = RecipientSimpleFTPackage.borrowVaultPublic(tenantID: self.TenantID)
+        let RecipientSimpleTokenPackage = getAccount(recipient).getCapability(SimpleToken.PackagePublicPath)
+                                            .borrow<&SimpleToken.Package{SimpleToken.PackagePublic}>()
+                                            ?? panic("Could not borrow the recipient's SimpleToken.Package.")
+        self.RecipientCollection = RecipientSimpleTokenPackage.borrowVaultPublic(tenantID: self.TenantID)
     }
 
     execute {
-        let vault <- self.SimpleFTMinter.mintTokens(amount: amount) 
+        let vault <- self.SimpleTokenMinter.mintTokens(amount: amount) 
         self.RecipientCollection.deposit(vault: <-vault)
-        log("Minted a SimpleFT into the recipient's SimpleFT Collection.")
+        log("Minted a SimpleToken into the recipient's SimpleToken Collection.")
     }
 }
 
