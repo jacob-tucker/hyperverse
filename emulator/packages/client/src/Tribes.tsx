@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, SyntheticEvent } from 'react';
+//@ts-ignore
 import DappLib from "@decentology/dappstarter-dapplib";
-import { roles } from "../components/account-widget.js";
 import archerbow from "./archerbow.png"
 import "./tribes.css"
 
 const accounts = DappLib.getAccounts();
-let ACCOUNT = {}
-for (let i = 0; i < roles.length; i++) {
-    ACCOUNT[roles[i]] = accounts[i]
+let ACCOUNT = {
+    "Admin": "0x",
+    "Alice": "0x"
 }
 
-const TribesSamplePage = () => {
+const TribesPage = (props:any) => {
     const [currentTribe, setCurrentTribe] = useState("")
     const [allTribes, setAllTribes] = useState([])
     const [checkedTribe, setCheckedTribe] = useState(false)
     const [error, setError] = useState(false)
 
-    const getCurrentTribe = async (e) => {
+    const getCurrentTribe = async (e: SyntheticEvent) => {
         e.preventDefault()
         let data = {
             tenantOwner: ACCOUNT.Admin,
@@ -44,9 +44,9 @@ const TribesSamplePage = () => {
     }
 
     return (
-        <div class="tribes">
+        <div className="tribes">
             {error ?
-                <div class="error">
+                <div className="error">
                     <h2>Two things could be wrong:</h2>
                     <ul>
                         <li>1) You have not called `instance` for an account in the Tribes module.</li>
@@ -54,20 +54,22 @@ const TribesSamplePage = () => {
                     </ul>
                 </div> : null}
             {checkedTribe && currentTribe === 'Archers'
-                ? <div class="archers-tribe">
+                ? <div className="archers-tribe">
                     <h1>Welcome to the Archers Tribe!</h1>
-                    <img src={archerbow} />
+                    <img src={archerbow} alt="" />
                 </div>
                 : checkedTribe && currentTribe === 'None!'
-                    ? <h1 class="no-access">You do not belong to a Tribe.</h1>
+                    ? <h1 className="no-access">You do not belong to a Tribe.</h1>
                     : checkedTribe && !error
-                        ? <h1 class="no-access">You do not have access to Archers.</h1>
+                        ? <h1 className="no-access">You do not have access to Archers.</h1>
                         : !error
-                            ? <button class="button-9" role="button" onClick={getCurrentTribe}>Look at your Tribe</button>
+                            ? <button className="button-9" onClick={getCurrentTribe}>Look at your Tribe</button>
                             : null}
         </div>
     );
 
 }
 
-export default TribesSamplePage;
+
+
+export default TribesPage;

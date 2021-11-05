@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import './components/top-navigation';
 import './components/page-loader';
 import './pages/dapp';
-import TribesPage from './pages/tribessample-page';
 
 class App extends Component {
 

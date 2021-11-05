@@ -13,7 +13,7 @@ export default class TopNavigation extends LitElement {
     super(args);
     let pathname = location.pathname;
     if (pathname !== "/") {
-      pathname = pathname.replace("/", "");
+      // pathname = pathname.replace("/", "");
     } else pathname = null;
     setTimeout(() => {
       this.setPageLoader(pathname || "dapp");
@@ -29,9 +29,9 @@ export default class TopNavigation extends LitElement {
     this.setPageLoader(e.target.dataset.link);
   };
 
-  setPageLoader(name) {
+  setPageLoader(route) {
     let pageLoader = document.getElementById("page-loader");
-    pageLoader.load(name, this.getPages());
+    pageLoader.load(route, this.getPages());
     this.requestUpdate();
   }
 
@@ -58,7 +58,7 @@ export default class TopNavigation extends LitElement {
                         ? "bg-gray-700 text-white"
                         : "text-gray-500"}"
                       @click=${this.handleClick}
-                      data-link="${x.name}"
+                      data-link="${x.route}"
                       >${x.title}</a
                     >
                   `;
