@@ -6,8 +6,8 @@ import "./tribes.css"
 
 const accounts = DappLib.getAccounts();
 let ACCOUNT = {
-    "Admin": "0x",
-    "Alice": "0x"
+    "Admin": "0x01cf0e2f2f715450",
+    "Alice": "0x179b6b1cb6755e31"
 }
 
 const TribesPage = (props:any) => {
