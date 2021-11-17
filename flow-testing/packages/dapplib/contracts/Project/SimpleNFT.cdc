@@ -2,8 +2,9 @@ import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
 import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
+import HNonFungibleToken from "../Hyperverse/HNonFungibleToken.cdc"
 
-pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
+pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable, HNonFungibleToken {
 
     /**************************************** METADATA ****************************************/
 
@@ -20,9 +21,10 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         return self.clientTenants[account]
     }
     // Original tenantID --> actual resource
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
     // Alias to original. Original -> actual resource above
     // So if an alias exists, it already points to a Tenant
@@ -45,7 +47,7 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub let tenantID: String
         pub var totalSupply: UInt64
         access(contract) fun updateTotalSupply() {
-            self.totalSupply = self.totalSupply + (1 as UInt64)
+            self.totalSupply = self.totalSupply + 1
         }
         pub var holder: Address
 
@@ -88,45 +90,35 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         pub fun depositMinter(NFTMinter: @NFTMinter)
     }
 
-    // All of the getAlias stuff only happens in this Package :)
     pub resource Package: PackagePublic {
-        pub var collections: @{String: Collection}
-        pub var admins: @{String: Admin}
+        pub var collections: @{String: HNonFungibleToken.Collection}
         pub var minters: @{String: NFTMinter}
+        pub var admins: @{String: Admin}
 
-        pub fun setup(tenantID: String) {
-            pre {
-                SimpleNFT.tenants[tenantID] != nil: "This tenantID does not exist."
+        pub fun borrowCollection(tenantID: String): &Collection {
+            let original = SimpleNFT.aliases[tenantID]!
+            if self.collections[original] == nil {
+                self.collections[original] <-! create Collection(tenantID)
             }
-            self.collections[tenantID] <-! create Collection(tenantID)
+            let ref = &self.collections[original] as auth &HNonFungibleToken.Collection
+            return ref as! &Collection
         }
-
-        pub fun depositAdmin(Admin: @Admin) {
-            self.admins[Admin.tenantID] <-! Admin
-        }
-
-        pub fun borrowAdmin(tenantID: String): &Admin {
-            return &self.admins[SimpleNFT.aliases[tenantID]!] as &Admin
+        pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic} {
+            return self.borrowCollection(tenantID: tenantID)
         }
 
         pub fun depositMinter(NFTMinter: @NFTMinter) {
             self.minters[NFTMinter.tenantID] <-! NFTMinter
         }
-
-         pub fun borrowMinter(tenantID: String): &NFTMinter {
+        pub fun borrowMinter(tenantID: String): &NFTMinter {
             return &self.minters[SimpleNFT.aliases[tenantID]!] as &NFTMinter
         }
 
-        pub fun borrowCollection(tenantID: String): &Collection {
-            let original = SimpleNFT.aliases[tenantID]!
-            if self.collections[original] == nil {
-                self.setup(tenantID: original)
-            }
-            return &self.collections[original] as &Collection
+        pub fun depositAdmin(Admin: @Admin) {
+            self.admins[Admin.tenantID] <-! Admin
         }
-
-        pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic} {
-            return self.borrowCollection(tenantID: tenantID)
+        pub fun borrowAdmin(tenantID: String): &Admin {
+            return &self.admins[SimpleNFT.aliases[tenantID]!] as &Admin
         }
 
         init() {
@@ -149,10 +141,10 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
     /**************************************** FUNCTIONALITY ****************************************/
 
     pub event ContractInitialized()
-    pub event Withdraw(id: UInt64, from: Address?)
-    pub event Deposit(id: UInt64, to: Address?)
+    pub event Withdraw(tenantID: String, id: UInt64, from: Address?)
+    pub event Deposit(tenantID: String, id: UInt64, to: Address?)
 
-    pub resource NFT {
+    pub resource NFT: HNonFungibleToken.INFT {
         pub let tenantID: String
         pub let id: UInt64
         pub var metadata: {String: String}
@@ -170,28 +162,26 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
 
     pub resource interface CollectionPublic {
         pub let tenantID: String
-        pub fun deposit(token: @NFT)
+        pub fun deposit(token: @HNonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun getMetadata(id: UInt64): {String: String}
     }
 
-    pub resource Collection: CollectionPublic {
+    pub resource Collection: CollectionPublic, HNonFungibleToken.Provider, HNonFungibleToken.Receiver, HNonFungibleToken.CollectionPublic {
         pub let tenantID: String
-        pub var ownedNFTs: @{UInt64: NFT}
+        pub var ownedNFTs: @{UInt64: HNonFungibleToken.NFT}
 
-        pub fun deposit(token: @NFT) {
-            pre {
-                self.tenantID == token.tenantID: "This token belongs to a different Tenant."
-            }
+        pub fun deposit(token: @HNonFungibleToken.NFT) {
+            let token <- token as! @NFT
             let id: UInt64 = token.id
             let oldToken <- self.ownedNFTs[id] <- token
-            emit Deposit(id: id, to: self.owner?.address)
+            emit Deposit(tenantID: self.tenantID, id: id, to: self.owner?.address)
             destroy oldToken
         }
 
-        pub fun withdraw(withdrawID: UInt64): @NFT {
+        pub fun withdraw(withdrawID: UInt64): @HNonFungibleToken.NFT {
             let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
-            emit Withdraw(id: token.id, from: self.owner?.address)
+            emit Withdraw(tenantID: self.tenantID, id: token.id, from: self.owner?.address)
             return <-token
         }
 
@@ -199,13 +189,14 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
             return self.ownedNFTs.keys
         }
 
-        pub fun borrowNFT(id: UInt64): &NFT {
-            return &self.ownedNFTs[id] as &NFT
+        pub fun borrowNFT(id: UInt64): &HNonFungibleToken.NFT {
+            return &self.ownedNFTs[id] as &HNonFungibleToken.NFT
         }
 
         pub fun getMetadata(id: UInt64): {String: String} {
-            let ref = &self.ownedNFTs[id] as &NFT
-            return ref.metadata
+            let ref = &self.ownedNFTs[id] as auth &HNonFungibleToken.NFT
+            let wholeNFT = ref as! &NFT
+            return wholeNFT.metadata
         }
 
         destroy() {
@@ -218,20 +209,20 @@ pub contract SimpleNFT: IHyperverseModule, IHyperverseComposable {
         }
     }
 
-    pub resource Admin {
+    pub resource NFTMinter {
         pub let tenantID: String
-        pub fun createNFTMinter(): @NFTMinter {
-            return <- create NFTMinter(self.tenantID)
+        pub fun mintNFT(metadata: {String: String}): @NFT {
+            return <- create NFT(self.tenantID, _metadata: metadata)
         }
         init(_ tenantID: String) {
             self.tenantID = tenantID
         }
     }
 
-    pub resource NFTMinter {
+    pub resource Admin {
         pub let tenantID: String
-        pub fun mintNFT(metadata: {String: String}): @NFT {
-            return <- create NFT(self.tenantID, _metadata: metadata)
+        pub fun createNFTMinter(): @NFTMinter {
+            return <- create NFTMinter(self.tenantID)
         }
         init(_ tenantID: String) {
             self.tenantID = tenantID

@@ -48,7 +48,7 @@ transaction() {
         /* Rewards */
         if signer.borrow<&Rewards.Package>(from: Rewards.PackageStoragePath) == nil {
             let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
-            signer.save(<- Rewards.getPackage(SimpleNFTPackage: SimpleNFTPackage), to: Rewards.PackageStoragePath)
+            signer.save(<- Rewards.getPackage(auth: auth), to: Rewards.PackageStoragePath)
             signer.link<auth &Rewards.Package>(Rewards.PackagePrivatePath, target: Rewards.PackageStoragePath)
             signer.link<&Rewards.Package{Rewards.PackagePublic}>(Rewards.PackagePublicPath, target: Rewards.PackageStoragePath)
             auth.addPackage(packageName: Rewards.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(Rewards.PackagePrivatePath))

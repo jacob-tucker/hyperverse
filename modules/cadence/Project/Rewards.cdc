@@ -20,9 +20,10 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
     }
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
     pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
@@ -101,8 +102,6 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
         pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
             return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
         }
-    
-        pub fun setup(tenantID: String) {}
 
         access(contract) fun getMinterInContract(tenantID: String): &SimpleNFT.NFTMinter {
             return self.SimpleNFTPackage.borrow()!.borrowMinter(tenantID: tenantID) as &SimpleNFT.NFTMinter

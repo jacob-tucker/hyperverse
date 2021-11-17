@@ -22,9 +22,10 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
     }
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
     pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
@@ -65,7 +66,7 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
         /* Dependencies */
         if SimpleNFT.getClientTenantID(account: auth.owner!.address) == nil {
-            SimpleNFT.instance(auth: auth)                   
+            SimpleNFT.instance(auth: auth)                
         }
         SimpleNFT.addAlias(auth: auth, new: STenantID)
         
@@ -204,7 +205,6 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
                 buyTokens.balance >= (self.forSale[simpleNFTTenantID]![id]!):
                     "Not enough tokens to buy the NFT!"
             }
-            let buyTokens <- buyTokens as! @FlowToken.Vault
             let price = self.forSale[simpleNFTTenantID]![id]!
             let vaultRef = self.FlowTokenVault.borrow()!
             vaultRef.deposit(from: <-buyTokens)

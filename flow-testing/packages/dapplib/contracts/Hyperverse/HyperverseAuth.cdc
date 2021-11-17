@@ -15,6 +15,9 @@ pub contract HyperverseAuth {
         // String : A.{Address of Contract}.{Contract Name}
         // From getType().identifier on a contract
         pub var packages: {String: Capability<auth &IHyperverseComposable.Package>}
+        pub fun getPackage(packageName: String): Capability<auth &IHyperverseComposable.Package> {
+            return self.packages[packageName]!
+        }
         pub fun addPackage(packageName: String, packageRef: Capability<auth &IHyperverseComposable.Package>) {
             pre {
                 packageRef.borrow() != nil: "This is an incorrect capability."
@@ -24,7 +27,7 @@ pub contract HyperverseAuth {
 
         init() {
             self.id = HyperverseAuth.totalAuths
-            HyperverseAuth.totalAuths = HyperverseAuth.totalAuths + (1 as UInt64)
+            HyperverseAuth.totalAuths = HyperverseAuth.totalAuths + 1
             self.packages = {}
         }
     }

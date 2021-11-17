@@ -24,7 +24,7 @@ pub contract HyperverseAuth {
 
         init() {
             self.id = HyperverseAuth.totalAuths
-            HyperverseAuth.totalAuths = HyperverseAuth.totalAuths + (1 as UInt64)
+            HyperverseAuth.totalAuths = HyperverseAuth.totalAuths + 1
             self.packages = {}
         }
     }

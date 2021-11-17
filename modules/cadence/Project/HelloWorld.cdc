@@ -19,9 +19,10 @@ pub contract HelloWorld: IHyperverseModule, IHyperverseComposable {
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
     }
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
     pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
@@ -64,16 +65,11 @@ pub contract HelloWorld: IHyperverseModule, IHyperverseComposable {
     }
 
     /**************************************** PACKAGE ****************************************/
-   
-    pub resource interface PackagePublic {
-      
-    }
     
-    pub resource Package: PackagePublic {    
-        pub fun setup(tenantID: String) {
-
-        }
-    }
+    pub let PackageStoragePath: StoragePath
+    pub let PackagePrivatePath: PrivatePath
+    pub let PackagePublicPath: PublicPath
+    pub resource Package {}
 
     /**************************************** FUNCTIONALITY ****************************************/
 
@@ -83,6 +79,9 @@ pub contract HelloWorld: IHyperverseModule, IHyperverseComposable {
         self.clientTenants = {}
         self.tenants <- {}
         self.aliases = {}
+        self.PackageStoragePath = /storage/HelloWorldPackage
+        self.PackagePrivatePath = /private/HelloWorldPackage
+        self.PackagePublicPath = /public/HelloWorldPackage
 
         self.metadata = HyperverseModule.ModuleMetadata(
             _title: "HelloWorld", 

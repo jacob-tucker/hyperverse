@@ -20,9 +20,10 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
     }
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
     pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
@@ -97,27 +98,27 @@ pub contract Rewards: IHyperverseModule, IHyperverseComposable {
 
     // We don't need aliases in this Package
     pub resource Package: PackagePublic {
-        pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
+        pub let dependencies: {String: Capability<auth &IHyperverseComposable.Package>}
         pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
-            return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
+            let package = self.dependencies[SimpleNFT.getType().identifier]!.borrow()!
+            let ref: &SimpleNFT.Package = package as! &SimpleNFT.Package
+            return ref
         }
-    
-        pub fun setup(tenantID: String) {}
 
         access(contract) fun getMinterInContract(tenantID: String): &SimpleNFT.NFTMinter {
-            return self.SimpleNFTPackage.borrow()!.borrowMinter(tenantID: tenantID) as &SimpleNFT.NFTMinter
+            let package = self.dependencies[SimpleNFT.getType().identifier]!.borrow()!
+            let ref: &SimpleNFT.Package = package as! &SimpleNFT.Package
+            return ref.borrowMinter(tenantID: tenantID)
         }
 
-        init(_SimpleNFTPackage: Capability<&SimpleNFT.Package>) {
-            self.SimpleNFTPackage = _SimpleNFTPackage
+        init(_auth: &HyperverseAuth.Auth) {
+            self.dependencies = {}
+            self.dependencies[SimpleNFT.getType().identifier] = _auth.getPackage(packageName: SimpleNFT.getType().identifier)
         }
     }
 
-    pub fun getPackage(SimpleNFTPackage: Capability<&SimpleNFT.Package>): @Package {
-        pre {
-            SimpleNFTPackage.borrow() != nil: "This is not a correct SimpleNFT.Package! Or you don't have one yet."
-        }
-        return <- create Package(_SimpleNFTPackage: SimpleNFTPackage)
+    pub fun getPackage(auth: &HyperverseAuth.Auth): @Package {
+        return <- create Package(_auth: auth)
     }
 
     /**************************************** FUNCTIONALITY ****************************************/

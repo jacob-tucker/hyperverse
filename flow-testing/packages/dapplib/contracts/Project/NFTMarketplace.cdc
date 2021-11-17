@@ -21,9 +21,10 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
     }
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
     pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
@@ -60,7 +61,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
         
         /* Dependencies */
         if SimpleToken.getClientTenantID(account: auth.owner!.address) == nil {
-            SimpleToken.instance(auth: auth)                   
+            SimpleToken.instance(auth: auth, initialSupply: 0.0)               
         }
         SimpleToken.addAlias(auth: auth, new: STenantID)
 
@@ -204,7 +205,7 @@ pub contract NFTMarketplace: IHyperverseModule, IHyperverseComposable {
 
             let price = self.forSale[id]!
             let vaultRef = self.SimpleTokenPackage.borrow()!.borrowVaultPublic(tenantID: self.tenantID)
-            vaultRef.deposit(vault: <-buyTokens)
+            vaultRef.deposit(from: <-buyTokens)
             let token <- self.SimpleNFTPackage.borrow()!.borrowCollection(tenantID: self.tenantID).withdraw(withdrawID: id)
             recipient.deposit(token: <-token)
             self.unlistSale(id: id)
