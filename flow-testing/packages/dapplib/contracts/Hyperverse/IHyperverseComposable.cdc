@@ -1,9 +1,12 @@
+import HyperverseModule from "./HyperverseModule.cdc"
+
 pub contract interface IHyperverseComposable {
 
     pub event TenantCreated(id: String)
 
-    access(contract) var clientTenants: {Address: String}
-    pub fun getClientTenantID(account: Address): String?
+    pub fun clientTenantID(account: Address): String
+    access(contract) var tenants: @{String: Tenant}
+    pub fun getTenant(account: Address): &{ITenant}
 
     pub resource interface ITenant {
         pub var holder: Address
@@ -13,8 +16,11 @@ pub contract interface IHyperverseComposable {
         pub var holder: Address
     }
 
+    pub let PackageStoragePath: StoragePath
+    pub let PackagePrivatePath: PrivatePath
+    pub let PackagePublicPath: PublicPath
+
     pub resource Package {
-        pub fun setup(tenantID: String)
-        // `instance` takes in a tenantID that represents the `uuid`
+       
     }
 }

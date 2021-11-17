@@ -1,34 +1,21 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
-import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
+import HFungibleToken from "../Hyperverse/HFungibleToken.cdc"
+import Registry from "../Hyperverse/Registry.cdc"
 
-pub contract SimpleToken: IHyperverseModule, IHyperverseComposable {
-
-    /**************************************** METADATA ****************************************/
-
-    access(contract) let metadata: HyperverseModule.ModuleMetadata
-    pub fun getMetadata(): HyperverseModule.ModuleMetadata {
-        return self.metadata
-    }
+pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
 
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
-    access(contract) var clientTenants: {Address: String}
-    pub fun getClientTenantID(account: Address): String? {
-        return self.clientTenants[account]
+    pub fun clientTenantID(account: Address): String {
+        return account.toString().concat(".").concat(self.getType().identifier)
     }
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
-    pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
-    }
-    access(contract) var aliases: {String: String}
-    pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
-        let original = auth.owner!.address.toString()
-                        .concat(".")
-                        .concat(self.getType().identifier)
-        self.aliases[new] = original
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
+    pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
+        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
 
     pub resource interface IState {
@@ -44,31 +31,25 @@ pub contract SimpleToken: IHyperverseModule, IHyperverseComposable {
             self.totalSupply = UFix64(Fix64(self.totalSupply) + delta)
         }
 
-        init(_tenantID: String, _holder: Address) {
+        init(_tenantID: String, _holder: Address, _initialSupply: UFix64) {
             self.tenantID = _tenantID
             self.holder = _holder
-            self.totalSupply = 0.0
+            self.totalSupply = _initialSupply
         }
     }
 
-    pub fun instance(auth: &HyperverseAuth.Auth) {
-        pre {
-            self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
-        }
-
-        var STenantID: String = auth.owner!.address.toString()
-                                .concat(".")
-                                .concat(self.getType().identifier)
+    pub fun instance(auth: &HyperverseAuth.Auth, initialSupply: UFix64) {
+        let tenant = auth.owner!.address
+        var STenantID: String = self.clientTenantID(account: tenant)
         
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
-        self.addAlias(auth: auth, new: STenantID)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant, _initialSupply: initialSupply)
         
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
-        package.depositAdministrator(Administrator: <- create Administrator(STenantID))
-        package.depositMinter(Minter: <- create Minter(STenantID))
+        package.depositAdministrator(Administrator: <- create Administrator(tenant))
+        package.depositMinter(Minter: <- create Minter(tenant))
         
-        self.clientTenants[auth.owner!.address] = STenantID
         emit TenantCreated(id: STenantID)
+        emit TokensInitialized(tenant: tenant, initialSupply: initialSupply)
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -78,45 +59,39 @@ pub contract SimpleToken: IHyperverseModule, IHyperverseComposable {
     pub let PackagePublicPath: PublicPath
  
     pub resource interface PackagePublic {
-        pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic}
+        pub fun borrowVaultPublic(tenant: Address): &Vault{VaultPublic}
         pub fun depositMinter(Minter: @Minter)
+        pub fun depositAdministrator(Administrator: @Administrator)
     }
 
     pub resource Package: PackagePublic {
-        pub var admins: @{String: Administrator}
-        pub var minters: @{String: Minter}
-        pub var vaults: @{String: Vault}
+        pub var vaults: @{Address: HFungibleToken.Vault}
+        pub var minters: @{Address: Minter}
+        pub var admins: @{Address: Administrator}
 
-        pub fun setup(tenantID: String) {
-            pre {
-                SimpleToken.tenants[tenantID] != nil: "This tenantID does not exist."
+        pub fun borrowVault(tenant: Address): &Vault {
+            if self.vaults[tenant] == nil {
+                self.vaults[tenant] <-! create Vault(tenant, _balance: 0.0)
             }
-            self.vaults[tenantID] <-! create Vault(tenantID, _balance: 0.0)
+            let ref = &self.vaults[tenant] as auth &HFungibleToken.Vault
+            return ref as! &Vault
         }
-
-        pub fun depositAdministrator(Administrator: @Administrator) {
-            self.admins[Administrator.tenantID] <-! Administrator
-        }
-        pub fun borrowAdministrator(tenantID: String): &Administrator {
-            return &self.admins[SimpleToken.aliases[tenantID]!] as &Administrator
+        pub fun borrowVaultPublic(tenant: Address): &Vault{VaultPublic} {
+            return self.borrowVault(tenant: tenant)
         }
 
         pub fun depositMinter(Minter: @Minter) {
-            self.minters[Minter.tenantID] <-! Minter
+            self.minters[Minter.tenant] <-! Minter
         }
-        pub fun borrowMinter(tenantID: String): &Minter {
-            return &self.minters[SimpleToken.aliases[tenantID]!] as &Minter
+        pub fun borrowMinter(tenant: Address): &Minter {
+            return &self.minters[tenant] as &Minter
         }
-        
-        pub fun borrowVault(tenantID: String): &Vault {
-            let original = SimpleToken.aliases[tenantID]!
-            if self.vaults[original] == nil {
-                self.setup(tenantID: original)
-            }
-            return &self.vaults[original] as &Vault
+
+        pub fun depositAdministrator(Administrator: @Administrator) {
+            self.admins[Administrator.tenant] <-! Administrator
         }
-        pub fun borrowVaultPublic(tenantID: String): &Vault{VaultPublic} {
-            return self.borrowVault(tenantID: tenantID)
+        pub fun borrowAdministrator(tenant: Address): &Administrator {
+            return &self.admins[tenant] as &Administrator
         }
 
         init() {
@@ -138,12 +113,18 @@ pub contract SimpleToken: IHyperverseModule, IHyperverseComposable {
 
     /**************************************** FUNCTIONALITY ****************************************/
 
-    pub resource interface VaultPublic {
-        pub let tenantID: String
-        pub var balance: UFix64
-        pub fun deposit(vault: @Vault)
+    pub event TokensInitialized(tenant: Address, initialSupply: UFix64)
 
-        init(_ tenantID: String, _balance: UFix64) {
+    pub event TokensWithdrawn(tenant: Address, amount: UFix64, from: Address?)
+
+    pub event TokensDeposited(tenant: Address, amount: UFix64, to: Address?)
+
+    pub resource interface VaultPublic {
+        pub let tenant: Address
+        pub var balance: UFix64
+        pub fun deposit(from: @HFungibleToken.Vault)
+
+        init(_ tenant: Address, _balance: UFix64) {
             post {
                 self.balance == _balance:
                     "Balance must be initialized to the initial balance"
@@ -151,78 +132,80 @@ pub contract SimpleToken: IHyperverseModule, IHyperverseComposable {
         }
     }
 
-    pub resource Vault: VaultPublic {
-        pub let tenantID: String
+    pub resource Vault: HFungibleToken.Provider, HFungibleToken.Receiver, HFungibleToken.Balance, VaultPublic {
+        pub let tenant: Address
         pub var balance: UFix64
 
-        pub fun withdraw(amount: UFix64): @SimpleToken.Vault {
+        pub fun withdraw(amount: UFix64): @HFungibleToken.Vault {
             self.balance = self.balance - amount
-            return <-create Vault(self.tenantID, _balance: amount)
+            emit TokensWithdrawn(tenant: self.tenant, amount: amount, from: self.owner?.address)
+            return <-create Vault(self.tenant, _balance: amount)
         }
 
-        pub fun deposit(vault: @Vault) {
-            pre {
-                vault.tenantID == self.tenantID:
-                    "Trying to deposit SimpleToken that belongs to another Tenant"
-            }
+        pub fun deposit(from: @HFungibleToken.Vault) {
+            let vault <- from as! @Vault
             self.balance = self.balance + vault.balance
+            emit TokensDeposited(tenant: self.tenant, amount: vault.balance, to: self.owner?.address)
             vault.balance = 0.0
             destroy vault
         }
 
-        init(_ tenantID: String, _balance: UFix64, ) {
+        init(_ tenant: Address, _balance: UFix64) {
             self.balance = _balance
-            self.tenantID = tenantID
+            self.tenant = tenant
 
-            SimpleToken.getTenant(id: self.tenantID).updateTotalSupply(delta: Fix64(_balance))
+            SimpleToken.getTenant(account: self.tenant).updateTotalSupply(delta: Fix64(_balance))
         }
 
         destroy() {
-            SimpleToken.getTenant(id: self.tenantID).updateTotalSupply(delta: -Fix64(self.balance))
+            SimpleToken.getTenant(account: self.tenant).updateTotalSupply(delta: -Fix64(self.balance))
         }
     }
 
     pub resource Administrator {
-        pub let tenantID: String
+        pub let tenant: Address
 
         pub fun createNewMinter(): @Minter {
-            return <-create Minter(self.tenantID)
+            return <-create Minter(self.tenant)
         }
-        init(_ tenantID: String) {
-            self.tenantID = tenantID
+        init(_ tenant: Address) {
+            self.tenant = tenant
         }
     }
 
     pub resource Minter {
-        pub let tenantID: String
+        pub let tenant: Address
         
         pub fun mintTokens(amount: UFix64): @Vault {
             pre {
                 amount > 0.0: "Amount minted must be greater than zero."
             }
-            return <-create Vault(self.tenantID, _balance: amount)
+            return <-create Vault(self.tenant, _balance: amount)
         }
-        init(_ tenantID: String) {
-           self.tenantID = tenantID
+        init(_ tenant: Address) {
+           self.tenant = tenant
         }
     }
 
     init() {
-        self.clientTenants = {}
         self.tenants <- {}
-        self.aliases = {}
 
         self.PackageStoragePath = /storage/SimpleTokenPackage
         self.PackagePrivatePath = /private/SimpleTokenPackage
         self.PackagePublicPath = /public/SimpleTokenPackage
 
-        self.metadata = HyperverseModule.ModuleMetadata(
-            _title: "SimpleToken", 
-            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
-            _version: "0.0.1", 
-            _publishedAt: getCurrentBlock().timestamp,
-            _externalLink: "",
-            _secondaryModules: nil
+        Registry.registerContract(
+            proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 
+            metadata: HyperverseModule.ModuleMetadata(
+                _identifier: self.getType().identifier,
+                _contractAddress: self.account.address,
+                _title: "SimpleToken", 
+                _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
+                _version: "0.0.1", 
+                _publishedAt: getCurrentBlock().timestamp,
+                _externalLink: "",
+                _secondaryModules: nil
+            )
         )
     }
 }

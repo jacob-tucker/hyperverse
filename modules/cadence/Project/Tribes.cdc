@@ -19,9 +19,10 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     pub fun getClientTenantID(account: Address): String? {
         return self.clientTenants[account]
     }
-    access(contract) var tenants: @{String: Tenant{IHyperverseComposable.ITenant, IState}}
+    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
     pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        return &self.tenants[id] as &Tenant{IHyperverseComposable.ITenant, IState}
+        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+        return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
     pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
@@ -240,6 +241,10 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         pub var description: String
 
         access(contract) var members: {Address: Bool}
+
+        pub fun getMembers(): [Address] {
+            return self.members.keys
+        }
 
         access(contract) fun addMember(member: Address) {
             self.members[member] = true
