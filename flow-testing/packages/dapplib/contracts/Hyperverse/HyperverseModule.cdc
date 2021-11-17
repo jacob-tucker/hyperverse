@@ -1,6 +1,8 @@
 pub contract HyperverseModule {
     
     pub struct ModuleMetadata {
+        pub var identifier: String
+        pub var contractAddress: Address
         pub var title: String
         pub var authors: [Author]
         pub var version: String
@@ -9,6 +11,8 @@ pub contract HyperverseModule {
         pub var secondaryModules: [{Address: String}]?
 
         init(
+            _identifier: String,
+            _contractAddress: Address,
             _title: String, 
             _authors: [Author], 
             _version: String, 
@@ -16,6 +20,8 @@ pub contract HyperverseModule {
             _externalURI: String,
             _secondaryModules: [{Address: String}]?,
         ) {
+            self.identifier = _identifier
+            self.contractAddress = _contractAddress
             self.title = _title
             self.authors = _authors
             self.version = _version

@@ -1,27 +1,19 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
-import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
+import Registry from "../Hyperverse/Registry.cdc"
 
-pub contract Tribes: IHyperverseModule, IHyperverseComposable {
-
-    /**************************************** METADATA ****************************************/
-
-    access(contract) let metadata: HyperverseModule.ModuleMetadata
-    pub fun getMetadata(): HyperverseModule.ModuleMetadata {
-        return self.metadata
-    }
+pub contract Tribes: IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
-    access(contract) var clientTenants: {Address: String}
-    pub fun getClientTenantID(account: Address): String? {
-        return self.clientTenants[account]
+    pub fun clientTenantID(account: Address): String {
+        return account.toString().concat(".").concat(self.getType().identifier)
     }
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+    pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
+        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
@@ -90,10 +82,6 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     }
 
     pub fun instance(auth: &HyperverseAuth.Auth) {
-        pre {
-            self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
-        }
-
         var STenantID: String = auth.owner!.address.toString()
                                 .concat(".")
                                 .concat(self.getType().identifier)
@@ -104,7 +92,6 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
         package.depositAdmin(Admin: <- create Admin(STenantID))
         
-        self.clientTenants[auth.owner!.address] = STenantID
         emit TenantCreated(id: STenantID)
     }
 
@@ -273,7 +260,6 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
     }
 
     init() {
-        self.clientTenants = {}
         self.tenants <- {}
         self.aliases = {}
 
@@ -281,13 +267,18 @@ pub contract Tribes: IHyperverseModule, IHyperverseComposable {
         self.PackagePrivatePath = /private/TribesPackage
         self.PackagePublicPath = /public/TribesPackage
 
-        self.metadata = HyperverseModule.ModuleMetadata(
-            _title: "Tribes", 
-            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
-            _version: "0.0.1", 
-            _publishedAt: getCurrentBlock().timestamp,
-            _externalUri: "",
-            _secondaryModules: nil
+        Registry.registerContract(
+            proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 
+            metadata: HyperverseModule.ModuleMetadata(
+                _identifier: self.getType().identifier,
+                _contractAddress: self.account.address,
+                _title: "Tribes", 
+                _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
+                _version: "0.0.1", 
+                _publishedAt: getCurrentBlock().timestamp,
+                _externalUri: "",
+                _secondaryModules: nil
+            )
         )
 
         emit TribesContractInitialized()

@@ -1,39 +1,21 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
-import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
+import Registry from "../Hyperverse/Registry.cdc"
 
-pub contract MultiNFT: IHyperverseModule, IHyperverseComposable {
-
-    /**************************************** METADATA ****************************************/
-
-    access(contract) let metadata: HyperverseModule.ModuleMetadata
-    pub fun getMetadata(): HyperverseModule.ModuleMetadata {
-        return self.metadata
-    }
+pub contract MultiNFT: IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
-    access(contract) var clientTenants: {Address: String}
-    pub fun getClientTenantID(account: Address): String? {
-        return self.clientTenants[account]
+    pub fun clientTenantID(account: Address): String {
+        return account.toString().concat(".").concat(self.getType().identifier)
     }
     // Original tenantID --> actual resource
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+    pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
+        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
-    }
-    // Alias to original. Original -> actual resource above
-    // So if an alias exists, it already points to a Tenant
-    access(contract) var aliases: {String: String}
-    pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
-        let original = auth.owner!.address.toString()
-                        .concat(".")
-                        .concat(self.getType().identifier)
-    
-        self.aliases[new] = original
     }
 
     pub resource interface IState {
@@ -63,22 +45,15 @@ pub contract MultiNFT: IHyperverseModule, IHyperverseComposable {
 
     // If we're making a new Tenant resource
     pub fun instance(auth: &HyperverseAuth.Auth) {
-        pre {
-            self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
-        }
-        
-        var STenantID: String = auth.owner!.address.toString()
-                                .concat(".")
-                                .concat(self.getType().identifier)
+        let tenant = auth.owner!.address
+        var STenantID: String = self.clientTenantID(account: tenant)
     
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
-        self.addAlias(auth: auth, new: STenantID)
 
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
-        package.depositAdmin(Admin: <- create Admin(STenantID))
-        package.depositMinter(NFTMinter: <- create NFTMinter(STenantID))
+        package.depositAdmin(Admin: <- create Admin(tenant))
+        package.depositMinter(NFTMinter: <- create NFTMinter(tenant))
 
-        self.clientTenants[auth.owner!.address] = STenantID
         emit TenantCreated(id: STenantID)
     }
 
@@ -89,49 +64,48 @@ pub contract MultiNFT: IHyperverseModule, IHyperverseComposable {
     pub let PackagePublicPath: PublicPath
 
     pub resource interface PackagePublic {
-        pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic}
+        pub fun borrowCollectionPublic(tenant: Address): &Collection{CollectionPublic}
         pub fun depositMinter(NFTMinter: @NFTMinter)
     }
 
     // All of the getAlias stuff only happens in this Package :)
     pub resource Package: PackagePublic {
-        pub var collections: @{String: Collection}
-        pub var admins: @{String: Admin}
-        pub var minters: @{String: NFTMinter}
+        pub var collections: @{Address: Collection}
+        pub var admins: @{Address: Admin}
+        pub var minters: @{Address: NFTMinter}
 
-        pub fun setup(tenantID: String) {
+        pub fun setup(tenant: Address) {
             pre {
-                MultiNFT.tenants[tenantID] != nil: "This tenantID does not exist."
+                MultiNFT.getTenant(account: tenant) != nil: "This tenantID does not exist."
             }
-            self.collections[tenantID] <-! create Collection(tenantID)
+            self.collections[tenant] <-! create Collection(tenant)
         }
 
         pub fun depositAdmin(Admin: @Admin) {
-            self.admins[Admin.tenantID] <-! Admin
+            self.admins[Admin.tenant] <-! Admin
         }
 
-        pub fun borrowAdmin(tenantID: String): &Admin {
-            return &self.admins[MultiNFT.aliases[tenantID]!] as &Admin
+        pub fun borrowAdmin(tenant: Address): &Admin {
+            return &self.admins[tenant] as &Admin
         }
 
         pub fun depositMinter(NFTMinter: @NFTMinter) {
-            self.minters[NFTMinter.tenantID] <-! NFTMinter
+            self.minters[NFTMinter.tenant] <-! NFTMinter
         }
 
-         pub fun borrowMinter(tenantID: String): &NFTMinter {
-            return &self.minters[MultiNFT.aliases[tenantID]!] as &NFTMinter
+         pub fun borrowMinter(tenant: Address): &NFTMinter {
+            return &self.minters[tenant] as &NFTMinter
         }
 
-        pub fun borrowCollection(tenantID: String): &Collection {
-            let original = MultiNFT.aliases[tenantID]!
-            if self.collections[original] == nil {
-                self.setup(tenantID: original)
+        pub fun borrowCollection(tenant: Address): &Collection {
+            if self.collections[tenant] == nil {
+                self.setup(tenant: tenant)
             }
-            return &self.collections[original] as &Collection
+            return &self.collections[tenant] as &Collection
         }
 
-        pub fun borrowCollectionPublic(tenantID: String): &Collection{CollectionPublic} {
-            return self.borrowCollection(tenantID: tenantID)
+        pub fun borrowCollectionPublic(tenant: Address): &Collection{CollectionPublic} {
+            return self.borrowCollection(tenant: tenant)
         }
 
         init() {
@@ -158,37 +132,37 @@ pub contract MultiNFT: IHyperverseModule, IHyperverseComposable {
     pub event Deposit(id: UInt64, to: Address?)
 
     pub resource NFT {
-        pub let tenantID: String
+        pub let tenant: Address
         pub let type: String
         pub let id: UInt64
         pub var metadata: {String: String}
     
-        init(_ tenantID: String, _type: String, _metadata: {String: String}) {
-            let tenant = MultiNFT.getTenant(id: tenantID)
+        init(_ tenant: Address, _type: String, _metadata: {String: String}) {
+            let state = MultiNFT.getTenant(account: tenant)
 
-            self.id = tenant.totalSupply[_type]!
+            self.id = state.totalSupply[_type]!
             self.type = _type
-            self.tenantID = tenantID
+            self.tenant = tenant
             self.metadata = _metadata
 
-            tenant.updateTotalSupply(type: _type)
+            state.updateTotalSupply(type: _type)
         }
     }
 
     pub resource interface CollectionPublic {
-        pub let tenantID: String
+        pub let tenant: Address
         pub fun deposit(token: @NFT)
         pub fun getIDs(): [UInt64]
         pub fun getMetadata(id: UInt64): {String: String}
     }
 
     pub resource Collection: CollectionPublic {
-        pub let tenantID: String
+        pub let tenant: Address
         pub var ownedNFTs: @{UInt64: NFT}
 
         pub fun deposit(token: @NFT) {
             pre {
-                self.tenantID == token.tenantID: "This token belongs to a different Tenant."
+                self.tenant == token.tenant: "This token belongs to a different Tenant."
             }
             let id: UInt64 = token.uuid
             let oldToken <- self.ownedNFTs[id] <- token
@@ -219,51 +193,54 @@ pub contract MultiNFT: IHyperverseModule, IHyperverseComposable {
             destroy self.ownedNFTs
         }
 
-        init (_ tenantID: String) {
-            self.tenantID = tenantID
+        init (_ tenant: Address) {
+            self.tenant = tenant
             self.ownedNFTs <- {}
         }
     }
 
     pub resource Admin {
-        pub let tenantID: String
+        pub let tenant: Address
         pub fun createNFTMinter(): @NFTMinter {
-            return <- create NFTMinter(self.tenantID)
+            return <- create NFTMinter(self.tenant)
         }
         pub fun addNewNFTType(type: String) {
-            MultiNFT.getTenant(id: self.tenantID).addNewNFTType(type: type)
+            MultiNFT.getTenant(account: self.tenant).addNewNFTType(type: type)
         }
-        init(_ tenantID: String) {
-            self.tenantID = tenantID
+        init(_ tenant: Address) {
+            self.tenant = tenant
         }
     }
 
     pub resource NFTMinter {
-        pub let tenantID: String
+        pub let tenant: Address
         pub fun mintNFT(type: String, metadata: {String: String}): @NFT {
-            return <- create NFT(self.tenantID, _type: type, _metadata: metadata)
+            return <- create NFT(self.tenant, _type: type, _metadata: metadata)
         }
-        init(_ tenantID: String) {
-            self.tenantID = tenantID
+        init(_ tenant: Address) {
+            self.tenant = tenant
         }
     }
 
     init() {
-        self.clientTenants = {}
         self.tenants <- {}
-        self.aliases = {}
 
         self.PackageStoragePath = /storage/MultiNFTPackage
         self.PackagePrivatePath = /private/MultiNFTPackage
         self.PackagePublicPath = /public/MultiNFTPackage
 
-        self.metadata = HyperverseModule.ModuleMetadata(
-            _title: "MultiNFT", 
-            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalURI: "https://www.decentology.com/")], 
-            _version: "0.0.1", 
-            _publishedAt: getCurrentBlock().timestamp,
-            _externalURI: "",
-            _secondaryModules: nil
+        Registry.registerContract(
+            proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 
+            metadata: HyperverseModule.ModuleMetadata(
+                _identifier: self.getType().identifier,
+                _contractAddress: self.account.address,
+                _title: "MultiNFT", 
+                _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalURI: "https://www.decentology.com/")], 
+                _version: "0.0.1", 
+                _publishedAt: getCurrentBlock().timestamp,
+                _externalURI: "",
+                _secondaryModules: nil
+            )
         )
 
          emit ContractInitialized()

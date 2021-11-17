@@ -1,30 +1,22 @@
 import IHyperverseComposable from "../Hyperverse/IHyperverseComposable.cdc"
-import IHyperverseModule from "../Hyperverse/IHyperverseModule.cdc"
 import HyperverseModule from "../Hyperverse/HyperverseModule.cdc"
 import SimpleNFT from "./SimpleNFT.cdc"
 import FlowToken from "../Flow/FlowToken.cdc"
 import FungibleToken from "../Flow/FungibleToken.cdc"
 import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
+import Registry from "../Hyperverse/Registry.cdc"
 
-pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
-
-    /**************************************** METADATA ****************************************/
-
-    access(contract) let metadata: HyperverseModule.ModuleMetadata
-    pub fun getMetadata(): HyperverseModule.ModuleMetadata {
-        return self.metadata
-    }
+pub contract SimpleNFTMarketplace: IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
     pub event TenantCreated(id: String)
-    access(contract) var clientTenants: {Address: String}
-    pub fun getClientTenantID(account: Address): String? {
-        return self.clientTenants[account]
+    pub fun clientTenantID(account: Address): String {
+        return account.toString().concat(".").concat(self.getType().identifier)
     }
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun getTenant(id: String): &Tenant{IHyperverseComposable.ITenant, IState} {
-        let ref = &self.tenants[id] as auth &IHyperverseComposable.Tenant
+    pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
+        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
     }
     access(contract) var aliases: {String: String}
@@ -53,10 +45,6 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
     }
 
     pub fun instance(auth: &HyperverseAuth.Auth) {
-        pre {
-            self.clientTenants[auth.owner!.address] == nil: "This account already have a Tenant from this contract."
-        }
-
         // If Jacob is the one calling instance...  
         // STenantID = "{Jacob's Address}.A.{Address of Contract}.{SimpleNFTMarketplace}
         // JacobsAddress.A.AddressOfContract.SimpleNFTMarketplace
@@ -65,7 +53,7 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
                                 .concat(self.getType().identifier)
 
         /* Dependencies */
-        if SimpleNFT.getClientTenantID(account: auth.owner!.address) == nil {
+        if SimpleNFT.getTenant(id: SimpleNFT.clientTenantID(account: auth.owner!.address)) == nil {
             SimpleNFT.instance(auth: auth)                
         }
         SimpleNFT.addAlias(auth: auth, new: STenantID)
@@ -73,7 +61,6 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
         self.addAlias(auth: auth, new: STenantID)
         
-        self.clientTenants[auth.owner!.address] = STenantID
         emit TenantCreated(id: STenantID)
     }
 
@@ -227,7 +214,6 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
     }
 
     init() {
-        self.clientTenants = {}
         self.tenants <- {}
         self.aliases = {}
 
@@ -235,13 +221,18 @@ pub contract SimpleNFTMarketplace: IHyperverseModule, IHyperverseComposable {
         self.PackagePrivatePath = /private/SimpleNFTMarketplacePackage
         self.PackagePublicPath = /public/SimpleNFTMarketplacePackage
 
-        self.metadata = HyperverseModule.ModuleMetadata(
-            _title: "SimpleNFT Marketplace", 
-            _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
-            _version: "0.0.1", 
-            _publishedAt: getCurrentBlock().timestamp,
-            _externalLink: "",
-            _secondaryModules: [{Address(0x26a365de6d6237cd): "SimpleNFT"}]
+        Registry.registerContract(
+            proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 
+            metadata: HyperverseModule.ModuleMetadata(
+                _identifier: self.getType().identifier,
+                _contractAddress: self.account.address,
+                _title: "SimpleNFT Marketplace", 
+                _authors: [HyperverseModule.Author(_address: 0x26a365de6d6237cd, _externalLink: "https://www.decentology.com/")], 
+                _version: "0.0.1", 
+                _publishedAt: getCurrentBlock().timestamp,
+                _externalLink: "",
+                _secondaryModules: [{Address(0x26a365de6d6237cd): "SimpleNFT"}]
+            )
         )
 
         emit SimpleNFTMarketplaceInitialized()

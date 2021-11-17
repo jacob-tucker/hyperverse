@@ -60,18 +60,18 @@ pub contract interface HNonFungibleToken {
     //
     // If the collection is not in an account's storage, `from` will be `nil`.
     //
-    pub event Withdraw(tenantID: String, id: UInt64, from: Address?)
+    pub event Withdraw(tenant: Address, id: UInt64, from: Address?)
 
     // Event that emitted when a token is deposited to a collection.
     //
     // It indicates the owner of the collection that it was deposited to.
     //
-    pub event Deposit(tenantID: String, id: UInt64, to: Address?)
+    pub event Deposit(tenant: Address, id: UInt64, to: Address?)
 
     // Interface that the NFTs have to conform to
     //
     pub resource interface INFT {
-        pub let tenantID: String
+        pub let tenant: Address
         // The unique ID that each NFT has
         pub let id: UInt64
     }
@@ -79,7 +79,7 @@ pub contract interface HNonFungibleToken {
     // Requirement that all conforming NFT smart contracts have
     // to define a resource called NFT that conforms to INFT
     pub resource NFT: INFT {
-        pub let tenantID: String
+        pub let tenant: Address
         pub let id: UInt64
     }
 
@@ -115,7 +115,7 @@ pub contract interface HNonFungibleToken {
     // to be declared in the implementing contract
     //
     pub resource Collection: Provider, Receiver, CollectionPublic {
-        pub let tenantID: String
+        pub let tenant: Address
         // Dictionary to hold the NFTs in the Collection
         pub var ownedNFTs: @{UInt64: NFT}
 
@@ -126,7 +126,7 @@ pub contract interface HNonFungibleToken {
         // and adds the ID to the id array
         pub fun deposit(token: @NFT) {
             pre {
-                self.tenantID == token.tenantID:
+                self.tenant == token.tenant:
                     "Cannot deposit a token from another Tenant"
             }
         }
@@ -144,7 +144,7 @@ pub contract interface HNonFungibleToken {
     }
 
     pub resource Package {
-        pub var collections: @{String: Collection}
-        pub fun borrowCollection(tenantID: String): &{Provider, Receiver, CollectionPublic}
+        pub var collections: @{Address: Collection}
+        pub fun borrowCollection(tenant: Address): &{Provider, Receiver, CollectionPublic}
     }
 }

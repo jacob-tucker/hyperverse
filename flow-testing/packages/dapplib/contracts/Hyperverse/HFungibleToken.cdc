@@ -58,19 +58,19 @@ pub contract interface HFungibleToken {
     ///
     /// The event that is emitted when the contract is created
     ///
-    pub event TokensInitialized(tenantID: String, initialSupply: UFix64)
+    pub event TokensInitialized(tenant: Address, initialSupply: UFix64)
 
     /// TokensWithdrawn
     ///
     /// The event that is emitted when tokens are withdrawn from a Vault
     ///
-    pub event TokensWithdrawn(tenantID: String, amount: UFix64, from: Address?)
+    pub event TokensWithdrawn(tenant: Address, amount: UFix64, from: Address?)
 
     /// TokensDeposited
     ///
     /// The event that is emitted when tokens are deposited into a Vault
     ///
-    pub event TokensDeposited(tenantID: String, amount: UFix64, to: Address?)
+    pub event TokensDeposited(tenant: Address, amount: UFix64, to: Address?)
 
     /// Provider
     ///
@@ -136,7 +136,7 @@ pub contract interface HFungibleToken {
         ///
         pub var balance: UFix64
 
-        init(tenantID: String, balance: UFix64) {
+        init(tenant: Address, balance: UFix64) {
             post {
                 self.balance == balance:
                     "Balance must be initialized to the initial balance"
@@ -149,7 +149,7 @@ pub contract interface HFungibleToken {
     /// The resource that contains the functions to send and receive tokens.
     ///
     pub resource Vault: Provider, Receiver, Balance {
-        pub let tenantID: String
+        pub let tenant: Address
 
         // The declaration of a concrete type in a contract interface means that
         // every Fungible Token contract that implements the HFungibleToken interface
@@ -174,8 +174,8 @@ pub contract interface HFungibleToken {
                 //
                 self.balance == before(self.balance) - amount:
                     "New Vault balance must be the difference of the previous balance and the withdrawn Vault"
-                result.tenantID == self.tenantID:
-                    "Vault has a different tenantID than its spawner"
+                result.tenant == self.tenant:
+                    "Vault has a different tenant than its spawner"
             }
         }
 
@@ -187,7 +187,7 @@ pub contract interface HFungibleToken {
             pre {
                 from.isInstance(self.getType()): 
                     "Cannot deposit an incompatible token type"
-                from.tenantID == self.tenantID:
+                from.tenant == self.tenant:
                     "Cannot deposit a Token from another Tenant"
             }
             post {
@@ -199,11 +199,11 @@ pub contract interface HFungibleToken {
         // The conforming type must declare an initializer
         // that allows prioviding the initial balance of the Vault
         //
-        init(_ tenantID: String, _balance: UFix64)
+        init(_ tenant: Address, _balance: UFix64)
     }
 
      pub resource Package {
-        pub var vaults: @{String: Vault}
-        pub fun borrowVault(tenantID: String): &{Provider, Receiver, Balance}
+        pub var vaults: @{Address: Vault}
+        pub fun borrowVault(tenant: Address): &{Provider, Receiver, Balance}
     }
 }

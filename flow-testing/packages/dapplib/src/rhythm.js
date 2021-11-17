@@ -107,6 +107,7 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
 
     // After all the vendor contracts are deployed, the call back runs this script file with a watch
     // on the contracts folder and an arg of 'deploy' causing processing to start here
+    await setupDeployer();
     processContractFolders(['Project'])
       .then(async () => {
         await setupAllAccounts();
@@ -166,6 +167,39 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
     });
 
     console.log('\n' + '⏳  Waiting for Flow emulator to start...');
+  }
+
+  async function setupDeployer() {
+    let deployer = "0x01cf0e2f2f715450";
+    let setupTx = fcl.transaction`
+        import HyperverseAuth from 0x01cf0e2f2f715450
+        transaction() {
+
+            prepare(signer: AuthAccount) {
+                /* Auth */
+                if signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath) == nil {
+                    signer.save(<- HyperverseAuth.createAuth(), to: HyperverseAuth.AuthStoragePath)
+                    signer.link<&HyperverseAuth.Auth{HyperverseAuth.IAuth}>(HyperverseAuth.AuthPublicPath, target: HyperverseAuth.AuthStoragePath)
+                }
+            }
+
+            execute {
+                log("Setup deployer to have an Auth.")
+            }
+        }`;
+
+    let setupOptions = {
+      decode: false,
+      roleInfo: { authorizers: [deployer], proposer: deployer, payer: deployer },
+      gasLimit: 300
+    }
+
+    let flow = new Flow({
+      httpUri,
+      serviceWallet
+    })
+    await flow.executeTransaction(setupTx, setupOptions);
+
   }
 
   async function setupAllAccounts() {
@@ -297,8 +331,7 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
     }
   }
 
-  function processContractFolders(folders) {
-
+  async function processContractFolders(folders) {
     return new Promise((resolve, reject) => {
       let sourceFolder = path.join(__dirname, '..', '..', 'dapplib', 'contracts');
       try {

@@ -2,16 +2,11 @@ import HyperverseModule from "./HyperverseModule.cdc"
 
 pub contract interface IHyperverseComposable {
 
-    access(contract) let metadata: HyperverseModule.ModuleMetadata
-    pub fun getMetadata(): HyperverseModule.ModuleMetadata
-
     pub event TenantCreated(id: String)
-    access(contract) var clientTenants: {Address: String}
-    pub fun getClientTenantID(account: Address): String?
-    access(contract) var tenants: @{String: Tenant}
-    pub fun getTenant(id: String): &{ITenant}
 
-    access(contract) var aliases: {String: String}
+    pub fun clientTenantID(account: Address): String
+    access(contract) var tenants: @{String: Tenant}
+    pub fun getTenant(account: Address): &{ITenant}
 
     pub resource interface ITenant {
         pub var holder: Address
@@ -25,5 +20,7 @@ pub contract interface IHyperverseComposable {
     pub let PackagePrivatePath: PrivatePath
     pub let PackagePublicPath: PublicPath
 
-    pub resource Package {}
+    pub resource Package {
+       
+    }
 }
