@@ -48,7 +48,7 @@ pub contract MultiNFT: IHyperverseComposable {
         let tenant = auth.owner!.address
         var STenantID: String = self.clientTenantID(account: tenant)
     
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
 
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
         package.depositAdmin(Admin: <- create Admin(tenant))

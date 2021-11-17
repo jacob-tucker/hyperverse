@@ -40,9 +40,7 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
 
     pub fun instance(auth: &HyperverseAuth.Auth, initialSupply: UFix64) {
         let tenant = auth.owner!.address
-        var STenantID: String = auth.owner!.address.toString()
-                                .concat(".")
-                                .concat(self.getType().identifier)
+        var STenantID: String = self.clientTenantID(account: tenant)
         
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant, _initialSupply: initialSupply)
         

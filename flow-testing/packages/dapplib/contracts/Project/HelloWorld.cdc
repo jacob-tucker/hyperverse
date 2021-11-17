@@ -33,9 +33,10 @@ pub contract HelloWorld: IHyperverseComposable {
     }
 
     pub fun instance(auth: &HyperverseAuth.Auth) {
-        var STenantID: String = self.clientTenantID(account: auth.owner!.address)
+        let tenant = auth.owner!.address
+        var STenantID: String = self.clientTenantID(account: tenant)
         
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
         
         emit TenantCreated(id: STenantID)
     }

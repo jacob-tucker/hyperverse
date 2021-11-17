@@ -19,16 +19,6 @@ pub contract SimpleNFT: IHyperverseComposable, HNonFungibleToken {
         let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
     }
-    // Alias to original. Original -> actual resource above
-    // So if an alias exists, it already points to a Tenant
-    access(contract) var aliases: {String: String}
-    pub fun addAlias(auth: &HyperverseAuth.Auth, new: String) {
-        let original = auth.owner!.address.toString()
-                        .concat(".")
-                        .concat(self.getType().identifier)
-    
-        self.aliases[new] = original
-    }
 
     pub resource interface IState {
         pub let tenantID: String
@@ -57,7 +47,6 @@ pub contract SimpleNFT: IHyperverseComposable, HNonFungibleToken {
         var STenantID: String = self.clientTenantID(account: tenant)
     
         self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
-        self.addAlias(auth: auth, new: STenantID)
 
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
         package.depositAdmin(Admin: <- create Admin(tenant))
@@ -217,7 +206,6 @@ pub contract SimpleNFT: IHyperverseComposable, HNonFungibleToken {
 
     init() {
         self.tenants <- {}
-        self.aliases = {}
 
         self.PackageStoragePath = /storage/SimpleNFTPackage
         self.PackagePrivatePath = /private/SimpleNFTPackage

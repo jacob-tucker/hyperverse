@@ -55,17 +55,15 @@ pub contract Rewards: IHyperverseComposable {
     // UInt64 : The incremented # (from 0) for that account. For example, you want your
     // 2nd Tenant from SimpleNFT, it'd be `1`.
     pub fun instance(auth: &HyperverseAuth.Auth, numForReward: Int) {
-        var STenantID: String = auth.owner!.address.toString()
-                                .concat(".")
-                                .concat(self.getType().identifier)
+        let tenant = auth.owner!.address
+        var STenantID: String = self.clientTenantID(account: tenant)
         
         /* Dependencies */
-        if SimpleNFT.getTenant(id: SimpleNFT.clientTenantID(account: auth.owner!.address)) == nil {
+        if SimpleNFT.getTenant(account: tenant) == nil {
             SimpleNFT.instance(auth: auth)                   
         }
-        SimpleNFT.addAlias(auth: auth, new: STenantID)
 
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address, _numForReward: numForReward)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant, _numForReward: numForReward)
         self.addAlias(auth: auth, new: STenantID)
 
         emit TenantCreated(id: STenantID)
@@ -80,7 +78,7 @@ pub contract Rewards: IHyperverseComposable {
     pub resource interface PackagePublic {
        pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic}
 
-       access(contract) fun getMinterInContract(tenantID: String): &SimpleNFT.NFTMinter
+       access(contract) fun getMinterInContract(tenant: Address): &SimpleNFT.NFTMinter
     }
 
     // We don't need aliases in this Package
@@ -92,10 +90,10 @@ pub contract Rewards: IHyperverseComposable {
             return ref
         }
 
-        access(contract) fun getMinterInContract(tenantID: String): &SimpleNFT.NFTMinter {
+        access(contract) fun getMinterInContract(tenant: Address): &SimpleNFT.NFTMinter {
             let package = self.dependencies[SimpleNFT.getType().identifier]!.borrow()!
             let ref: &SimpleNFT.Package = package as! &SimpleNFT.Package
-            return ref.borrowMinter(tenantID: tenantID)
+            return ref.borrowMinter(tenant: tenant)
         }
 
         init(_auth: &HyperverseAuth.Auth) {
@@ -112,18 +110,18 @@ pub contract Rewards: IHyperverseComposable {
 
     pub event RewardsInitialized()
 
-    pub fun giveReward(tenantID: String, minterPackage: &Package{PackagePublic}, recipientPackage: &Package{PackagePublic}) {
-        let TenantState = self.getTenant(id: tenantID)
-        if TenantState.recipients[recipientPackage.owner!.address] == true {
+    pub fun giveReward(tenant: Address, minterPackage: &Package{PackagePublic}, recipientPackage: &Package{PackagePublic}) {
+        let state = self.getTenant(account: tenant)
+        if state.recipients[recipientPackage.owner!.address] == true {
             panic("This recipient has already received a reward!")
         }
         // Proof that we need alias at the contract level so we can do that here wait nvm LUL
-        let nftCollection = recipientPackage.SimpleNFTPackagePublic().borrowCollectionPublic(tenantID: tenantID)
+        let nftCollection = recipientPackage.SimpleNFTPackagePublic().borrowCollectionPublic(tenant: tenant)
         let ids = nftCollection.getIDs()
-        if ids.length >= TenantState.numForReward {
-            let nftMinter = minterPackage.getMinterInContract(tenantID: tenantID)
+        if ids.length >= state.numForReward {
+            let nftMinter = minterPackage.getMinterInContract(tenant: tenant)
             nftCollection.deposit(token: <- nftMinter.mintNFT(metadata: {"name": "Super Legendary Reward"}))
-            TenantState.addRecipient(recipient: recipientPackage.owner!.address)
+            state.addRecipient(recipient: recipientPackage.owner!.address)
         } else {
             panic("Sorry! This account needs more NFTs to get a Reward!")
         }

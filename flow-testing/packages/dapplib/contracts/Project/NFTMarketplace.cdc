@@ -47,7 +47,7 @@ pub contract NFTMarketplace: IHyperverseComposable {
             SimpleNFT.instance(auth: auth)                   
         }
 
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: auth.owner!.address)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
         
         emit TenantCreated(id: STenantID)
     }
