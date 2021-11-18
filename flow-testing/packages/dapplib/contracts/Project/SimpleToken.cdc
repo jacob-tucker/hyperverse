@@ -13,6 +13,9 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
         return account.toString().concat(".").concat(self.getType().identifier)
     }
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
+    pub fun tenantExists(account: Address): Bool {
+        return self.tenants[self.clientTenantID(account: account)] != nil
+    }
     pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
         let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
@@ -156,11 +159,11 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
             self.balance = _balance
             self.tenant = tenant
 
-            SimpleToken.getTenant(account: self.tenant).updateTotalSupply(delta: Fix64(_balance))
+            SimpleToken.getTenant(account: self.tenant)!.updateTotalSupply(delta: Fix64(_balance))
         }
 
         destroy() {
-            SimpleToken.getTenant(account: self.tenant).updateTotalSupply(delta: -Fix64(self.balance))
+            SimpleToken.getTenant(account: self.tenant)!.updateTotalSupply(delta: -Fix64(self.balance))
         }
     }
 

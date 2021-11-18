@@ -51,7 +51,7 @@ contract MorganToken is IHyperverseModule, IERC20 {
 
     // use this function instead of the constructor
     // since creation will be done using createClone() function
-    function init() external override {
+    function init() external {
         // The msg.sender should be the Factory contract because
         // it called the Proxy which delegate called this contract.
         _factoryContract = msg.sender;

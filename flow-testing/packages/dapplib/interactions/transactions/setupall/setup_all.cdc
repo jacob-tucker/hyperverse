@@ -17,9 +17,11 @@ transaction() {
         if signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath) == nil {
             signer.save(<- HyperverseAuth.createAuth(), to: HyperverseAuth.AuthStoragePath)
             signer.link<&HyperverseAuth.Auth{HyperverseAuth.IAuth}>(HyperverseAuth.AuthPublicPath, target: HyperverseAuth.AuthStoragePath)
+            signer.link<&HyperverseAuth.Auth>(HyperverseAuth.AuthPrivatePath, target: HyperverseAuth.AuthStoragePath)
         }
         let auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
                         ?? panic("Could not borrow the Auth.")
+        let authCapability = signer.getCapability<&HyperverseAuth.Auth>(HyperverseAuth.AuthPrivatePath)
 
         /* SimpleToken */
         if signer.borrow<&SimpleToken.Package>(from: SimpleToken.PackageStoragePath) == nil {
@@ -48,7 +50,7 @@ transaction() {
         /* Rewards */
         if signer.borrow<&Rewards.Package>(from: Rewards.PackageStoragePath) == nil {
             let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
-            signer.save(<- Rewards.getPackage(auth: auth), to: Rewards.PackageStoragePath)
+            signer.save(<- Rewards.getPackage(auth: authCapability), to: Rewards.PackageStoragePath)
             signer.link<auth &Rewards.Package>(Rewards.PackagePrivatePath, target: Rewards.PackageStoragePath)
             signer.link<&Rewards.Package{Rewards.PackagePublic}>(Rewards.PackagePublicPath, target: Rewards.PackageStoragePath)
             auth.addPackage(packageName: Rewards.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(Rewards.PackagePrivatePath))
@@ -56,9 +58,7 @@ transaction() {
 
         /* NFTMarketplace */
         if signer.borrow<&NFTMarketplace.Package>(from: NFTMarketplace.PackageStoragePath) == nil {
-            let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
-            let SimpleTokenPackage = signer.getCapability<&SimpleToken.Package>(SimpleToken.PackagePrivatePath)
-            signer.save(<- NFTMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, SimpleTokenPackage: SimpleTokenPackage), to: NFTMarketplace.PackageStoragePath)
+            signer.save(<- NFTMarketplace.getPackage(auth: authCapability), to: NFTMarketplace.PackageStoragePath)
             signer.link<auth &NFTMarketplace.Package>(NFTMarketplace.PackagePrivatePath, target: NFTMarketplace.PackageStoragePath)
             signer.link<&NFTMarketplace.Package{NFTMarketplace.PackagePublic}>(NFTMarketplace.PackagePublicPath, target: NFTMarketplace.PackageStoragePath)
             auth.addPackage(packageName: NFTMarketplace.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(NFTMarketplace.PackagePrivatePath))
@@ -66,9 +66,8 @@ transaction() {
 
         /* SimpleNFTMarketplace */
         if signer.borrow<&SimpleNFTMarketplace.Package>(from: SimpleNFTMarketplace.PackageStoragePath) == nil {
-            let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
             let FlowTokenVault = signer.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-            signer.save(<- SimpleNFTMarketplace.getPackage(SimpleNFTPackage: SimpleNFTPackage, FlowTokenVault: FlowTokenVault), to: SimpleNFTMarketplace.PackageStoragePath)
+            signer.save(<- SimpleNFTMarketplace.getPackage(auth: authCapability, FlowTokenVault: FlowTokenVault), to: SimpleNFTMarketplace.PackageStoragePath)
             signer.link<auth &SimpleNFTMarketplace.Package>(SimpleNFTMarketplace.PackagePrivatePath, target: SimpleNFTMarketplace.PackageStoragePath)
             signer.link<&SimpleNFTMarketplace.Package{SimpleNFTMarketplace.PackagePublic}>(SimpleNFTMarketplace.PackagePublicPath, target: SimpleNFTMarketplace.PackageStoragePath)
             auth.addPackage(packageName: SimpleNFTMarketplace.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(SimpleNFTMarketplace.PackagePrivatePath))

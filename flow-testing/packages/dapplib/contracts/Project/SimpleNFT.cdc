@@ -13,8 +13,11 @@ pub contract SimpleNFT: IHyperverseComposable, HNonFungibleToken {
     pub fun clientTenantID(account: Address): String {
         return account.toString().concat(".").concat(self.getType().identifier)
     }
-    // Original tenantID --> actual resource
+    
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
+    pub fun tenantExists(account: Address): Bool {
+        return self.tenants[self.clientTenantID(account: account)] != nil
+    }
     pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
         let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
@@ -125,7 +128,7 @@ pub contract SimpleNFT: IHyperverseComposable, HNonFungibleToken {
         pub var metadata: {String: String}
     
         init(_ tenant: Address, _metadata: {String: String}) {
-            let state = SimpleNFT.getTenant(account: tenant)
+            let state = SimpleNFT.getTenant(account: tenant)!
           
             self.id = state.totalSupply
             self.tenant = tenant

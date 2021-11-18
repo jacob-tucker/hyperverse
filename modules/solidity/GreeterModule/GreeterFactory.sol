@@ -69,7 +69,7 @@ contract GreeterFactory is CloneFactory {
         return tenants[tenant].greeter;
     }
 
-    function greeting(address tenant) public view returns (string) {
+    function greeting(address tenant) public view returns (string memory) {
         return getProxy(tenant).greet();
     }
 }

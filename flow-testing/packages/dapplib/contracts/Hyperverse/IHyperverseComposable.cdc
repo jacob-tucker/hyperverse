@@ -6,7 +6,7 @@ pub contract interface IHyperverseComposable {
 
     pub fun clientTenantID(account: Address): String
     access(contract) var tenants: @{String: Tenant}
-    pub fun getTenant(account: Address): &{ITenant}
+    pub fun tenantExists(account: Address): Bool
 
     pub resource interface ITenant {
         pub var holder: Address

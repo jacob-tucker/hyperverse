@@ -12,6 +12,9 @@ pub contract HelloWorld: IHyperverseComposable {
         return account.toString().concat(".").concat(self.getType().identifier)
     }
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
+    pub fun tenantExists(account: Address): Bool {
+        return self.tenants[self.clientTenantID(account: account)] != nil
+    }
     pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
         let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant

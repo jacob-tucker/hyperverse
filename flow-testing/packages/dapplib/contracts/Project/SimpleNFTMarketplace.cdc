@@ -15,6 +15,9 @@ pub contract SimpleNFTMarketplace: IHyperverseComposable {
         return account.toString().concat(".").concat(self.getType().identifier)
     }
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
+    pub fun tenantExists(account: Address): Bool {
+        return self.tenants[self.clientTenantID(account: account)] != nil
+    }
     pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
         let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
@@ -59,7 +62,6 @@ pub contract SimpleNFTMarketplace: IHyperverseComposable {
     pub let PackagePublicPath: PublicPath
    
     pub resource interface PackagePublic {
-       pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic}
        pub fun borrowSaleCollectionPublic(tenant: Address): &SaleCollection{SalePublic}
     }
     
@@ -67,18 +69,14 @@ pub contract SimpleNFTMarketplace: IHyperverseComposable {
     // be creating a Storefront. You're creating a storefront for YOUR NFTs, so those
     // NFTs must already exist.
     pub resource Package: PackagePublic {
-        pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
-        pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
-            return self.SimpleNFTPackage.borrow()!
-        }
-        
+        pub let auth: Capability<&HyperverseAuth.Auth>
         pub let FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
 
         pub var salecollections: @{Address: SaleCollection}
 
         pub fun borrowSaleCollection(tenant: Address): &SaleCollection {
             if self.salecollections[tenant] == nil {
-                self.salecollections[tenant] <-! create SaleCollection(tenant, _nftPackage: self.SimpleNFTPackage, _ftVault: self.FlowTokenVault)
+                self.salecollections[tenant] <-! create SaleCollection(tenant, _auth: self.auth, _ftVault: self.FlowTokenVault)
             }
             return &self.salecollections[tenant] as &SaleCollection
         }
@@ -87,10 +85,10 @@ pub contract SimpleNFTMarketplace: IHyperverseComposable {
         }
 
         init(
-            _SimpleNFTPackage: Capability<&SimpleNFT.Package>,
+            _auth: Capability<&HyperverseAuth.Auth>,
             _FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>) 
         {
-            self.SimpleNFTPackage = _SimpleNFTPackage
+            self.auth = _auth
             self.FlowTokenVault = _FlowTokenVault
             self.salecollections <- {} 
         }
@@ -101,13 +99,10 @@ pub contract SimpleNFTMarketplace: IHyperverseComposable {
     }
 
     pub fun getPackage(
-        SimpleNFTPackage: Capability<&SimpleNFT.Package>,
+        auth: Capability<&HyperverseAuth.Auth>,
         FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
     ): @Package {
-        pre {
-            SimpleNFTPackage.borrow() != nil: "This is not a correct SimpleNFT.Package! Or you don't have one yet."
-        }
-        return <- create Package(_SimpleNFTPackage: SimpleNFTPackage, _FlowTokenVault: FlowTokenVault)
+        return <- create Package(_auth: auth, _FlowTokenVault: FlowTokenVault)
     }
 
     /**************************************** FUNCTIONALITY ****************************************/
@@ -132,11 +127,11 @@ pub contract SimpleNFTMarketplace: IHyperverseComposable {
         access(self) let FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
         access(self) let SimpleNFTPackage: Capability<&SimpleNFT.Package>
 
-        init (_ tenant: Address, _nftPackage: Capability<&SimpleNFT.Package>, _ftVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>) {
+        init (_ tenant: Address, _auth: Capability<&HyperverseAuth.Auth>, _ftVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>) {
             self.tenant = tenant
             self.forSale = {}
             self.FlowTokenVault = _ftVault
-            self.SimpleNFTPackage = _nftPackage
+            self.SimpleNFTPackage = _auth.borrow()!.getPackage(packageName: SimpleNFT.getType().identifier) as! Capability<&SimpleNFT.Package>
         }
 
         pub fun unlistSale(simpleNFTTenant: Address, id: UInt64) {

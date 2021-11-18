@@ -40,11 +40,11 @@ pub contract NFTMarketplace: IHyperverseComposable {
         var STenantID: String = self.clientTenantID(account: tenant)
         
         /* Dependencies */
-        if SimpleToken.getTenant(account: tenant) == nil {
+        if !SimpleToken.tenantExists(account: tenant) {
             SimpleToken.instance(auth: auth, initialSupply: 0.0)               
         }
 
-        if SimpleNFT.getTenant(account: tenant) == nil {
+        if !SimpleNFT.tenantExists(account: tenant) {
             SimpleNFT.instance(auth: auth)                   
         }
 
@@ -60,26 +60,19 @@ pub contract NFTMarketplace: IHyperverseComposable {
     pub let PackagePublicPath: PublicPath
    
     pub resource interface PackagePublic {
-       pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic}
-       pub fun SimpleTokenPackagePublic(): &SimpleToken.Package{SimpleToken.PackagePublic}
        pub fun borrowSaleCollectionPublic(tenant: Address): &SaleCollection{SalePublic}
     }
     
     pub resource Package: PackagePublic {
-        pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
-        pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
-            return self.SimpleNFTPackage.borrow()!
-        }
-        pub let SimpleTokenPackage: Capability<&SimpleToken.Package>
-        pub fun SimpleTokenPackagePublic(): &SimpleToken.Package{SimpleToken.PackagePublic} {
-            return self.SimpleTokenPackage.borrow()!
-        }
+        // pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
+        // pub let SimpleTokenPackage: Capability<&SimpleToken.Package>
+        pub let auth: Capability<&HyperverseAuth.Auth>
 
         pub var salecollections: @{Address: SaleCollection}
 
         pub fun borrowSaleCollection(tenant: Address): &SaleCollection {
             if self.salecollections[tenant] == nil {
-                self.salecollections[tenant] <-! create SaleCollection(tenant, _nftPackage: self.SimpleNFTPackage, _ftPackage: self.SimpleTokenPackage)
+                self.salecollections[tenant] <-! create SaleCollection(tenant, _auth: self.auth)
             }
             return &self.salecollections[tenant] as &SaleCollection
         }
@@ -88,12 +81,13 @@ pub contract NFTMarketplace: IHyperverseComposable {
         }
 
         init(
-            _SimpleNFTPackage: Capability<&SimpleNFT.Package>, 
-            _SimpleTokenPackage: Capability<&SimpleToken.Package>) 
+            _auth: Capability<&HyperverseAuth.Auth>
+            ) 
         {
-            self.SimpleNFTPackage = _SimpleNFTPackage
-            self.SimpleTokenPackage = _SimpleTokenPackage
+            // self.SimpleNFTPackage = _SimpleNFTPackage
+            // self.SimpleTokenPackage = _SimpleTokenPackage
             self.salecollections <- {} 
+            self.auth = _auth
         }
 
         destroy() {
@@ -101,14 +95,11 @@ pub contract NFTMarketplace: IHyperverseComposable {
         }
     }
 
-    pub fun getPackage(
-        SimpleNFTPackage: Capability<&SimpleNFT.Package>, 
-        SimpleTokenPackage: Capability<&SimpleToken.Package>
-    ): @Package {
-        pre {
-            SimpleNFTPackage.borrow() != nil: "This is not a correct SimpleNFT.Package! Or you don't have one yet."
-        }
-        return <- create Package(_SimpleNFTPackage: SimpleNFTPackage, _SimpleTokenPackage: SimpleTokenPackage)
+    pub fun getPackage(auth: Capability<&HyperverseAuth.Auth>): @Package {
+        // pre {
+        //     SimpleNFTPackage.borrow() != nil: "This is not a correct SimpleNFT.Package! Or you don't have one yet."
+        // }
+        return <- create Package(_auth: auth)
     }
 
     /**************************************** FUNCTIONALITY ****************************************/
@@ -133,11 +124,12 @@ pub contract NFTMarketplace: IHyperverseComposable {
         access(self) let SimpleTokenPackage: Capability<&SimpleToken.Package>
         access(self) let SimpleNFTPackage: Capability<&SimpleNFT.Package>
 
-        init (_ tenant: Address, _nftPackage: Capability<&SimpleNFT.Package>, _ftPackage: Capability<&SimpleToken.Package>,) {
+        init (_ tenant: Address, _auth: Capability<&HyperverseAuth.Auth>) {
             self.tenant = tenant
             self.forSale = {}
-            self.SimpleTokenPackage = _ftPackage
-            self.SimpleNFTPackage = _nftPackage
+            self.SimpleTokenPackage = _auth.borrow()!.getPackage(packageName: SimpleToken.getType().identifier) as! Capability<&SimpleToken.Package>
+            self.SimpleNFTPackage = _auth.borrow()!.getPackage(packageName: SimpleNFT.getType().identifier) as! Capability<&SimpleNFT.Package>
+            
         }
 
         pub fun unlistSale(id: UInt64) {
@@ -151,7 +143,6 @@ pub contract NFTMarketplace: IHyperverseComposable {
                 price > 0.0:
                     "Cannot list a NFT for 0.0"
             }
-
             var ownedNFTs = self.SimpleNFTPackage.borrow()!.borrowCollection(tenant: self.tenant).getIDs()
             for id in ids {
                 if (ownedNFTs.contains(id)) {
