@@ -2,15 +2,12 @@ import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 
 transaction(recipient: Address) {
 
-    let TenantID: String
+    let Tenant: Address
     let AdminsSNFTPackage: &SimpleToken.Package
     let RecipientsSNFTPackage: &SimpleToken.Package{SimpleToken.PackagePublic}
     
     prepare(tenantOwner: AuthAccount) {
-        self.TenantID = tenantOwner.address.toString()
-                        .concat(".")
-                        .concat(SimpleToken.getType().identifier)
-
+        self.Tenant = tenantOwner.address
         self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleToken.Package>(from: SimpleToken.PackageStoragePath)
                                     ?? panic("Could not borrow the SimpleToken.Package from the signer.")
 
@@ -21,7 +18,7 @@ transaction(recipient: Address) {
 
     execute {
         self.RecipientsSNFTPackage.depositMinter(
-            Minter: <- self.AdminsSNFTPackage.borrowAdministrator(tenantID: self.TenantID).createNewMinter()
+            Minter: <- self.AdminsSNFTPackage.borrowAdministrator(tenant: self.Tenant).createNewMinter()
         )
         log("Gave a SimpleToken.NFTMinter to the recipient's account.")
     }

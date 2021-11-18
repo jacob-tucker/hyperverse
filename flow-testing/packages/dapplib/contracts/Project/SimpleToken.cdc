@@ -20,6 +20,7 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
 
     pub resource interface IState {
         pub let tenantID: String
+        pub var totalSupply: UFix64
         access(contract) fun updateTotalSupply(delta: Fix64)
     }
     
@@ -31,10 +32,10 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
             self.totalSupply = UFix64(Fix64(self.totalSupply) + delta)
         }
 
-        init(_tenantID: String, _holder: Address, _initialSupply: UFix64) {
+        init(_tenantID: String, _holder: Address) {
             self.tenantID = _tenantID
             self.holder = _holder
-            self.totalSupply = _initialSupply
+            self.totalSupply = 0.0
         }
     }
 
@@ -42,11 +43,12 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
         let tenant = auth.owner!.address
         var STenantID: String = self.clientTenantID(account: tenant)
         
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant, _initialSupply: initialSupply)
+        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
         
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
         package.depositAdministrator(Administrator: <- create Administrator(tenant))
         package.depositMinter(Minter: <- create Minter(tenant))
+        package.borrowVault(tenant: tenant).deposit(from: <- create Vault(tenant, _balance: initialSupply))
         
         emit TenantCreated(id: STenantID)
         emit TokensInitialized(tenant: tenant, initialSupply: initialSupply)

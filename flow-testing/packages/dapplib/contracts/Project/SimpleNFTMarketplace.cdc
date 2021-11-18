@@ -69,23 +69,16 @@ pub contract SimpleNFTMarketplace: IHyperverseComposable {
     pub resource Package: PackagePublic {
         pub let SimpleNFTPackage: Capability<&SimpleNFT.Package>
         pub fun SimpleNFTPackagePublic(): &SimpleNFT.Package{SimpleNFT.PackagePublic} {
-            return self.SimpleNFTPackage.borrow()! as &SimpleNFT.Package{SimpleNFT.PackagePublic}
+            return self.SimpleNFTPackage.borrow()!
         }
         
         pub let FlowTokenVault: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
 
         pub var salecollections: @{Address: SaleCollection}
-    
-        pub fun setup(tenant: Address) {
-            // pre {
-            //     SimpleNFTMarketplace.tenants[tenant] != nil: "This tenant does not exist."
-            // }
-            self.salecollections[tenant] <-! create SaleCollection(tenant, _nftPackage: self.SimpleNFTPackage, _ftVault: self.FlowTokenVault)
-        }
 
         pub fun borrowSaleCollection(tenant: Address): &SaleCollection {
             if self.salecollections[tenant] == nil {
-                self.setup(tenant: tenant)
+                self.salecollections[tenant] <-! create SaleCollection(tenant, _nftPackage: self.SimpleNFTPackage, _ftVault: self.FlowTokenVault)
             }
             return &self.salecollections[tenant] as &SaleCollection
         }

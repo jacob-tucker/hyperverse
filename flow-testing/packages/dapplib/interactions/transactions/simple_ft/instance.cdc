@@ -1,7 +1,7 @@
 import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
-transaction() {
+transaction(initialSupply: UFix64) {
     let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        SimpleToken.instance(auth: self.Auth)
+        SimpleToken.instance(auth: self.Auth, initialSupply: initialSupply)
         log("Create a new instance of a SimpleToken Tenant.")
     }
 }

@@ -4,9 +4,5 @@ import Tribes from "../../../contracts/Project/Tribes.cdc"
 // sense to do it through an address.
 
 pub fun main(tenantOwner: Address): {String: Tribes.TribeData} {
-    let tenantID = tenantOwner.toString()
-                        .concat(".")
-                        .concat(Tribes.getType().identifier)
-    
-    return Tribes.getTenant(id: tenantID).getAllTribes()
+    return Tribes.getTenant(account: tenantOwner).getAllTribes()
 }

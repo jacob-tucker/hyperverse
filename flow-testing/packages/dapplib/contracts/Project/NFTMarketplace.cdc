@@ -4,6 +4,7 @@ import SimpleNFT from "./SimpleNFT.cdc"
 import SimpleToken from "./SimpleToken.cdc"
 import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 import Registry from "../Hyperverse/Registry.cdc"
+import HFungibleToken from "../Hyperverse/HFungibleToken.cdc"
 
 pub contract NFTMarketplace: IHyperverseComposable {
 
@@ -75,17 +76,10 @@ pub contract NFTMarketplace: IHyperverseComposable {
         }
 
         pub var salecollections: @{Address: SaleCollection}
-    
-        pub fun setup(tenant: Address) {
-            pre {
-                NFTMarketplace.getTenant(account: tenant) != nil: "This tenant does not exist."
-            }
-            self.salecollections[tenant] <-! create SaleCollection(tenant, _nftPackage: self.SimpleNFTPackage, _ftPackage: self.SimpleTokenPackage)
-        }
 
         pub fun borrowSaleCollection(tenant: Address): &SaleCollection {
             if self.salecollections[tenant] == nil {
-                self.setup(tenant: tenant)
+                self.salecollections[tenant] <-! create SaleCollection(tenant, _nftPackage: self.SimpleNFTPackage, _ftPackage: self.SimpleTokenPackage)
             }
             return &self.salecollections[tenant] as &SaleCollection
         }
@@ -128,7 +122,7 @@ pub contract NFTMarketplace: IHyperverseComposable {
     pub event SaleWithdrawn(id: UInt64)
 
     pub resource interface SalePublic {
-        pub fun purchase(id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @SimpleToken.Vault)
+        pub fun purchase(id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @HFungibleToken.Vault)
         pub fun idPrice(id: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
     }
@@ -168,8 +162,10 @@ pub contract NFTMarketplace: IHyperverseComposable {
             }
         }
 
-        pub fun purchase(id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @SimpleToken.Vault) {
+        pub fun purchase(id: UInt64, recipient: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}, buyTokens: @HFungibleToken.Vault) {
             pre {
+                buyTokens.isInstance(Type<@SimpleToken.Vault>()):
+                    "Not a SimpleToken Vault"
                 self.forSale[id] != nil:
                     "No NFT matching this id for sale!"
                 buyTokens.balance >= (self.forSale[id]!):

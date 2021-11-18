@@ -33,9 +33,11 @@ export default class TokenHarness extends LitElement {
       <page-body title="${this.title}" category="${this.category}" description="${this.description}">
       
         <action-card title="SimpleToken - Instance" description="Create your own Tenant" action="SimpleTokenInstance"
-          method="post" fields="signer">
+          method="post" fields="signer initialSupply">
           <account-widget field="signer" label="Signer">
           </account-widget>
+          <text-widget field="initialSupply" label="Initial Token Supply" placeholder="50.0">
+          </text-widget>
         </action-card>
       
         <action-card title="SimpleToken - Get Client Tenants" description="SimpleToken TenantID for this account"
@@ -81,6 +83,12 @@ export default class TokenHarness extends LitElement {
           <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
           <account-widget field="account" label="Account">
+          </account-widget>
+        </action-card>
+      
+        <action-card title="SimpleToken - Get Total Supply" description="Get Total Supply" action="SimpleTokenTotalSupply"
+          method="get" fields="tenantOwner">
+          <account-widget field="tenantOwner" label="Tenant Owner">
           </account-widget>
         </action-card>
       

@@ -42,7 +42,7 @@ pub contract MultiNFT: IHyperverseComposable {
             self.holder = _holder
         }
     }
-
+ 
     // If we're making a new Tenant resource
     pub fun instance(auth: &HyperverseAuth.Auth) {
         let tenant = auth.owner!.address
@@ -74,11 +74,14 @@ pub contract MultiNFT: IHyperverseComposable {
         pub var admins: @{Address: Admin}
         pub var minters: @{Address: NFTMinter}
 
-        pub fun setup(tenant: Address) {
-            pre {
-                MultiNFT.getTenant(account: tenant) != nil: "This tenantID does not exist."
+        pub fun borrowCollection(tenant: Address): &Collection {
+            if self.collections[tenant] == nil {
+                self.collections[tenant] <-! create Collection(tenant)
             }
-            self.collections[tenant] <-! create Collection(tenant)
+            return &self.collections[tenant] as &Collection
+        }
+        pub fun borrowCollectionPublic(tenant: Address): &Collection{CollectionPublic} {
+            return self.borrowCollection(tenant: tenant)
         }
 
         pub fun depositAdmin(Admin: @Admin) {
@@ -95,17 +98,6 @@ pub contract MultiNFT: IHyperverseComposable {
 
          pub fun borrowMinter(tenant: Address): &NFTMinter {
             return &self.minters[tenant] as &NFTMinter
-        }
-
-        pub fun borrowCollection(tenant: Address): &Collection {
-            if self.collections[tenant] == nil {
-                self.setup(tenant: tenant)
-            }
-            return &self.collections[tenant] as &Collection
-        }
-
-        pub fun borrowCollectionPublic(tenant: Address): &Collection{CollectionPublic} {
-            return self.borrowCollection(tenant: tenant)
         }
 
         init() {

@@ -100,30 +100,21 @@ pub contract Tribes: IHyperverseComposable {
         pub var identities: @{Address: Identity}
         pub var admins: @{Address: Admin}
 
-        pub fun setup(tenant: Address) {
-            pre {
-                Tribes.getTenant(account: tenant) != nil: "This tenant does not exist."
+        pub fun borrowIdentity(tenant: Address): &Identity {
+            if self.identities[tenant] == nil {
+                self.identities[tenant] <-! create Identity(tenant, _address: self.owner!.address)
             }
-            self.identities[tenant] <-! create Identity(tenant, _address: self.owner!.address)
+            return &self.identities[tenant] as &Identity
+        }
+        pub fun borrowIdentityPublic(tenant: Address): &Identity{IdentityPublic} {
+            return self.borrowIdentity(tenant: tenant)
         }
 
         pub fun depositAdmin(Admin: @Admin) {
             self.admins[Admin.tenant] <-! Admin
         }
-
         pub fun borrowAdmin(tenant: Address): &Admin {
             return &self.admins[tenant] as &Admin
-        }
-
-        pub fun borrowIdentity(tenant: Address): &Identity {
-            if self.identities[tenant] == nil {
-                self.setup(tenant: tenant)
-            }
-            return &self.identities[tenant] as &Identity
-        }
-
-        pub fun borrowIdentityPublic(tenant: Address): &Identity{IdentityPublic} {
-            return self.borrowIdentity(tenant: tenant)
         }
 
         init() {
@@ -184,9 +175,6 @@ pub contract Tribes: IHyperverseComposable {
 
         access(contract) fun addTribe(newTribe: @Tribe) {
             self.currentTribeName = newTribe.name
-
-            log(newTribe.name)
-            log(self.currentTribeName)
 
             let oldTribe <- self.currentTribe <- newTribe
             destroy oldTribe

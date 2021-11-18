@@ -20,15 +20,21 @@ pub contract HelloWorld: IHyperverseComposable {
     pub resource interface IState {
         pub let tenantID: String
         pub var holder: Address
+
+        pub let greeting: String
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant, IState {
         pub let tenantID: String
         pub var holder: Address
 
+        pub let greeting: String
+
         init(_tenantID: String, _holder: Address) {
             self.tenantID = _tenantID
             self.holder = _holder
+
+            self.greeting = "Hello, World! :D"
         }
     }
 

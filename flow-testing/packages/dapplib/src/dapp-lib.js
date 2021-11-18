@@ -768,7 +768,10 @@ module.exports = class DappLib {
                 proposer: data.signer
             }
         },
-            'simple_ft_instance'
+            'simple_ft_instance',
+            {
+                initialSupply: { value: data.initialSupply, type: t.UFix64 }
+            }
         );
 
         return {
@@ -898,6 +901,30 @@ module.exports = class DappLib {
             'simple_ft_get_balance',
             {
                 account: { value: data.account, type: t.Address },
+                tenantOwner: { value: data.tenantOwner, type: t.Address }
+            }
+        );
+
+        return {
+            type: DappLib.DAPP_RESULT_BIG_NUMBER,
+            label: 'SimpleToken Balance',
+            result: result.callData
+        }
+    }
+
+    /*
+      tenantOwner - the owner of the Tenant you want to interact with
+      account - the account we're reading the SimpleToken balance for
+    */
+    static async SimpleTokenTotalSupply(data) {
+
+        let result = await Blockchain.get({
+            config: DappLib.getConfig(),
+            roles: {
+            }
+        },
+            'simple_ft_get_total_supply',
+            {
                 tenantOwner: { value: data.tenantOwner, type: t.Address }
             }
         );
