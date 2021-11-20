@@ -7,70 +7,26 @@ pub contract Tribes: IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: String)
-    pub fun clientTenantID(account: Address): String {
-        return account.toString().concat(".").concat(self.getType().identifier)
-    }
-    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun tenantExists(account: Address): Bool {
-        return self.tenants[self.clientTenantID(account: account)] != nil
-    }
-    pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
-        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
+    pub event TenantCreated(tenant: Address)
+
+    access(contract) var tenants: @{Address: IHyperverseComposable.Tenant}
+    access(contract) fun getTenant(tenant: Address): &Tenant {
+        let ref = &self.tenants[tenant] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
     }
-
-    pub resource interface IState {
-        pub let tenantID: String
-        access(contract) var participants: {Address: Bool}
-        access(contract) var tribes: {String: TribeData}
-
-        pub fun getAllTribes(): {String: TribeData}
-        pub fun getTribeData(tribeName: String): TribeData
-        access(contract) fun addNewTribe(newTribeName: String, ipfsHash: String, description: String)
-        access(contract) fun addMember(tribe: String, member: Address)
-        access(contract) fun removeMember(currentTribe: String, member: Address)
+    pub fun tenantExists(tenant: Address): Bool {
+        return self.tenants[tenant] != nil
     }
     
-    pub resource Tenant: IHyperverseComposable.ITenant, IState {
-        pub let tenantID: String
+    pub resource Tenant: IHyperverseComposable.ITenant {
+        pub let tenantID: Address
         pub var holder: Address
 
-        pub var tribes: {String: TribeData}
-        pub var participants: {Address: Bool}
+        pub(set) var tribes: {String: TribeData}
+        pub(set) var participants: {Address: Bool}
 
-        pub fun getAllTribes(): {String: TribeData} {
-            return self.tribes
-        }
-
-        pub fun getTribeData(tribeName: String): TribeData {
-            return self.tribes[tribeName]!
-        }
-
-        pub fun addNewTribe(newTribeName: String, ipfsHash: String, description: String) {
-            self.tribes[newTribeName] = TribeData(_ipfsHash: ipfsHash, _description: description)
-        }
-
-        pub fun addMember(tribe: String, member: Address) {
-            pre {
-                self.participants[member] == nil || !self.participants[member]!:
-                    "Member already belongs to a Tribe!"
-            }
-            self.tribes[tribe]!.addMember(member: member)
-            self.participants[member] = true
-        }
-
-        pub fun removeMember(currentTribe: String, member: Address) {
-            pre {
-                self.participants[member]!:
-                    "Member does not belong to a Tribe!"
-            }
-            self.tribes[currentTribe]!.removeMember(member: member)
-            self.participants[member] = false
-        }
-
-        init(_tenantID: String, _holder: Address) {
-            self.tenantID = _tenantID
+        init(_tenant: Address, _holder: Address) {
+            self.tenantID = _tenant
             self.holder = _holder
             self.tribes = {}
             self.participants = {}
@@ -79,14 +35,13 @@ pub contract Tribes: IHyperverseComposable {
 
     pub fun instance(auth: &HyperverseAuth.Auth) {
         let tenant = auth.owner!.address
-        var STenantID: String = self.clientTenantID(account: tenant)
         
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
+        self.tenants[tenant] <-! create Tenant(_tenant: tenant, _holder: tenant)
         
         let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
         package.depositAdmin(Admin: <- create Admin(tenant))
         
-        emit TenantCreated(id: STenantID)
+        emit TenantCreated(tenant: tenant)
     }
 
     /**************************************** PACKAGE ****************************************/
@@ -142,7 +97,8 @@ pub contract Tribes: IHyperverseComposable {
     pub resource Admin {
         pub let tenant: Address
         pub fun addNewTribe(newTribeName: String, ipfsHash: String, description: String) {
-            Tribes.getTenant(account: self.tenant).addNewTribe(newTribeName: newTribeName, ipfsHash: ipfsHash, description: description)
+            let state = Tribes.getTenant(tenant: self.tenant)
+            state.tribes[newTribeName] = TribeData(_ipfsHash: ipfsHash, _description: description)
         }
 
         init(_ tenant: Address) {
@@ -152,15 +108,29 @@ pub contract Tribes: IHyperverseComposable {
 
     pub fun joinTribe(identity: &Identity, tribe: String) {
         pre {
-            Tribes.getTenant(account: identity.tenant).getAllTribes()[tribe] != nil:
+            self.getAllTribes(tenant: identity.tenant)[tribe] != nil:
                 "This Tribe does not exist!"
         }
-        Tribes.getTenant(account: identity.tenant).addMember(tribe: tribe, member: identity.address)
+        let state = Tribes.getTenant(tenant: identity.tenant)
+        
+        let member = identity.address
+        assert(state.participants[member] == nil || !state.participants[member]!, message: "Member already belongs to a Tribe!")
+        
+        state.tribes[tribe]!.addMember(member: member)
+        state.participants[member] = true
+        
         identity.addTribe(newTribe: <- create Tribe(_name: tribe))
     }
     
     pub fun leaveTribe(identity: &Identity) {
-        Tribes.getTenant(account: identity.tenant).removeMember(currentTribe: identity.currentTribeName!, member: identity.address)
+        let currentTribe = identity.currentTribeName!
+        let member = identity.address
+        let state = Tribes.getTenant(tenant: identity.tenant)
+
+        assert(state.participants[member]!, message: "Member does not belong to a Tribe!")
+        state.tribes[currentTribe]!.removeMember(member: member)
+        state.participants[member] = false
+        
         identity.removeTribe()
     }
 
@@ -238,6 +208,14 @@ pub contract Tribes: IHyperverseComposable {
             self.name = _name 
             self.joinDate = getCurrentBlock().timestamp
         }
+    }
+
+    pub fun getAllTribes(tenant: Address): {String: TribeData} {
+        return self.getTenant(tenant: tenant).tribes
+    }
+
+    pub fun getTribeData(tenant: Address, tribeName: String): TribeData {
+        return self.getTenant(tenant: tenant).tribes[tribeName]!
     }
 
     init() {

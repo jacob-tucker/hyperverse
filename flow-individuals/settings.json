@@ -1,0 +1,9 @@
+{
+    "name": "test",
+    "blocks": {
+        "/blockchain/flow": true,
+        "/blockchain/flow/cadence": true,
+        "/framework/vanilla": true,
+        "/category/foundation/core-simple_nft": true
+    }
+}

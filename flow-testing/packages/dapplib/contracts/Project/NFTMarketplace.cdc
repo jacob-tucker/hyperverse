@@ -15,17 +15,15 @@ pub contract NFTMarketplace: IHyperverseComposable {
         return account.toString().concat(".").concat(self.getType().identifier)
     }
     access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
+    pub fun tenantExists(account: Address): Bool {
+        return self.tenants[self.clientTenantID(account: account)] != nil
+    }
+    pub fun getTenant(account: Address): &Tenant {
         let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
     }
-
-    pub resource interface IState {
-        pub let tenantID: String
-        pub var holder: Address
-    }
     
-    pub resource Tenant: IHyperverseComposable.ITenant, IState {
+    pub resource Tenant: IHyperverseComposable.ITenant {
         pub let tenantID: String
         pub var holder: Address
 

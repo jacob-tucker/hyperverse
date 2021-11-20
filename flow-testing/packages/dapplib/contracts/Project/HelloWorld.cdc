@@ -15,19 +15,12 @@ pub contract HelloWorld: IHyperverseComposable {
     pub fun tenantExists(account: Address): Bool {
         return self.tenants[self.clientTenantID(account: account)] != nil
     }
-    pub fun getTenant(account: Address): &Tenant{IHyperverseComposable.ITenant, IState} {
+    pub fun getTenant(account: Address): &Tenant {
         let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
     }
-
-    pub resource interface IState {
-        pub let tenantID: String
-        pub var holder: Address
-
-        pub let greeting: String
-    }
     
-    pub resource Tenant: IHyperverseComposable.ITenant, IState {
+    pub resource Tenant: IHyperverseComposable.ITenant {
         pub let tenantID: String
         pub var holder: Address
 
