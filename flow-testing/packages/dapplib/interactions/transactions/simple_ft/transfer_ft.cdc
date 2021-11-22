@@ -6,15 +6,15 @@ transaction(recipient: Address, amount: UFix64, tenantOwner: Address) {
     let RecipientVault: &SimpleToken.Vault{SimpleToken.VaultPublic}
 
     prepare(signer: AuthAccount) {                  
-        let SignerPackage = signer.borrow<&SimpleToken.Package>(from: SimpleToken.PackageStoragePath)
-                                ?? panic("Could not borrow the signer's SimpleToken Package.")
+        let SignerBundle = signer.borrow<&SimpleToken.Bundle>(from: SimpleToken.BundleStoragePath)
+                                ?? panic("Could not borrow the signer's SimpleToken Bundle.")
 
-        self.SignerVault = SignerPackage.borrowVault(tenant: tenantOwner)
+        self.SignerVault = SignerBundle.borrowVault(tenant: tenantOwner)
 
-        let RecipientSimpleTokenPackage = getAccount(recipient).getCapability(/public/SimpleTokenPackage)
-                                            .borrow<&SimpleToken.Package{SimpleToken.PackagePublic}>()
-                                            ?? panic("Could not borrow the recipient's SimpleToken.Package.")
-        self.RecipientVault = RecipientSimpleTokenPackage.borrowVaultPublic(tenant: tenantOwner)
+        let RecipientSimpleTokenBundle = getAccount(recipient).getCapability(SimpleToken.BundlePublicPath)
+                                            .borrow<&SimpleToken.Bundle{SimpleToken.PublicBundle}>()
+                                            ?? panic("Could not borrow the recipient's SimpleToken.Bundle.")
+        self.RecipientVault = RecipientSimpleTokenBundle.borrowVaultPublic(tenant: tenantOwner)
     }
 
     execute {

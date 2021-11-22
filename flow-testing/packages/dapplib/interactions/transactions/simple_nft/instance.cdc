@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        SimpleNFT.instance(auth: self.Auth)
+        SimpleNFT.createTenant(auth: self.Auth)
         log("Create a new instance of a SimpleNFT Tenant.")
     }
 }

@@ -3,17 +3,17 @@ import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 transaction(recipient: Address) {
 
     let Tenant: Address
-    let AdminsSNFTPackage: &SimpleToken.Package
-    let RecipientsSNFTPackage: &SimpleToken.Package{SimpleToken.PackagePublic}
+    let AdminsSNFTPackage: &SimpleToken.Bundle
+    let RecipientsSNFTPackage: &SimpleToken.Bundle{SimpleToken.PublicBundle}
     
     prepare(tenantOwner: AuthAccount) {
         self.Tenant = tenantOwner.address
-        self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleToken.Package>(from: SimpleToken.PackageStoragePath)
-                                    ?? panic("Could not borrow the SimpleToken.Package from the signer.")
+        self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleToken.Bundle>(from: SimpleToken.BundleStoragePath)
+                                    ?? panic("Could not borrow the SimpleToken.Bundle from the signer.")
 
-        self.RecipientsSNFTPackage = getAccount(recipient).getCapability(SimpleToken.PackagePublicPath)
-                                        .borrow<&SimpleToken.Package{SimpleToken.PackagePublic}>()
-                                        ?? panic("Could not borrow the public SimpleToken.Package from the signer.")
+        self.RecipientsSNFTPackage = getAccount(recipient).getCapability(SimpleToken.BundlePublicPath)
+                                        .borrow<&SimpleToken.Bundle{SimpleToken.PublicBundle}>()
+                                        ?? panic("Could not borrow the public SimpleToken.Bundle from the signer.")
     }
 
     execute {

@@ -180,6 +180,7 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
                 if signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath) == nil {
                     signer.save(<- HyperverseAuth.createAuth(), to: HyperverseAuth.AuthStoragePath)
                     signer.link<&HyperverseAuth.Auth{HyperverseAuth.IAuth}>(HyperverseAuth.AuthPublicPath, target: HyperverseAuth.AuthStoragePath)
+                    signer.link<&HyperverseAuth.Auth>(HyperverseAuth.AuthPrivatePath, target: HyperverseAuth.AuthStoragePath)
                 }
             }
 
@@ -228,60 +229,61 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
               let auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
                               ?? panic("Could not borrow the Auth.")
               let authCapability = signer.getCapability<&HyperverseAuth.Auth>(HyperverseAuth.AuthPrivatePath)
+              assert(authCapability.borrow() != nil, message: "Auth cap is nil")
       
               /* SimpleToken */
-              if signer.borrow<&SimpleToken.Package>(from: SimpleToken.PackageStoragePath) == nil {
-                  signer.save(<- SimpleToken.getPackage(), to: SimpleToken.PackageStoragePath)
-                  signer.link<auth &SimpleToken.Package>(SimpleToken.PackagePrivatePath, target: SimpleToken.PackageStoragePath)
-                  signer.link<&SimpleToken.Package{SimpleToken.PackagePublic}>(SimpleToken.PackagePublicPath, target: SimpleToken.PackageStoragePath)
-                  auth.addPackage(packageName: SimpleToken.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(SimpleToken.PackagePrivatePath))
+              if signer.borrow<&SimpleToken.Bundle>(from: SimpleToken.BundleStoragePath) == nil {
+                  signer.save(<- SimpleToken.getBundle(), to: SimpleToken.BundleStoragePath)
+                  signer.link<auth &SimpleToken.Bundle>(SimpleToken.BundlePrivatePath, target: SimpleToken.BundleStoragePath)
+                  signer.link<&SimpleToken.Bundle{SimpleToken.PublicBundle}>(SimpleToken.BundlePublicPath, target: SimpleToken.BundleStoragePath)
+                  auth.addBundle(bundleName: SimpleToken.getType().identifier, bundle: signer.getCapability<auth &IHyperverseComposable.Bundle>(SimpleToken.BundlePrivatePath))
               }
       
               /* SimpleNFT */
-              if signer.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath) == nil {
-                  signer.save(<- SimpleNFT.getPackage(), to: SimpleNFT.PackageStoragePath)
-                  signer.link<auth &SimpleNFT.Package>(SimpleNFT.PackagePrivatePath, target: SimpleNFT.PackageStoragePath)
-                  signer.link<&SimpleNFT.Package{SimpleNFT.PackagePublic}>(SimpleNFT.PackagePublicPath, target: SimpleNFT.PackageStoragePath)
-                  auth.addPackage(packageName: SimpleNFT.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(SimpleNFT.PackagePrivatePath))
+              if signer.borrow<&SimpleNFT.Bundle>(from: SimpleNFT.BundleStoragePath) == nil {
+                  signer.save(<- SimpleNFT.getBundle(), to: SimpleNFT.BundleStoragePath)
+                  signer.link<auth &SimpleNFT.Bundle>(SimpleNFT.BundlePrivatePath, target: SimpleNFT.BundleStoragePath)
+                  signer.link<&SimpleNFT.Bundle{SimpleNFT.PublicBundle}>(SimpleNFT.BundlePublicPath, target: SimpleNFT.BundleStoragePath)
+                  auth.addBundle(bundleName: SimpleNFT.getType().identifier, bundle: signer.getCapability<auth &IHyperverseComposable.Bundle>(SimpleNFT.BundlePrivatePath))
               }
       
               /* Tribes */
-              if signer.borrow<&Tribes.Package>(from: Tribes.PackageStoragePath) == nil {
-                  signer.save(<- Tribes.getPackage(), to: Tribes.PackageStoragePath)
-                  signer.link<auth &Tribes.Package>(Tribes.PackagePrivatePath, target: Tribes.PackageStoragePath)
-                  signer.link<&Tribes.Package{Tribes.PackagePublic}>(Tribes.PackagePublicPath, target: Tribes.PackageStoragePath)
-                  auth.addPackage(packageName: Tribes.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(Tribes.PackagePrivatePath))
+              if signer.borrow<&Tribes.Bundle>(from: Tribes.BundleStoragePath) == nil {
+                  signer.save(<- Tribes.getBundle(), to: Tribes.BundleStoragePath)
+                  signer.link<auth &Tribes.Bundle>(Tribes.BundlePrivatePath, target: Tribes.BundleStoragePath)
+                  signer.link<&Tribes.Bundle{Tribes.PublicBundle}>(Tribes.BundlePublicPath, target: Tribes.BundleStoragePath)
+                  auth.addBundle(bundleName: Tribes.getType().identifier, bundle: signer.getCapability<auth &IHyperverseComposable.Bundle>(Tribes.BundlePrivatePath))
               }
       
               /* Rewards */
-              if signer.borrow<&Rewards.Package>(from: Rewards.PackageStoragePath) == nil {
-                  let SimpleNFTPackage = signer.getCapability<&SimpleNFT.Package>(SimpleNFT.PackagePrivatePath)
-                  signer.save(<- Rewards.getPackage(auth: authCapability), to: Rewards.PackageStoragePath)
-                  signer.link<auth &Rewards.Package>(Rewards.PackagePrivatePath, target: Rewards.PackageStoragePath)
-                  signer.link<&Rewards.Package{Rewards.PackagePublic}>(Rewards.PackagePublicPath, target: Rewards.PackageStoragePath)
-                  auth.addPackage(packageName: Rewards.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(Rewards.PackagePrivatePath))
+              if signer.borrow<&Rewards.Bundle>(from: Rewards.BundleStoragePath) == nil {
+                  let SimpleNFTBundle = signer.getCapability<&SimpleNFT.Bundle>(SimpleNFT.BundlePrivatePath)
+                  signer.save(<- Rewards.getBundle(auth: authCapability), to: Rewards.BundleStoragePath)
+                  signer.link<auth &Rewards.Bundle>(Rewards.BundlePrivatePath, target: Rewards.BundleStoragePath)
+                  signer.link<&Rewards.Bundle{Rewards.PublicBundle}>(Rewards.BundlePublicPath, target: Rewards.BundleStoragePath)
+                  auth.addBundle(bundleName: Rewards.getType().identifier, bundle: signer.getCapability<auth &IHyperverseComposable.Bundle>(Rewards.BundlePrivatePath))
               }
       
               /* NFTMarketplace */
-              if signer.borrow<&NFTMarketplace.Package>(from: NFTMarketplace.PackageStoragePath) == nil {
-                  signer.save(<- NFTMarketplace.getPackage(auth: authCapability), to: NFTMarketplace.PackageStoragePath)
-                  signer.link<auth &NFTMarketplace.Package>(NFTMarketplace.PackagePrivatePath, target: NFTMarketplace.PackageStoragePath)
-                  signer.link<&NFTMarketplace.Package{NFTMarketplace.PackagePublic}>(NFTMarketplace.PackagePublicPath, target: NFTMarketplace.PackageStoragePath)
-                  auth.addPackage(packageName: NFTMarketplace.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(NFTMarketplace.PackagePrivatePath))
+              if signer.borrow<&NFTMarketplace.Bundle>(from: NFTMarketplace.BundleStoragePath) == nil {
+                  signer.save(<- NFTMarketplace.getBundle(auth: authCapability), to: NFTMarketplace.BundleStoragePath)
+                  signer.link<auth &NFTMarketplace.Bundle>(NFTMarketplace.BundlePrivatePath, target: NFTMarketplace.BundleStoragePath)
+                  signer.link<&NFTMarketplace.Bundle{NFTMarketplace.PublicBundle}>(NFTMarketplace.BundlePublicPath, target: NFTMarketplace.BundleStoragePath)
+                  auth.addBundle(bundleName: NFTMarketplace.getType().identifier, bundle: signer.getCapability<auth &IHyperverseComposable.Bundle>(NFTMarketplace.BundlePrivatePath))
               }
       
               /* SimpleNFTMarketplace */
-              if signer.borrow<&SimpleNFTMarketplace.Package>(from: SimpleNFTMarketplace.PackageStoragePath) == nil {
+              if signer.borrow<&SimpleNFTMarketplace.Bundle>(from: SimpleNFTMarketplace.BundleStoragePath) == nil {
                   let FlowTokenVault = signer.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-                  signer.save(<- SimpleNFTMarketplace.getPackage(auth: authCapability, FlowTokenVault: FlowTokenVault), to: SimpleNFTMarketplace.PackageStoragePath)
-                  signer.link<auth &SimpleNFTMarketplace.Package>(SimpleNFTMarketplace.PackagePrivatePath, target: SimpleNFTMarketplace.PackageStoragePath)
-                  signer.link<&SimpleNFTMarketplace.Package{SimpleNFTMarketplace.PackagePublic}>(SimpleNFTMarketplace.PackagePublicPath, target: SimpleNFTMarketplace.PackageStoragePath)
-                  auth.addPackage(packageName: SimpleNFTMarketplace.getType().identifier, packageRef: signer.getCapability<auth &IHyperverseComposable.Package>(SimpleNFTMarketplace.PackagePrivatePath))
+                  signer.save(<- SimpleNFTMarketplace.getBundle(auth: authCapability, FlowTokenVault: FlowTokenVault), to: SimpleNFTMarketplace.BundleStoragePath)
+                  signer.link<auth &SimpleNFTMarketplace.Bundle>(SimpleNFTMarketplace.BundlePrivatePath, target: SimpleNFTMarketplace.BundleStoragePath)
+                  signer.link<&SimpleNFTMarketplace.Bundle{SimpleNFTMarketplace.PublicBundle}>(SimpleNFTMarketplace.BundlePublicPath, target: SimpleNFTMarketplace.BundleStoragePath)
+                  auth.addBundle(bundleName: SimpleNFTMarketplace.getType().identifier, bundle: signer.getCapability<auth &IHyperverseComposable.Bundle>(SimpleNFTMarketplace.BundlePrivatePath))
               }
           }
       
           execute {
-              log("Signer setup their Auth and all their Packages for the 6 Smart Modules.")
+              log("Signer setup their Auth and all their Bundles for the 7 Smart Modules.")
           }
       }`;
 

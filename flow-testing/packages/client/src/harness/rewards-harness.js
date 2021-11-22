@@ -40,12 +40,6 @@ export default class RewardsHarness extends LitElement {
           </text-widget>
         </action-card>
       
-        <action-card title="Rewards - Get Client Tenants" description="Rewards TenantID for this account"
-          action="RewardsGetClientTenants" method="get" fields="account">
-          <account-widget field="account" label="Account">
-          </account-widget>
-        </action-card>
-      
         <action-card title="Rewards - Give Reward" description="Give Reward" action="RewardsGiveReward" method="post"
           fields="tenantOwner signer">
           <account-widget field="tenantOwner" label="Tenant Owner">

@@ -11,17 +11,25 @@ transaction(tenantOwner: Address, id: UInt64, marketplace: Address) {
     let SaleCollection: &NFTMarketplace.SaleCollection{NFTMarketplace.SalePublic}
 
     prepare(signer: AuthAccount) {
-        let Package = signer.borrow<&NFTMarketplace.Package>(from: NFTMarketplace.PackageStoragePath)
-                        ?? panic("Could not borrow the signer's Package.")
+        let Bundle = signer.borrow<&NFTMarketplace.Bundle>(from: NFTMarketplace.BundleStoragePath)
+                        ?? panic("Could not borrow the signer's Bundle.")
 
-        self.NFTCollection = Package.SimpleNFTPackagePublic().borrowCollectionPublic(tenant: tenantOwner)
+        let SimpleNFTBundle = signer.getCapability(SimpleNFT.BundlePublicPath)
+                                .borrow<&SimpleNFT.Bundle{SimpleNFT.PublicBundle}>()
+                                ?? panic("Could not get the public Bundle.")
 
-        let PackagePublic = getAccount(marketplace).getCapability(NFTMarketplace.PackagePublicPath)
-                                .borrow<&NFTMarketplace.Package{NFTMarketplace.PackagePublic}>()
-                                ?? panic("Could not get the public Package of the marketplace account.")
+        self.NFTCollection = SimpleNFTBundle.borrowCollectionPublic(tenant: tenantOwner)
 
-        self.SaleCollection = PackagePublic.borrowSaleCollectionPublic(tenant: tenantOwner)
-        self.Vault <- Package.SimpleTokenPackage.borrow()!.borrowVault(tenant: tenantOwner).withdraw(amount: self.SaleCollection.idPrice(id: id)!)
+        let PublicBundle = getAccount(marketplace).getCapability(NFTMarketplace.BundlePublicPath)
+                                .borrow<&NFTMarketplace.Bundle{NFTMarketplace.PublicBundle}>()
+                                ?? panic("Could not get the public Bundle of the marketplace account.")
+
+        self.SaleCollection = PublicBundle.borrowSaleCollectionPublic(tenant: tenantOwner)
+
+        let SimpleTokenBundle = signer.borrow<&SimpleToken.Bundle>(from: SimpleToken.BundleStoragePath)
+                                ?? panic("Could not get the public Bundle.")
+
+        self.Vault <- SimpleTokenBundle.borrowVault(tenant: tenantOwner).withdraw(amount: self.SaleCollection.idPrice(id: id)!)
     }
 
     execute {

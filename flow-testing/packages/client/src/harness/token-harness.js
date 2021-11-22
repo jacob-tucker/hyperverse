@@ -40,12 +40,6 @@ export default class TokenHarness extends LitElement {
           </text-widget>
         </action-card>
       
-        <action-card title="SimpleToken - Get Client Tenants" description="SimpleToken TenantID for this account"
-          action="SimpleTokenGetClientTenants" method="get" fields="account">
-          <account-widget field="account" label="Account">
-          </account-widget>
-        </action-card>
-      
         <action-card title="SimpleToken - Give Minter" description="Give Minter" action="SimpleTokenGiveMinter" method="post"
           fields="tenantOwner recipient">
           <account-widget field="tenantOwner" label="Tenant Owner">

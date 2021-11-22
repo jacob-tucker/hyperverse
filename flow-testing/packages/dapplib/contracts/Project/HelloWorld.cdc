@@ -7,58 +7,57 @@ pub contract HelloWorld: IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: String)
-    pub fun clientTenantID(account: Address): String {
-        return account.toString().concat(".").concat(self.getType().identifier)
-    }
-    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun tenantExists(account: Address): Bool {
-        return self.tenants[self.clientTenantID(account: account)] != nil
-    }
-    pub fun getTenant(account: Address): &Tenant {
-        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
+    pub event TenantCreated(tenant: Address)
+    
+    access(contract) var tenants: @{Address: IHyperverseComposable.Tenant}
+    access(contract) fun getTenant(tenant: Address): &Tenant {
+        let ref = &self.tenants[tenant] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
+    }
+    pub fun tenantExists(tenant: Address): Bool {
+        return self.tenants[tenant] != nil
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant {
-        pub let tenantID: String
         pub var holder: Address
 
         pub let greeting: String
 
-        init(_tenantID: String, _holder: Address) {
-            self.tenantID = _tenantID
+        init(_holder: Address) {
             self.holder = _holder
 
             self.greeting = "Hello, World! :D"
         }
     }
 
-    pub fun instance(auth: &HyperverseAuth.Auth) {
+    pub fun createTenant(auth: &HyperverseAuth.Auth) {
         let tenant = auth.owner!.address
-        var STenantID: String = self.clientTenantID(account: tenant)
         
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
+        self.tenants[tenant] <-! create Tenant(_holder: tenant)
         
-        emit TenantCreated(id: STenantID)
+        emit TenantCreated(tenant: tenant)
     }
 
-    /**************************************** PACKAGE ****************************************/
+    /**************************************** BUNDLE ****************************************/
     
-    pub let PackageStoragePath: StoragePath
-    pub let PackagePrivatePath: PrivatePath
-    pub let PackagePublicPath: PublicPath
-    pub resource Package {}
+    pub let BundleStoragePath: StoragePath
+    pub let BundlePrivatePath: PrivatePath
+    pub let BundlePublicPath: PublicPath
+    pub resource Bundle {}
 
     /**************************************** FUNCTIONALITY ****************************************/
 
     pub event HelloWorldInitialized()
 
+    pub fun getGreeting(tenant: Address): String {
+        return self.getTenant(tenant: tenant).greeting
+    }
+
     init() {
         self.tenants <- {}
-        self.PackageStoragePath = /storage/HelloWorldPackage
-        self.PackagePrivatePath = /private/HelloWorldPackage
-        self.PackagePublicPath = /public/HelloWorldPackage
+        self.BundleStoragePath = /storage/HelloWorldBundle
+        self.BundlePrivatePath = /private/HelloWorldBundle
+        self.BundlePublicPath = /public/HelloWorldBundle
 
         Registry.registerContract(
             proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 

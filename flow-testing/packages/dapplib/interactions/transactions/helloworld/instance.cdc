@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        HelloWorld.instance(auth: self.Auth)
+        HelloWorld.createTenant(auth: self.Auth)
         log("Create a new instance of a HelloWorld Tenant.")
     }
 }

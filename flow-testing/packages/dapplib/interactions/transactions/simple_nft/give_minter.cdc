@@ -3,17 +3,17 @@ import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 transaction(recipient: Address) {
 
     let Tenant: Address
-    let AdminsSNFTPackage: &SimpleNFT.Package
-    let RecipientsSNFTPackage: &SimpleNFT.Package{SimpleNFT.PackagePublic}
+    let AdminsSNFTPackage: &SimpleNFT.Bundle
+    let RecipientsSNFTPackage: &SimpleNFT.Bundle{SimpleNFT.PublicBundle}
     
     prepare(tenantOwner: AuthAccount) {
         self.Tenant = tenantOwner.address
-        self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
-                                    ?? panic("Could not borrow the SimpleNFT.Package from the signer.")
+        self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleNFT.Bundle>(from: SimpleNFT.BundleStoragePath)
+                                    ?? panic("Could not borrow the SimpleNFT.Bundle from the signer.")
 
-        self.RecipientsSNFTPackage = getAccount(recipient).getCapability(SimpleNFT.PackagePublicPath)
-                                        .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()
-                                        ?? panic("Could not borrow the public SimpleNFT.Package from the recipient.")
+        self.RecipientsSNFTPackage = getAccount(recipient).getCapability(SimpleNFT.BundlePublicPath)
+                                        .borrow<&SimpleNFT.Bundle{SimpleNFT.PublicBundle}>()
+                                        ?? panic("Could not borrow the public SimpleNFT.Bundle from the recipient.")
     }
 
     execute {

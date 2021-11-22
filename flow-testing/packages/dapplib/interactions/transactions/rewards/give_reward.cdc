@@ -4,22 +4,22 @@ import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 // The signer is the recipient
 transaction(tenantOwner: Address) {
 
-    let TenantsRewardsPackage: &Rewards.Package{Rewards.PackagePublic}
-    let RecipientsRewardsPackage: &Rewards.Package{Rewards.PackagePublic}
+    let TenantsRewardsPackage: &Rewards.Bundle{Rewards.PublicBundle}
+    let RecipientsRewardsPackage: &Rewards.Bundle{Rewards.PublicBundle}
 
     prepare(signer: AuthAccount) {
 
-        self.TenantsRewardsPackage = getAccount(tenantOwner).getCapability(Rewards.PackagePublicPath)
-                                .borrow<&Rewards.Package{Rewards.PackagePublic}>()
-                                ?? panic("Could not borrow the public SimpleNFT.Package")
+        self.TenantsRewardsPackage = getAccount(tenantOwner).getCapability(Rewards.BundlePublicPath)
+                                .borrow<&Rewards.Bundle{Rewards.PublicBundle}>()
+                                ?? panic("Could not borrow the public SimpleNFT.Bundle")
 
-        self.RecipientsRewardsPackage = signer.getCapability(Rewards.PackagePublicPath)
-                                            .borrow<&Rewards.Package{Rewards.PackagePublic}>()
-                                            ?? panic("Could not borrow the public Package from the signer.")
+        self.RecipientsRewardsPackage = signer.getCapability(Rewards.BundlePublicPath)
+                                            .borrow<&Rewards.Bundle{Rewards.PublicBundle}>()
+                                            ?? panic("Could not borrow the public Bundle from the signer.")
     }
 
     execute {
-        Rewards.giveReward(tenant: tenantOwner, minterPackage: self.TenantsRewardsPackage, recipientPackage: self.RecipientsRewardsPackage)
+        Rewards.giveReward(tenant: tenantOwner, minterBundle: self.TenantsRewardsPackage, recipientBundle: self.RecipientsRewardsPackage)
         log("Gave the signer the reward.")
     }
 }

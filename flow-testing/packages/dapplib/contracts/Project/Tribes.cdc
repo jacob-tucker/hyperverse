@@ -33,28 +33,28 @@ pub contract Tribes: IHyperverseComposable {
         }
     }
 
-    pub fun instance(auth: &HyperverseAuth.Auth) {
+    pub fun createTenant(auth: &HyperverseAuth.Auth) {
         let tenant = auth.owner!.address
         
         self.tenants[tenant] <-! create Tenant(_tenant: tenant, _holder: tenant)
         
-        let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
-        package.depositAdmin(Admin: <- create Admin(tenant))
+        let bundle = auth.bundles[self.getType().identifier]!.borrow()! as! &Bundle
+        bundle.depositAdmin(Admin: <- create Admin(tenant))
         
         emit TenantCreated(tenant: tenant)
     }
 
-    /**************************************** PACKAGE ****************************************/
+    /**************************************** BUNDLE ****************************************/
 
-    pub let PackageStoragePath: StoragePath
-    pub let PackagePrivatePath: PrivatePath
-    pub let PackagePublicPath: PublicPath
+    pub let BundleStoragePath: StoragePath
+    pub let BundlePrivatePath: PrivatePath
+    pub let BundlePublicPath: PublicPath
 
-    pub resource interface PackagePublic {
+    pub resource interface PublicBundle {
         pub fun borrowIdentityPublic(tenant: Address): &Identity{IdentityPublic}
     }
    
-    pub resource Package: PackagePublic {
+    pub resource Bundle: PublicBundle {
         pub var identities: @{Address: Identity}
         pub var admins: @{Address: Admin}
 
@@ -86,8 +86,8 @@ pub contract Tribes: IHyperverseComposable {
         }
     }
 
-    pub fun getPackage(): @Package {
-        return <- create Package()
+    pub fun getBundle(): @Bundle {
+        return <- create Bundle()
     }
 
     /**************************************** FUNCTIONALITY ****************************************/
@@ -221,9 +221,9 @@ pub contract Tribes: IHyperverseComposable {
     init() {
         self.tenants <- {}
 
-        self.PackageStoragePath = /storage/TribesPackage
-        self.PackagePrivatePath = /private/TribesPackage
-        self.PackagePublicPath = /public/TribesPackage
+        self.BundleStoragePath = /storage/TribesBundle
+        self.BundlePrivatePath = /private/TribesBundle
+        self.BundlePublicPath = /public/TribesBundle
 
         Registry.registerContract(
             proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 

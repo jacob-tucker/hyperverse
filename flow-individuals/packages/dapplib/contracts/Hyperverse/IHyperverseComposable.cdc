@@ -20,7 +20,5 @@ pub contract interface IHyperverseComposable {
     pub let PackagePrivatePath: PrivatePath
     pub let PackagePublicPath: PublicPath
 
-    pub resource Package {
-       
-    }
+    pub resource Package {}
 }

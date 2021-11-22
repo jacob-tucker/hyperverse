@@ -10,7 +10,7 @@ transaction(numForReward: Int) {
     }
 
     execute {
-        Rewards.instance(auth: self.Auth, numForReward: numForReward)
+        Rewards.createTenant(auth: self.Auth, numForReward: numForReward)
         log("Create a new instance of a Rewards Tenant.")
     }
 }

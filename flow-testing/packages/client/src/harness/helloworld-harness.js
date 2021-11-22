@@ -38,12 +38,6 @@ export default class HelloWorldHarness extends LitElement {
           </account-widget>
         </action-card>
       
-        <action-card title="HelloWorld - Get Client Tenants" description="HelloWorld TenantID for this account"
-          action="HelloWorldGetClientTenants" method="get" fields="account">
-          <account-widget field="account" label="Account">
-          </account-widget>
-        </action-card>
-      
         <action-card title="HelloWorld - Greeting" description="Hello, World!" action="HelloWorldGreeting" method="get"
           fields="tenantOwner">
           <account-widget field="tenantOwner" label="Tenant Owner">

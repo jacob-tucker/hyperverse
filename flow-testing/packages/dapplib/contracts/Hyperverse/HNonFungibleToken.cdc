@@ -48,7 +48,7 @@ import IHyperverseComposable from "./IHyperverseComposable.cdc"
 pub contract interface HNonFungibleToken {
     pub resource Tenant {
         // The total number of tokens of this type in existence
-        pub var totalSupply: UInt64
+        pub(set) var totalSupply: UInt64
     }
 
     // Event that emitted when the NFT contract is initialized
@@ -73,6 +73,7 @@ pub contract interface HNonFungibleToken {
     pub resource interface INFT {
         pub let tenant: Address
         // The unique ID that each NFT has
+        // determined by the resource's `uuid`
         pub let id: UInt64
     }
 
@@ -143,8 +144,8 @@ pub contract interface HNonFungibleToken {
         }
     }
 
-    pub resource Package {
+    pub resource Bundle {
         pub var collections: @{Address: Collection}
-        pub fun borrowCollection(tenant: Address): &{Provider, Receiver, CollectionPublic}
+        pub fun borrowCollection(tenant: Address): &Collection
     }
 }

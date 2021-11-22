@@ -5,8 +5,8 @@ transaction(newTribeName: String, ipfsHash: String, description: String) {
     let TribesAdmin: &Tribes.Admin
 
     prepare(tenantOwner: AuthAccount) {
-        let SignerTribesPackage = tenantOwner.borrow<&Tribes.Package>(from: Tribes.PackageStoragePath)
-                                        ?? panic("Could not borrow the signer's Tribes.Package.")
+        let SignerTribesPackage = tenantOwner.borrow<&Tribes.Bundle>(from: Tribes.BundleStoragePath)
+                                        ?? panic("Could not borrow the signer's Tribes.Bundle.")
 
         self.TribesAdmin = SignerTribesPackage.borrowAdmin(tenant: tenantOwner.address)
     }

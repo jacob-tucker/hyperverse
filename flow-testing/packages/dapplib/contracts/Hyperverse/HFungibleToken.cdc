@@ -202,8 +202,8 @@ pub contract interface HFungibleToken {
         init(_ tenant: Address, _balance: UFix64)
     }
 
-     pub resource Package {
+     pub resource Bundle {
         pub var vaults: @{Address: Vault}
-        pub fun borrowVault(tenant: Address): &{Provider, Receiver, Balance}
+        pub fun borrowVault(tenant: Address): &Vault
     }
 }

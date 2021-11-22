@@ -2,22 +2,19 @@ import SimpleNFTMarketplace from "../../../contracts/Project/SimpleNFTMarketplac
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 
 // Needs to be called every time a user comes into a new tenant of this contract
-transaction(tenantOwner: Address, id: UInt64, simpleNFTTenantOwner: Address) {
+transaction(tenantOwner: Address, id: UInt64) {
 
     let SaleCollection: &SimpleNFTMarketplace.SaleCollection
 
     prepare(signer: AuthAccount) {
-        let Package = signer.borrow<&SimpleNFTMarketplace.Package>(from: SimpleNFTMarketplace.PackageStoragePath)
-                        ?? panic("Could not borrow the signer's Package.")
+        let Bundle = signer.borrow<&SimpleNFTMarketplace.Bundle>(from: SimpleNFTMarketplace.BundleStoragePath)
+                        ?? panic("Could not borrow the signer's Bundle.")
 
-        self.SaleCollection = Package.borrowSaleCollection(tenant: tenantOwner)
+        self.SaleCollection = Bundle.borrowSaleCollection(tenant: tenantOwner)
     }
 
     execute {
-        let simpleNFTTenantID = simpleNFTTenantOwner.toString()
-                        .concat(".")
-                        .concat(SimpleNFT.getType().identifier)
-        self.SaleCollection.unlistSale(simpleNFTTenant: simpleNFTTenantOwner, id: id)
+        self.SaleCollection.unlistSale(id: id)
         log("Unlisted the NFT with id from Sale.")
     }
 }

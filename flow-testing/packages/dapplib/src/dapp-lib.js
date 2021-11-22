@@ -607,8 +607,7 @@ module.exports = class DappLib {
             'simplenftmarketplace_unlist_sale',
             {
                 tenantOwner: { value: data.tenantOwner, type: t.Address },
-                id: { value: parseInt(data.id), type: t.UInt64 },
-                simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
+                id: { value: parseInt(data.id), type: t.UInt64 }
             }
         );
 
@@ -639,8 +638,7 @@ module.exports = class DappLib {
             {
                 tenantOwner: { value: data.tenantOwner, type: t.Address },
                 ids: DappLib.formatFlowArray(data.ids, t.UInt64),
-                price: { value: data.price, type: t.UFix64 },
-                simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
+                price: { value: data.price, type: t.UFix64 }
             }
         );
 
@@ -670,8 +668,7 @@ module.exports = class DappLib {
             {
                 tenantOwner: { value: data.tenantOwner, type: t.Address },
                 id: { value: parseInt(data.id), type: t.UInt64 },
-                marketplace: { value: data.marketplace, type: t.Address },
-                simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
+                marketplace: { value: data.marketplace, type: t.Address }
             }
         );
 
@@ -697,8 +694,7 @@ module.exports = class DappLib {
             'simplenftmarketplace_get_ids',
             {
                 account: { value: data.account, type: t.Address },
-                tenantOwner: { value: data.tenantOwner, type: t.Address },
-                simpleNFTTenantOwner: { value: data.simpleNFTTenantOwner, type: t.Address }
+                tenantOwner: { value: data.tenantOwner, type: t.Address }
             }
         );
 

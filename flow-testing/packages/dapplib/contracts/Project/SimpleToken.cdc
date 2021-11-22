@@ -8,62 +8,55 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: String)
-    pub fun clientTenantID(account: Address): String {
-        return account.toString().concat(".").concat(self.getType().identifier)
-    }
-    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun tenantExists(account: Address): Bool {
-        return self.tenants[self.clientTenantID(account: account)] != nil
-    }
-    pub fun getTenant(account: Address): &Tenant {
-        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
+    pub event TenantCreated(tenant: Address)
+    
+    access(contract) var tenants: @{Address: IHyperverseComposable.Tenant}
+    access(contract) fun getTenant(tenant: Address): &Tenant {
+        let ref = &self.tenants[tenant] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
+    }
+    pub fun tenantExists(tenant: Address): Bool {
+        return self.tenants[tenant] != nil
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant {
-        pub let tenantID: String
         pub var holder: Address
-        pub var totalSupply: UFix64
-        access(contract) fun updateTotalSupply(delta: Fix64) {
-            self.totalSupply = UFix64(Fix64(self.totalSupply) + delta)
-        }
+        pub(set) var totalSupply: UFix64
 
-        init(_tenantID: String, _holder: Address) {
-            self.tenantID = _tenantID
+        init(_holder: Address) {
             self.holder = _holder
             self.totalSupply = 0.0
         }
     }
 
-    pub fun instance(auth: &HyperverseAuth.Auth, initialSupply: UFix64) {
+    pub fun createTenant(auth: &HyperverseAuth.Auth, initialSupply: UFix64) {
         let tenant = auth.owner!.address
-        var STenantID: String = self.clientTenantID(account: tenant)
+        let tenantR <- create Tenant(_holder: tenant)
+        tenantR.totalSupply = initialSupply
+        self.tenants[tenant] <-! tenantR
         
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
+        let bundle = auth.bundles[self.getType().identifier]!.borrow()! as! &Bundle
+        bundle.depositAdministrator(Administrator: <- create Administrator(tenant))
+        bundle.depositMinter(Minter: <- create Minter(tenant))
+        bundle.borrowVault(tenant: tenant).deposit(from: <- create Vault(tenant, _balance: initialSupply))
         
-        let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
-        package.depositAdministrator(Administrator: <- create Administrator(tenant))
-        package.depositMinter(Minter: <- create Minter(tenant))
-        package.borrowVault(tenant: tenant).deposit(from: <- create Vault(tenant, _balance: initialSupply))
-        
-        emit TenantCreated(id: STenantID)
+        emit TenantCreated(tenant: tenant)
         emit TokensInitialized(tenant: tenant, initialSupply: initialSupply)
     }
 
-    /**************************************** PACKAGE ****************************************/
+    /**************************************** BUNDLE ****************************************/
 
-    pub let PackageStoragePath: StoragePath
-    pub let PackagePrivatePath: PrivatePath
-    pub let PackagePublicPath: PublicPath
+    pub let BundleStoragePath: StoragePath
+    pub let BundlePrivatePath: PrivatePath
+    pub let BundlePublicPath: PublicPath
  
-    pub resource interface PackagePublic {
+    pub resource interface PublicBundle {
         pub fun borrowVaultPublic(tenant: Address): &Vault{VaultPublic}
         pub fun depositMinter(Minter: @Minter)
         pub fun depositAdministrator(Administrator: @Administrator)
     }
 
-    pub resource Package: PackagePublic {
+    pub resource Bundle: PublicBundle {
         pub var vaults: @{Address: HFungibleToken.Vault}
         pub var minters: @{Address: Minter}
         pub var admins: @{Address: Administrator}
@@ -106,8 +99,8 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
         }
     }
 
-    pub fun getPackage(): @Package {
-        return <- create Package()
+    pub fun getBundle(): @Bundle {
+        return <- create Bundle()
     }
 
     /**************************************** FUNCTIONALITY ****************************************/
@@ -152,12 +145,11 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
         init(_ tenant: Address, _balance: UFix64) {
             self.balance = _balance
             self.tenant = tenant
-
-            SimpleToken.getTenant(account: self.tenant)!.updateTotalSupply(delta: Fix64(_balance))
         }
 
         destroy() {
-            SimpleToken.getTenant(account: self.tenant)!.updateTotalSupply(delta: -Fix64(self.balance))
+            let state = SimpleToken.getTenant(tenant: self.tenant)
+            state.totalSupply = state.totalSupply - self.balance
         }
     }
 
@@ -179,6 +171,8 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
             pre {
                 amount > 0.0: "Amount minted must be greater than zero."
             }
+            let state = SimpleToken.getTenant(tenant: self.tenant)
+            state.totalSupply = state.totalSupply + amount
             return <-create Vault(self.tenant, _balance: amount)
         }
         init(_ tenant: Address) {
@@ -186,12 +180,16 @@ pub contract SimpleToken: IHyperverseComposable, HFungibleToken {
         }
     }
 
+    pub fun getTotalSupply(tenant: Address): UFix64 {
+        return self.getTenant(tenant: tenant).totalSupply
+    }
+
     init() {
         self.tenants <- {}
 
-        self.PackageStoragePath = /storage/SimpleTokenPackage
-        self.PackagePrivatePath = /private/SimpleTokenPackage
-        self.PackagePublicPath = /public/SimpleTokenPackage
+        self.BundleStoragePath = /storage/SimpleTokenBundle
+        self.BundlePrivatePath = /private/SimpleTokenBundle
+        self.BundlePublicPath = /public/SimpleTokenBundle
 
         Registry.registerContract(
             proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 

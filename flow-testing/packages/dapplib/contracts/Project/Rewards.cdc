@@ -8,68 +8,60 @@ pub contract Rewards: IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: String)
-    pub fun clientTenantID(account: Address): String {
-        return account.toString().concat(".").concat(self.getType().identifier)
-    }
-    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun tenantExists(account: Address): Bool {
-        return self.tenants[self.clientTenantID(account: account)] != nil
-    }
-    pub fun getTenant(account: Address): &Tenant {
-        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
+    pub event TenantCreated(tenant: Address)
+    
+    access(contract) var tenants: @{Address: IHyperverseComposable.Tenant}
+    access(contract) fun getTenant(tenant: Address): &Tenant {
+        let ref = &self.tenants[tenant] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
+    }
+    pub fun tenantExists(tenant: Address): Bool {
+        return self.tenants[tenant] != nil
     }
     
     pub resource Tenant: IHyperverseComposable.ITenant {
-        pub let tenantID: String
         pub var holder: Address
 
-        access(contract) var recipients: {Address: Bool}
-        access(contract) fun addRecipient(recipient: Address) {
-            self.recipients[recipient] = true
-        }
+        pub(set) var recipients: {Address: Bool}
         pub let numForReward: Int
 
-        init(_tenantID: String, _holder: Address, _numForReward: Int) {
-            self.tenantID = _tenantID
+        init(_holder: Address, _numForReward: Int) {
             self.holder = _holder
             self.recipients = {}
             self.numForReward = _numForReward
         }
     }
 
-    pub fun instance(auth: &HyperverseAuth.Auth, numForReward: Int) {
+    pub fun createTenant(auth: &HyperverseAuth.Auth, numForReward: Int) {
         let tenant = auth.owner!.address
-        var STenantID: String = self.clientTenantID(account: tenant)
         
         /* Dependencies */
-        if !SimpleNFT.tenantExists(account: tenant) {
-            SimpleNFT.instance(auth: auth)                   
+        if !SimpleNFT.tenantExists(tenant: tenant) {
+            SimpleNFT.createTenant(auth: auth)                   
         }
 
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant, _numForReward: numForReward)
+        self.tenants[tenant] <-! create Tenant(_holder: tenant, _numForReward: numForReward)
 
-        emit TenantCreated(id: STenantID)
+        emit TenantCreated(tenant: tenant)
     }
 
-    /**************************************** PACKAGE ****************************************/
+    /**************************************** BUNDLE ****************************************/
 
-    pub let PackageStoragePath: StoragePath
-    pub let PackagePrivatePath: PrivatePath
-    pub let PackagePublicPath: PublicPath
+    pub let BundleStoragePath: StoragePath
+    pub let BundlePrivatePath: PrivatePath
+    pub let BundlePublicPath: PublicPath
 
-    pub resource interface PackagePublic {
+    pub resource interface PublicBundle {
        access(contract) fun getMinterInContract(tenant: Address): &SimpleNFT.NFTMinter
     }
 
-    // We don't need aliases in this Package
-    pub resource Package: PackagePublic {
+    // We don't need aliases in this Bundle
+    pub resource Bundle: PublicBundle {
         pub let auth: Capability<&HyperverseAuth.Auth>
 
         access(contract) fun getMinterInContract(tenant: Address): &SimpleNFT.NFTMinter {
-            let package: &SimpleNFT.Package = self.auth.borrow()!.getPackage(packageName: SimpleNFT.getType().identifier).borrow()! as! &SimpleNFT.Package
-            return package.borrowMinter(tenant: tenant)
+            let bundle: &SimpleNFT.Bundle = self.auth.borrow()!.getBundle(bundleName: SimpleNFT.getType().identifier) as! &SimpleNFT.Bundle
+            return bundle.borrowMinter(tenant: tenant)
         }
 
         init(_auth: Capability<&HyperverseAuth.Auth>) {
@@ -77,30 +69,30 @@ pub contract Rewards: IHyperverseComposable {
         }
     }
 
-    pub fun getPackage(auth: Capability<&HyperverseAuth.Auth>): @Package {
-        return <- create Package(_auth: auth)
+    pub fun getBundle(auth: Capability<&HyperverseAuth.Auth>): @Bundle {
+        return <- create Bundle(_auth: auth)
     }
 
     /**************************************** FUNCTIONALITY ****************************************/
 
     pub event RewardsInitialized()
 
-    pub fun giveReward(tenant: Address, minterPackage: &Package{PackagePublic}, recipientPackage: &Package{PackagePublic}) {
-        let state = self.getTenant(account: tenant)
-        if state.recipients[recipientPackage.owner!.address] == true {
+    pub fun giveReward(tenant: Address, minterBundle: &Bundle{PublicBundle}, recipientBundle: &Bundle{PublicBundle}) {
+        let state = self.getTenant(tenant: tenant)
+        if state.recipients[recipientBundle.owner!.address] == true {
             panic("This recipient has already received a reward!")
         }
         
-        let simpleNFTPackage = getAccount(recipientPackage.owner!.address).getCapability(SimpleNFT.PackagePublicPath)
-                                .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()
-                                ?? panic("Could not get the recipient's SimpleNFT Package")
+        let simpleNFTBundle = getAccount(recipientBundle.owner!.address).getCapability(SimpleNFT.BundlePublicPath)
+                                .borrow<&SimpleNFT.Bundle{SimpleNFT.PublicBundle}>()
+                                ?? panic("Could not get the recipient's SimpleNFT Bundle")
         
-        let nftCollection = simpleNFTPackage.borrowCollectionPublic(tenant: tenant)
+        let nftCollection = simpleNFTBundle.borrowCollectionPublic(tenant: tenant)
         let ids = nftCollection.getIDs()
         if ids.length >= state.numForReward {
-            let nftMinter = minterPackage.getMinterInContract(tenant: tenant)
+            let nftMinter = minterBundle.getMinterInContract(tenant: tenant)
             nftCollection.deposit(token: <- nftMinter.mintNFT(metadata: {"name": "Super Legendary Reward"}))
-            state.addRecipient(recipient: recipientPackage.owner!.address)
+            state.recipients[recipientBundle.owner!.address] = true
         } else {
             panic("Sorry! This account needs more NFTs to get a Reward!")
         }
@@ -109,9 +101,9 @@ pub contract Rewards: IHyperverseComposable {
     init() {
         self.tenants <- {}
 
-        self.PackageStoragePath = /storage/RewardsPackage
-        self.PackagePrivatePath = /private/RewardsPackage
-        self.PackagePublicPath = /public/RewardsPackage
+        self.BundleStoragePath = /storage/RewardsBundle
+        self.BundlePrivatePath = /private/RewardsBundle
+        self.BundlePublicPath = /public/RewardsBundle
 
         Registry.registerContract(
             proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 

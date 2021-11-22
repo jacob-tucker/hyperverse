@@ -10,7 +10,7 @@ transaction() {
     }
 
     execute {
-        NFTMarketplace.instance(auth: self.Auth)
+        NFTMarketplace.createTenant(auth: self.Auth)
         log("Create a new instance of a NFTMarketplace Tenant.")
     }
 }

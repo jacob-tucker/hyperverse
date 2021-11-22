@@ -7,65 +7,53 @@ pub contract MultiNFT: IHyperverseComposable {
 
     /**************************************** TENANT ****************************************/
 
-    pub event TenantCreated(id: String)
-    pub fun clientTenantID(account: Address): String {
-        return account.toString().concat(".").concat(self.getType().identifier)
-    }
-
-    access(contract) var tenants: @{String: IHyperverseComposable.Tenant}
-    pub fun tenantExists(account: Address): Bool {
-        return self.tenants[self.clientTenantID(account: account)] != nil
-    }
-    pub fun getTenant(account: Address): &Tenant {
-        let ref = &self.tenants[self.clientTenantID(account: account)] as auth &IHyperverseComposable.Tenant
+    pub event TenantCreated(tenant: Address)
+    
+    access(contract) var tenants: @{Address: IHyperverseComposable.Tenant}
+    access(contract) fun getTenant(tenant: Address): &Tenant {
+        let ref = &self.tenants[tenant] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
+    }
+    pub fun tenantExists(tenant: Address): Bool {
+        return self.tenants[tenant] != nil
     }
 
     pub resource Tenant: IHyperverseComposable.ITenant {
-        pub let tenantID: String
-        pub var totalSupply: {String: UInt64}
-        access(contract) fun updateTotalSupply(type: String) {
-            self.totalSupply[type] = self.totalSupply[type]! + 1
-        }
-        access(contract) fun addNewNFTType(type: String) {
-            self.totalSupply[type] = 0
-        }
         pub var holder: Address
+        pub(set) var totalSupply: {String: UInt64}
 
-        init(_tenantID: String, _holder: Address) {
-            self.tenantID = _tenantID
+        init(_holder: Address) {
             self.totalSupply = {}
             self.holder = _holder
         }
     }
  
     // If we're making a new Tenant resource
-    pub fun instance(auth: &HyperverseAuth.Auth) {
+    pub fun createTenant(auth: &HyperverseAuth.Auth) {
         let tenant = auth.owner!.address
-        var STenantID: String = self.clientTenantID(account: tenant)
     
-        self.tenants[STenantID] <-! create Tenant(_tenantID: STenantID, _holder: tenant)
+        self.tenants[tenant] <-! create Tenant(_holder: tenant)
 
-        let package = auth.packages[self.getType().identifier]!.borrow()! as! &Package
-        package.depositAdmin(Admin: <- create Admin(tenant))
-        package.depositMinter(NFTMinter: <- create NFTMinter(tenant))
+        let bundle = auth.bundles[self.getType().identifier]!.borrow()! as! &Bundle
+        bundle.depositAdmin(Admin: <- create Admin(tenant))
+        bundle.depositMinter(NFTMinter: <- create NFTMinter(tenant))
 
-        emit TenantCreated(id: STenantID)
+        emit TenantCreated(tenant: tenant)
     }
 
-    /**************************************** PACKAGE ****************************************/
+    /**************************************** BUNDLE ****************************************/
 
-    pub let PackageStoragePath: StoragePath
-    pub let PackagePrivatePath: PrivatePath
-    pub let PackagePublicPath: PublicPath
+    pub let BundleStoragePath: StoragePath
+    pub let BundlePrivatePath: PrivatePath
+    pub let BundlePublicPath: PublicPath
 
-    pub resource interface PackagePublic {
+    pub resource interface PublicBundle {
         pub fun borrowCollectionPublic(tenant: Address): &Collection{CollectionPublic}
         pub fun depositMinter(NFTMinter: @NFTMinter)
     }
 
-    // All of the getAlias stuff only happens in this Package :)
-    pub resource Package: PackagePublic {
+    // All of the getAlias stuff only happens in this Bundle :)
+    pub resource Bundle: PublicBundle {
         pub var collections: @{Address: Collection}
         pub var admins: @{Address: Admin}
         pub var minters: @{Address: NFTMinter}
@@ -109,8 +97,8 @@ pub contract MultiNFT: IHyperverseComposable {
         }
     }
 
-    pub fun getPackage(): @Package {
-        return <- create Package()
+    pub fun getBundle(): @Bundle {
+        return <- create Bundle()
     }
 
     /**************************************** FUNCTIONALITY ****************************************/
@@ -126,14 +114,14 @@ pub contract MultiNFT: IHyperverseComposable {
         pub var metadata: {String: String}
     
         init(_ tenant: Address, _type: String, _metadata: {String: String}) {
-            let state = MultiNFT.getTenant(account: tenant)
+            let state = MultiNFT.getTenant(tenant: tenant)
 
             self.id = state.totalSupply[_type]!
             self.type = _type
             self.tenant = tenant
             self.metadata = _metadata
 
-            state.updateTotalSupply(type: _type)
+            state.totalSupply[_type] = state.totalSupply[_type]! + 1
         }
     }
 
@@ -193,7 +181,8 @@ pub contract MultiNFT: IHyperverseComposable {
             return <- create NFTMinter(self.tenant)
         }
         pub fun addNewNFTType(type: String) {
-            MultiNFT.getTenant(account: self.tenant).addNewNFTType(type: type)
+            let state = MultiNFT.getTenant(tenant: self.tenant)
+            state.totalSupply[type] = 0
         }
         init(_ tenant: Address) {
             self.tenant = tenant
@@ -213,9 +202,9 @@ pub contract MultiNFT: IHyperverseComposable {
     init() {
         self.tenants <- {}
 
-        self.PackageStoragePath = /storage/MultiNFTPackage
-        self.PackagePrivatePath = /private/MultiNFTPackage
-        self.PackagePublicPath = /public/MultiNFTPackage
+        self.BundleStoragePath = /storage/MultiNFTBundle
+        self.BundlePrivatePath = /private/MultiNFTBundle
+        self.BundlePublicPath = /public/MultiNFTBundle
 
         Registry.registerContract(
             proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 

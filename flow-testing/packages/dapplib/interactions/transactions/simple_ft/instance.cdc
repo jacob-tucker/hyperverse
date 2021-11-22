@@ -10,7 +10,7 @@ transaction(initialSupply: UFix64) {
     }
 
     execute {
-        SimpleToken.instance(auth: self.Auth, initialSupply: initialSupply)
+        SimpleToken.createTenant(auth: self.Auth, initialSupply: initialSupply)
         log("Create a new instance of a SimpleToken Tenant.")
     }
 }

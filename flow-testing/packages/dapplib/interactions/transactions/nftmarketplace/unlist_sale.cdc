@@ -6,10 +6,10 @@ transaction(tenantOwner: Address, id: UInt64) {
     let SaleCollection: &NFTMarketplace.SaleCollection
 
     prepare(signer: AuthAccount) {
-        let Package = signer.borrow<&NFTMarketplace.Package>(from: NFTMarketplace.PackageStoragePath)
-                        ?? panic("Could not borrow the signer's Package.")
+        let Bundle = signer.borrow<&NFTMarketplace.Bundle>(from: NFTMarketplace.BundleStoragePath)
+                        ?? panic("Could not borrow the signer's Bundle.")
 
-        self.SaleCollection = Package.borrowSaleCollection(tenant: tenantOwner)
+        self.SaleCollection = Bundle.borrowSaleCollection(tenant: tenantOwner)
     }
 
     execute {

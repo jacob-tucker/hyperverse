@@ -6,14 +6,14 @@ transaction(recipient: Address, tenantOwner: Address, name: String) {
     let RecipientCollection: &SimpleNFT.Collection{SimpleNFT.CollectionPublic}
 
     prepare(signer: AuthAccount) {                    
-        let SignerSimpleNFTPackage = signer.borrow<&SimpleNFT.Package>(from: SimpleNFT.PackageStoragePath)
-                                        ?? panic("Could not borrow the signer's SimpleNFT.Package.")
+        let SignerSimpleNFTPackage = signer.borrow<&SimpleNFT.Bundle>(from: SimpleNFT.BundleStoragePath)
+                                        ?? panic("Could not borrow the signer's SimpleNFT.Bundle.")
 
         self.SimpleNFTMinter = SignerSimpleNFTPackage.borrowMinter(tenant: tenantOwner)
 
-        let RecipientSimpleNFTPackage = getAccount(recipient).getCapability(SimpleNFT.PackagePublicPath)
-                                            .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()
-                                            ?? panic("Could not borrow the recipient's SimpleNFT.Package.")
+        let RecipientSimpleNFTPackage = getAccount(recipient).getCapability(SimpleNFT.BundlePublicPath)
+                                            .borrow<&SimpleNFT.Bundle{SimpleNFT.PublicBundle}>()
+                                            ?? panic("Could not borrow the recipient's SimpleNFT.Bundle.")
         self.RecipientCollection = RecipientSimpleNFTPackage.borrowCollectionPublic(tenant: tenantOwner)
     }
 

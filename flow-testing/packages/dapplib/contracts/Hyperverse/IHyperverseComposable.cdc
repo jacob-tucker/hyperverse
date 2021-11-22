@@ -16,11 +16,9 @@ pub contract interface IHyperverseComposable {
         pub var holder: Address
     }
 
-    pub let PackageStoragePath: StoragePath
-    pub let PackagePrivatePath: PrivatePath
-    pub let PackagePublicPath: PublicPath
+    pub let BundleStoragePath: StoragePath
+    pub let BundlePrivatePath: PrivatePath
+    pub let BundlePublicPath: PublicPath
 
-    pub resource Package {
-       
-    }
+    pub resource Bundle {}
 }

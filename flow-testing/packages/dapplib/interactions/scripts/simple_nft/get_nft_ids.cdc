@@ -5,8 +5,8 @@ import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 
 pub fun main(account: Address, tenantOwner: Address): [UInt64] {
 
-    let accountPackage = getAccount(account).getCapability(SimpleNFT.PackagePublicPath)
-                                .borrow<&SimpleNFT.Package{SimpleNFT.PackagePublic}>()!
+    let accountPackage = getAccount(account).getCapability(SimpleNFT.BundlePublicPath)
+                                .borrow<&SimpleNFT.Bundle{SimpleNFT.PublicBundle}>()!
 
     return accountPackage.borrowCollectionPublic(tenant: tenantOwner).getIDs()
 }
