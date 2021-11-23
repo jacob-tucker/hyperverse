@@ -48,25 +48,26 @@ contract Tribes is IHyperverseModule {
         admins[initialAdmin] = true;
     }
 
-    modifier isAdmin() {
-        require(
-            admins[msg.sender],
-            "The caller of this function is not an admin."
-        );
+    modifier isAdmin(address admin) {
+        require(admins[admin], "The caller of this function is not an admin.");
         _;
     }
 
     /* Admin Stuff */
 
-    function addNewAdmin(address newAdmin) public isAdmin {
+    function addNewAdmin(address admin, address newAdmin)
+        public
+        isAdmin(admin)
+    {
         admins[newAdmin] = true;
     }
 
     function addNewTribe(
+        address admin,
         bytes memory tribeName,
         bytes memory ipfsHash,
         bytes memory description
-    ) public isAdmin {
+    ) public isAdmin(admin) {
         TribeData storage newTribe = tribes[tribeName];
         newTribe.name = tribeName;
         newTribe.description = description;
@@ -75,13 +76,17 @@ contract Tribes is IHyperverseModule {
 
     /* Public Stuff */
 
-    function getTribeData(bytes memory tribe)
+    function getTribeData(bytes memory tribeName)
         public
         view
-        returns (bytes memory, bytes memory)
+        returns (
+            bytes memory,
+            bytes memory,
+            bytes memory
+        )
     {
-        TribeData storage tribeData = tribes[tribe];
-        return (tribeData.ipfsHash, tribeData.description);
+        TribeData storage tribeData = tribes[tribeName];
+        return (tribeName, tribeData.ipfsHash, tribeData.description);
     }
 
     function addMemberToTribe(bytes memory tribeName, address member) public {
