@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "hardhat/console.sol";
 import "../hyperverse/IHyperverseModule.sol";
 
-
 contract Tribes is IHyperverseModule {
     mapping(address => bool) admins;
     mapping(bytes => TribeData) tribes;
