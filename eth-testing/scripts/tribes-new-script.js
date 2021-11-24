@@ -1,4 +1,4 @@
-//npx hardhat run scripts/tribe-script.js
+//npx hardhat run scripts/tribes-new-script.js
 const hre = require("hardhat");
 async function main() {
 

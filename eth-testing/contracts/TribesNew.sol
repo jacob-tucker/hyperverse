@@ -61,7 +61,7 @@ contract TribesNew is IHyperverseModule {
     // Checks to see if the caller is an admin for the specified tenant
     modifier isAdmin(address tenant) {
         require(
-            getProxy(tenant).admins[msg.sender],
+            getState(tenant).admins[msg.sender],
             "The calling address is not an admin"
         );
         _;
@@ -81,7 +81,7 @@ contract TribesNew is IHyperverseModule {
         tenants[tenant].admins[newAdmin] = false;
     }
 
-    function getProxy(address tenant) private view returns (Tenant storage) {
+    function getState(address tenant) private view returns (Tenant storage) {
         return tenants[tenant];
     }
 
@@ -93,7 +93,7 @@ contract TribesNew is IHyperverseModule {
     ) public isAdmin(tenant) {
         emit NewTribeCreated(tribeName, ipfsHash, description);
 
-        TribeData storage newTribe = getProxy(tenant).tribes[tribeName];
+        TribeData storage newTribe = getState(tenant).tribes[tribeName];
         newTribe.name = tribeName;
         newTribe.description = description;
         newTribe.ipfsHash = ipfsHash;
@@ -106,7 +106,7 @@ contract TribesNew is IHyperverseModule {
     ) public {
         emit JoinedTribe(tribeName, member);
 
-        Tenant storage state = getProxy(tenant);
+        Tenant storage state = getState(tenant);
         require(
             !state.participants[member],
             "This member is already in a Tribe!"
@@ -127,7 +127,7 @@ contract TribesNew is IHyperverseModule {
             bytes memory
         )
     {
-        Tenant storage state = getProxy(tenant);
+        Tenant storage state = getState(tenant);
         TribeData storage tribeData = state.tribes[tribeName];
         return (tribeData.name, tribeData.ipfsHash, tribeData.description);
     }
