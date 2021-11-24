@@ -1,14 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "../hyperverse/IHyperverseModule.sol";
 
 contract TribesNew is IHyperverseModule {
     struct Tenant {
         mapping(address => bool) admins;
         mapping(bytes => TribeData) tribes;
-        mapping(address => bool) participants;
+        mapping(address => bytes) participants;
         address owner;
     }
 
@@ -43,7 +42,7 @@ contract TribesNew is IHyperverseModule {
     function createTribes() external {
         Tenant storage state = tenants[msg.sender];
 
-        console.log("Tribes instance for ", msg.sender, " created");
+        //console.log("Tribes instance for ", msg.sender, " created");
 
         state.admins[msg.sender] = true;
         state.owner = msg.sender;
@@ -99,23 +98,27 @@ contract TribesNew is IHyperverseModule {
         newTribe.ipfsHash = ipfsHash;
     }
 
-    function joinTribe(
-        address tenant,
-        bytes memory tribeName,
-        address member
-    ) public {
-        emit JoinedTribe(tribeName, member);
+    function joinTribe(address tenant, bytes memory tribeName) public {
+        address member = msg.sender;
+        emit JoinedTribe(tribeName, msg.sender);
 
         Tenant storage state = getState(tenant);
         require(
-            !state.participants[member],
+            state.participants[member].length == 0,
             "This member is already in a Tribe!"
         );
-        state.participants[member] = true;
+        state.participants[member] = tribeName;
 
         TribeData storage tribeData = state.tribes[tribeName];
         tribeData.members[member] = true;
         tribeData.numOfMembers += 1;
+    }
+
+    function getUserTribe(address tenant) public view returns (bytes memory) {
+        address member = msg.sender;
+
+        Tenant storage state = getState(tenant);
+        return state.participants[member];
     }
 
     function getTribeData(address tenant, bytes memory tribeName)

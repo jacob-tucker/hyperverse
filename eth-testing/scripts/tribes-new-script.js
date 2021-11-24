@@ -36,6 +36,17 @@ async function main() {
         description: hre.ethers.utils.parseBytes32String(getTribeData[2])
     });
 
+    const joinTribe = await tribesNewContract.joinTribe(
+        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+        name
+    );
+
+    const getUserTribe = await tribesNewContract.getUserTribe(
+        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+    );
+
+    console.log(hre.ethers.utils.parseBytes32String(getUserTribe))
+
 }
 
 main()
