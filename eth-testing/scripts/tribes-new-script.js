@@ -10,7 +10,7 @@ async function main() {
     console.log("TribesNew Contract deployed to:", tribesNewContract.address);
 
     // This creates a new Tenant "instance" for the msg.sender
-    await tribesNewContract.createTribes();
+    await tribesNewContract.createInstance();
 
     // Yeah yeah
     const name = hre.ethers.utils.formatBytes32String("Merkle")
