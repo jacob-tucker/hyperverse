@@ -29,9 +29,7 @@ contract Tribes is IHyperverseModule {
     mapping(address => Tenant) tenants;
 
     event JoinedTribe(uint256 tribeId, address newMember);
-
     event LeftTribe(uint256 tribeId, address member);
-
     event NewTribeCreated(bytes name, bytes ipfsHash, bytes description);
 
     constructor()
@@ -71,6 +69,7 @@ contract Tribes is IHyperverseModule {
         _;
     }
 
+    // Should this be isAdmin()?
     function addAdmin(address tenant, address newAdmin)
         external
         isOwner(tenant)
@@ -78,6 +77,7 @@ contract Tribes is IHyperverseModule {
         getState(tenant).admins[newAdmin] = true;
     }
 
+    // Should this be isAdmin()?
     function removeAdmin(address tenant, address newAdmin)
         external
         isOwner(tenant)
@@ -94,14 +94,16 @@ contract Tribes is IHyperverseModule {
         bytes memory tribeName,
         bytes memory ipfsHash,
         bytes memory description
-    ) public isAdmin(tenant) {
+    ) external isAdmin(tenant) {
         emit NewTribeCreated(tribeName, ipfsHash, description);
 
-        getState(tenant).tribeIds.increment();
+        Tenant storage state = getState(tenant);
 
-        uint256 newTribeId = getState(tenant).tribeIds.current();
+        state.tribeIds.increment();
 
-        TribeData storage newTribe = getState(tenant).tribes[newTribeId];
+        uint256 newTribeId = state.tribeIds.current();
+
+        TribeData storage newTribe = state.tribes[newTribeId];
         newTribe.name = tribeName;
         newTribe.description = description;
         newTribe.ipfsHash = ipfsHash;
