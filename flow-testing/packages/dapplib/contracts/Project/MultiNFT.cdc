@@ -52,7 +52,6 @@ pub contract MultiNFT: IHyperverseComposable {
         pub fun depositMinter(NFTMinter: @NFTMinter)
     }
 
-    // All of the getAlias stuff only happens in this Bundle :)
     pub resource Bundle: PublicBundle {
         pub var collections: @{Address: Collection}
         pub var admins: @{Address: Admin}

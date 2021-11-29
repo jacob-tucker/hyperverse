@@ -115,7 +115,7 @@ pub contract SimpleNFT: IHyperverseComposable, HNonFungibleToken {
         init(_ tenant: Address, _metadata: {String: String}) {
             let state = SimpleNFT.getTenant(tenant: tenant)
           
-            self.id = state.totalSupply
+            self.id = self.uuid
             self.tenant = tenant
             self.metadata = _metadata
 

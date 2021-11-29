@@ -3,11 +3,19 @@ pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
 import "../hyperverse/IHyperverseModule.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract Tribes is IHyperverseModule {
-    mapping(address => bool) admins;
-    mapping(bytes => TribeData) tribes;
-    mapping(address => bool) participants;
+    using Counters for Counters.Counter;
+
+    struct Tenant {
+        mapping(address => bool) admins;
+        mapping(uint256 => TribeData) tribes;
+        mapping(address => uint256) participants;
+        //add an array of names? so we can join tribe by finding index on array?
+        address owner;
+        Counters.Counter tribeIds;
+    }
 
     struct TribeData {
         bytes name;
@@ -15,10 +23,16 @@ contract Tribes is IHyperverseModule {
         bytes description;
         mapping(address => bool) members;
         uint256 numOfMembers;
+        uint256 tribeId;
     }
 
+    mapping(address => Tenant) tenants;
 
-    // address private _factoryContract;
+    event JoinedTribe(uint256 tribeId, address newMember);
+
+    event LeftTribe(uint256 tribeId, address member);
+
+    event NewTribeCreated(bytes name, bytes ipfsHash, bytes description);
 
     constructor()
         IHyperverseModule(
@@ -29,92 +43,134 @@ contract Tribes is IHyperverseModule {
             ),
             "0.0.1",
             3479831479814,
-            "https://externalLink.net",
-            new bytes[](0)
+            "https://externalLink.net"
         )
     {}
 
-    // Don't really need this because all of these calls
-    // WILL be from the factory. No one else can get them.
-    // modifier isFactory() {
-    //     require(
-    //         msg.sender == _factoryContract,
-    //         "The msgsender must be the factory contract"
-    //     );
-    //     _;
-    // }
-
-    function init(address initialAdmin) external {
-        // _factoryContract = msg.sender;
-        admins[initialAdmin] = true;
-
-        console.log("init Admin: ", initialAdmin, " ", admins[initialAdmin]);
+    function createInstance() external {
+        Tenant storage state = tenants[msg.sender];
+        state.admins[msg.sender] = true;
+        state.owner = msg.sender;
     }
 
-    modifier isAdmin(address admin) {
-        require(admins[admin], "The caller of this function is not an admin.");
+    // Checks to see if the caller is an owner of a tenant
+    modifier isOwner(address tenant) {
+        require(
+            getState(tenant).owner == msg.sender,
+            "The calling address is not an owner of a tenant"
+        );
         _;
     }
 
-    /* Admin Stuff */
-
-    function addNewAdmin(address admin, address newAdmin)
-        public
-        isAdmin(admin)
-    {
-        admins[newAdmin] = true;
+    // Checks to see if the caller is an admin for the specified tenant
+    modifier isAdmin(address tenant) {
+        require(
+            getState(tenant).admins[msg.sender],
+            "The calling address is not an admin"
+        );
+        _;
     }
 
-    function addNewTribe( 
-        address admin,
+    function addAdmin(address tenant, address newAdmin)
+        external
+        isOwner(tenant)
+    {
+        getState(tenant).admins[newAdmin] = true;
+    }
+
+    function removeAdmin(address tenant, address newAdmin)
+        external
+        isOwner(tenant)
+    {
+        getState(tenant).admins[newAdmin] = false;
+    }
+
+    function getState(address tenant) private view returns (Tenant storage) {
+        return tenants[tenant];
+    }
+
+    function addNewTribe(
+        address tenant,
         bytes memory tribeName,
         bytes memory ipfsHash,
-        bytes memory description) public isAdmin(admin){
-        TribeData storage newTribe = tribes[tribeName];
+        bytes memory description
+    ) public isAdmin(tenant) {
+        emit NewTribeCreated(tribeName, ipfsHash, description);
+
+        getState(tenant).tribeIds.increment();
+
+        uint256 newTribeId = getState(tenant).tribeIds.current();
+
+        TribeData storage newTribe = getState(tenant).tribes[newTribeId];
         newTribe.name = tribeName;
         newTribe.description = description;
         newTribe.ipfsHash = ipfsHash;
-
+        newTribe.tribeId = newTribeId;
     }
 
-    /* Public Stuff */
+    function joinTribe(address tenant, uint256 tribeId) public {
+        address member = msg.sender;
+        Tenant storage state = getState(tenant);
 
-    function getTribeData(bytes memory tribeName)
+        require(state.tribeIds.current() >= tribeId, "Tribe does not exist");
+
+        require(
+            state.participants[member] == 0,
+            "This member is already in a Tribe!"
+        );
+
+        state.participants[member] = tribeId;
+        TribeData storage tribeData = state.tribes[tribeId];
+        tribeData.members[member] = true;
+        tribeData.numOfMembers += 1;
+
+        emit JoinedTribe(tribeId, member);
+    }
+
+    function leaveTribe(address tenant) public {
+        address member = msg.sender;
+        Tenant storage state = getState(tenant);
+        //extra layer - not sure if necessary
+        require(
+            state.participants[member] != 0,
+            "This member is not in a Tribe!"
+        );
+        emit LeftTribe(state.participants[member], member);
+        TribeData storage tribeData = state.tribes[state.participants[member]];
+        state.participants[member] = 0;
+        tribeData.members[member] = false;
+        tribeData.numOfMembers -= 1;
+    }
+
+    function getUserTribe(address tenant) public view returns (bytes memory) {
+        address member = msg.sender;
+        Tenant storage state = getState(tenant);
+
+        require(
+            state.participants[member] != 0,
+            "This member is not in a Tribe!"
+        );
+
+        uint256 tribeId = state.participants[member];
+        TribeData storage tribeData = state.tribes[tribeId];
+        return tribeData.name;
+    }
+
+    function getTribeData(address tenant, uint256 tribeId)
         public
         view
         returns (
             bytes memory,
             bytes memory,
             bytes memory
-        ){
-        TribeData storage tribeData = tribes[tribeName];
-        return (tribeName, tribeData.ipfsHash, tribeData.description);
-    }
-
-    function addMemberToTribe(bytes memory tribeName, address member) public {
-        require(!participants[member], "This member is already in a Tribe!");
-        participants[member] = true;
-
-        TribeData storage tribeData = tribes[tribeName];
-        tribeData.members[member] = true;
-        tribeData.numOfMembers += 1;
-
-    }
-
-    function removeMemberFromTribe(bytes memory tribeName, address member)
-        public
+        )
     {
-        require(participants[member], "This member is not in a Tribe!");
-        require(
-            tribes[tribeName].members[member],
-            "This member does not belong to this Tribe!"
-        );
+        Tenant storage state = getState(tenant);
+        TribeData storage tribeData = state.tribes[tribeId];
+        return (tribeData.name, tribeData.ipfsHash, tribeData.description);
+    }
 
-        participants[member] = false;
-
-        TribeData storage tribeData = tribes[tribeName];
-        tribeData.members[member] = false;
-        tribeData.numOfMembers -= 1;
-
+    function totalTribes(address tenant) public view returns (uint256) {
+        return getState(tenant).tribeIds.current();
     }
 }

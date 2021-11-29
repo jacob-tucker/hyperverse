@@ -1,16 +1,16 @@
-//npx hardhat run scripts/tribes-new-script.js
+//npx hardhat run scripts/tribes-script.js
 const hre = require("hardhat");
 async function main() {
 
-    // This deploys the "TribesNew" contract
-    const TribesNew = await hre.ethers.getContractFactory("TribesNew");
-    const tribesNewContract = await TribesNew.deploy();
-    await tribesNewContract.deployed();
+    // This deploys the "Tribes" contract
+    const Tribes = await hre.ethers.getContractFactory("Tribes");
+    const tribesContract = await Tribes.deploy();
+    await tribesContract.deployed();
 
-    console.log("TribesNew Contract deployed to:", tribesNewContract.address);
+    console.log("Tribes Contract deployed to:", tribesContract.address);
 
     // This creates a new Tenant "instance" for the msg.sender
-    await tribesNewContract.createInstance();
+    await tribesContract.createInstance();
 
     // Yeah yeah
     const name = hre.ethers.utils.formatBytes32String("Merkle")
@@ -18,16 +18,16 @@ async function main() {
     const description = hre.ethers.utils.formatBytes32String("Merkles like apples")
 
     // Creates a new tribe, passing in the Tenant address (the same as msg.sender above)
-    const createNewTribe = await tribesNewContract.addNewTribe(
+    const createNewTribe = await tribesContract.addNewTribe(
         "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
         name, ipfsHash, description
     );
     const event = await createNewTribe.wait();
     console.log(event.events[0].event)
 
-    const getTribeData = await tribesNewContract.getTribeData(
+    const getTribeData = await tribesContract.getTribeData(
         "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-        name
+        1
     );
     // Gets the tribe data back and converts it from bytes -> string
     console.log({
@@ -36,12 +36,12 @@ async function main() {
         description: hre.ethers.utils.parseBytes32String(getTribeData[2])
     });
 
-    const joinTribe = await tribesNewContract.joinTribe(
+    const joinTribe = await tribesContract.joinTribe(
         "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-        name
+        1
     );
 
-    const getUserTribe = await tribesNewContract.getUserTribe(
+    const getUserTribe = await tribesContract.getUserTribe(
         "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
     );
 

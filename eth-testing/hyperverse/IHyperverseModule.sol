@@ -23,15 +23,13 @@ abstract contract IHyperverseModule {
         Author memory _author,
         bytes memory _version, // 0.1.1
         uint64 _publishedAt,
-        bytes memory _externalLink,
-        bytes[] memory _secondaryModules
+        bytes memory _externalLink
     ) {
         metadata.title = _title;
         metadata.authors.push(_author);
         metadata.version = _version;
         metadata.publishedAt = _publishedAt;
         metadata.externalLink = _externalLink;
-        metadata.secondaryModules = _secondaryModules;
     }
 
     struct ModuleMetadata {
@@ -40,7 +38,6 @@ abstract contract IHyperverseModule {
         bytes version;
         uint64 publishedAt;
         bytes externalLink; // <-- can't be "external" in Solidity because it's a keyword
-        bytes[] secondaryModules;
     }
 
     struct Author {

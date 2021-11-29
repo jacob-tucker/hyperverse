@@ -10,6 +10,7 @@ pub contract Tribes: IHyperverseComposable {
     pub event TenantCreated(tenant: Address)
 
     access(contract) var tenants: @{Address: IHyperverseComposable.Tenant}
+
     access(contract) fun getTenant(tenant: Address): &Tenant {
         let ref = &self.tenants[tenant] as auth &IHyperverseComposable.Tenant
         return ref as! &Tenant
@@ -17,7 +18,7 @@ pub contract Tribes: IHyperverseComposable {
     pub fun tenantExists(tenant: Address): Bool {
         return self.tenants[tenant] != nil
     }
-    
+
     pub resource Tenant: IHyperverseComposable.ITenant {
         pub let tenantID: Address
         pub var holder: Address

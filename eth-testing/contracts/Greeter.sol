@@ -17,8 +17,7 @@ contract Greeter is IHyperverseModule {
             ),
             "0.0.1",
             3479831479814,
-            "https://externalLink.net",
-            new bytes[](0)
+            "https://externalLink.net"
         )
     {}
 
