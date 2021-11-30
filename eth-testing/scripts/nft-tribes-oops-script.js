@@ -1,57 +1,93 @@
 //npx hardhat run scripts/nft-tribes-oops-script.js
+
 const hre = require("hardhat");
 async function main() {
+    const [TENANT, USER] = await ethers.getSigners();
 
-    // This deploys the "NFTTribes" contract
-    const NFTTribes = await hre.ethers.getContractFactory("NFTTribesOops");
-    const nftTribesContract = await NFTTribes.deploy();
-    await nftTribesContract.deployed();
+    /*********************** DEPLOYMENT ***********************/
 
-    console.log("NFTTribes Contract deployed to:", nftTribesContract.address);
+    // This deploys the "TribesState" contract
+    const TribesState = await hre.ethers.getContractFactory("TribesState");
+    const tribesStateContract = await TribesState.deploy();
+    await tribesStateContract.deployed();
 
-    // This creates a new Tenant "instance" for the msg.sender
-    await nftTribesContract.createInstance();
+    console.log("TribesState Contract deployed to:", tribesStateContract.address);
+
+    // This deploys the "TribesFunctions" contract
+    const TribesFunctions = await hre.ethers.getContractFactory("TribesFunctions");
+    const tribesFunctionsContract = await TribesFunctions.deploy(tribesStateContract.address);
+    await tribesFunctionsContract.deployed();
+
+    console.log("TribesFunctions Contract deployed to:", tribesFunctionsContract.address);
+
+    /*********************** STUFF ***********************/
+
+    await tribesFunctionsContract.connect(TENANT).createInstance();
+
+    // Restricts the Tenant's state to only be modified by TribesFunctions
+    await tribesStateContract.connect(TENANT).restrictCaller(tribesFunctionsContract.address);
 
     // Yeah yeah
     const name = hre.ethers.utils.formatBytes32String("Merkle");
-    const ipfsHash = hre.ethers.utils.formatBytes32String("ipfslinkHere");
-    const description = hre.ethers.utils.formatBytes32String("Merkles like apples");
+    const ipfsHash = hre.ethers.utils.formatBytes32String("https://ipfs.io/...");
+    const description = hre.ethers.utils.formatBytes32String("a group that loves apples");
 
     // Creates a new tribe, passing in the Tenant address (the same as msg.sender above)
-    const createNewTribe = await nftTribesContract.addNewTribe(
-        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    await tribesFunctionsContract.connect(TENANT).addNewTribe(
+        TENANT.address,
         name, ipfsHash, description
     );
-    const event = await createNewTribe.wait();
-    console.log(event.events[0].event);
 
-    const getTribeData = await nftTribesContract.getTribeData(
-        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    try {
+        await tribesStateContract.connect(TENANT).addNewTribe(
+            TENANT.address,
+            name, ipfsHash, description
+        );
+    } catch (e) {
+        console.log("You cannot call me!");
+    }
+
+    const getTribeData = await tribesStateContract.getTribeData(
+        TENANT.address,
         1
     );
     // Gets the tribe data back and converts it from bytes -> string
-    console.log({
-        tribeName: hre.ethers.utils.parseBytes32String(getTribeData[0]),
-        ipfsHash: hre.ethers.utils.parseBytes32String(getTribeData[1]),
-        description: hre.ethers.utils.parseBytes32String(getTribeData[2])
-    });
-
-    const mint = await nftTribesContract.mint(
-        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+    console.log(
+        hre.ethers.utils.parseBytes32String(getTribeData[0]), "is",
+        hre.ethers.utils.parseBytes32String(getTribeData[2]), "and you can view their image here:",
+        hre.ethers.utils.parseBytes32String(getTribeData[1])
     );
 
-    console.log("Minted a token");
+    try {
+        await tribesFunctionsContract.connect(USER).joinTribe(
+            TENANT.address,
+            1
+        );
+    } catch (e) {
+        console.log("USER doesn't have enough NFTs!");
+    }
 
-    const joinTribe = await nftTribesContract.joinTribe(
-        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    // Mint a token
+    await tribesFunctionsContract.connect(TENANT).mint(
+        TENANT.address,
+        USER.address
+    );
+
+    console.log("TENANT minted a token to USER.");
+
+    await tribesFunctionsContract.connect(USER).joinTribe(
+        TENANT.address,
         1
     );
 
-    const getUserTribe = await nftTribesContract.getUserTribe(
-        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+    console.log("USER joined a tribe.");
+
+    const getUserTribe = await tribesStateContract.getUserTribe(
+        TENANT.address,
+        USER.address
     );
 
-    console.log(hre.ethers.utils.parseBytes32String(getUserTribe));
+    console.log("USER's Tribe:", hre.ethers.utils.parseBytes32String(getUserTribe));
 
 }
 
