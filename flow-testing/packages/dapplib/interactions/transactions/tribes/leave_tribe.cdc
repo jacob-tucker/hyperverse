@@ -13,7 +13,7 @@ transaction(tenantOwner: Address) {
     }
 
     execute {
-        Tribes.leaveTribe(identity: self.TribesIdentity)
+        self.TribesIdentity.leaveTribe()
         log("This signer left their Tribe.")
     }
 }

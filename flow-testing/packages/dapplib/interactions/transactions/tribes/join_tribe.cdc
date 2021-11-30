@@ -12,7 +12,7 @@ transaction(tenantOwner: Address, tribeName: String) {
     }
 
     execute {
-        Tribes.joinTribe(identity: self.TribesIdentity, tribe: tribeName)
+        self.TribesIdentity.joinTribe(tribeName: tribeName)
         log("This signer joined a Tribe.")
     }
 }
