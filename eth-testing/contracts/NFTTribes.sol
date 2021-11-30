@@ -1,30 +1,34 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-import "./IHyperverseModule.sol";
+import "../hyperverse/IHyperverseModule.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./Tribes.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract NFTTribes is IHyperverseModule {
+contract NFTTribes is ERC721, IHyperverseModule {
     Tribes tribesContract;
+    uint256 counter;
+    address owner;
 
-    struct Tenant {
-        ;
+    constructor(address _tenantContract)
+        ERC721("Item", "ITM")
+        
+    {
+        tribesContract = Tribes(_tenantContract);
+        counter = 0;
+        owner = msg.sender;
     }
 
-    constructor()
-        IHyperverseModule(
-            "NFTTribes",
-            Author(
-                0x5B38Da6a701c568545dCfcB03FcB875f56beddC4,
-                "https://externallink.net"
-            ),
-            "0.0.1",
-            3479831479814,
-            "https://externalLink.net"
-        )
-    {
-        tribesContract = Tribes(0x01);
+    function mint(address to) public {
+        require(msg.sender == owner, "Only the owner of this contract can mint.");
+        _mint(to, counter);
+        counter = counter + 1;
+    }
+ 
+    function joinSecretTribe(address tenant, uint256 tribeId) public {
+        require(balanceOf(msg.sender) >= 3, "The caller doesn't have enough NFTs!");
+
+        tribesContract.joinTribe(tenant, tribeId);
     }
 }

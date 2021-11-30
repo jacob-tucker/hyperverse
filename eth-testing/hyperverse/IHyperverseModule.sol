@@ -18,23 +18,9 @@ pragma solidity >=0.7.0 <0.9.0;
 abstract contract IHyperverseModule {
     ModuleMetadata public metadata;
 
-    constructor(
-        bytes memory _title,
-        Author memory _author,
-        bytes memory _version, // 0.1.1
-        uint64 _publishedAt,
-        bytes memory _externalLink
-    ) {
-        metadata.title = _title;
-        metadata.authors.push(_author);
-        metadata.version = _version;
-        metadata.publishedAt = _publishedAt;
-        metadata.externalLink = _externalLink;
-    }
-
     struct ModuleMetadata {
         bytes title; // <-- `pub var title: String` in Cadence
-        Author[] authors;
+        Author author;
         bytes version;
         uint64 publishedAt;
         bytes externalLink; // <-- can't be "external" in Solidity because it's a keyword

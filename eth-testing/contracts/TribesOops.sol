@@ -1,11 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "../hyperverse/IHyperverseModule.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract Tribes is IHyperverseModule {
+contract TribesOops is IHyperverseModule {
     using Counters for Counters.Counter;
 
     struct Tenant {
@@ -33,8 +32,18 @@ contract Tribes is IHyperverseModule {
     event NewTribeCreated(bytes name, bytes ipfsHash, bytes description);
 
     constructor()
-        
-    {}
+    {
+        metadata = ModuleMetadata(
+            "Tribes",
+            Author(
+                0x5B38Da6a701c568545dCfcB03FcB875f56beddC4,
+                "https://externallink.net"
+            ),
+            "0.0.1",
+            3479831479814,
+            "https://externalLink.net"
+        );
+    }
 
     function createInstance() external {
         Tenant storage state = tenants[msg.sender];
@@ -101,16 +110,18 @@ contract Tribes is IHyperverseModule {
         newTribe.tribeId = newTribeId;
     }
 
+    function _beforeJoinTribe() internal virtual {}
+
     function joinTribe(address tenant, uint256 tribeId) public {
         address member = msg.sender;
         Tenant storage state = getState(tenant);
-
-        require(state.tribeIds.current() >= tribeId, "Tribe does not exist");
-
         require(
             state.participants[member] == 0,
             "This member is already in a Tribe!"
         );
+        require(state.tribeIds.current() >= tribeId, "Tribe does not exist");
+
+        _beforeJoinTribe();
 
         state.participants[member] = tribeId;
         TribeData storage tribeData = state.tribes[tribeId];

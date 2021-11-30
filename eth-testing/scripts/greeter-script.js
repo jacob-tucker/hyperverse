@@ -1,3 +1,4 @@
+//npx hardhat run scripts/greeter-script.js
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
@@ -19,33 +20,26 @@ async function main() {
 
     console.log("Greeter Base Contract deployed to:", greeterContract.address);
 
-    const Factory = await hre.ethers.getContractFactory("GreeterFactory");
-    const factoryContract = await Factory.deploy(greeterContract.address);
-    await factoryContract.deployed();
-
-    console.log("Factory Contract deployed to:", factoryContract.address);
-
-    let cloneTxn = await factoryContract.createGreeter(
-        "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    await greeterContract.createInstance(
         "Hi Jacob"
     );
-    await cloneTxn.wait();
 
-    let cloneTxn2 = await factoryContract.createGreeter(
-        "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
+    let greet = await greeterContract.greet(
+        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+    );
+
+    console.log(greet);
+
+    await greeterContract.setGreeting(
+        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
         "Hi Gel"
-    );
-    await cloneTxn2.wait();
-    // 0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f
-    let greet = await factoryContract.greet(
-        "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-    );
-    let greet2 = await factoryContract.greet(
-        "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f"
+    )
+
+    let greet2 = await greeterContract.greet(
+        "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
     );
 
-    console.log(greet)
-    console.log(greet2)
+    console.log(greet2);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -5,41 +5,40 @@ import "hardhat/console.sol";
 import "../hyperverse/IHyperverseModule.sol";
 
 contract Greeter is IHyperverseModule {
-    string private greeting;
-    address private _factoryContract;
+    struct Tenant {
+        string greeting;
+        address owner;
+    }
+
+    mapping(address => Tenant) public tenants;
 
     constructor()
-        IHyperverseModule(
-            "Greeter",
-            Author(
-                0x5B38Da6a701c568545dCfcB03FcB875f56beddC4,
-                "https://externallink.net"
-            ),
-            "0.0.1",
-            3479831479814,
-            "https://externalLink.net"
-        )
     {}
 
-    modifier isFactory() {
+    modifier isOwner(address tenant) {
         require(
-            msg.sender == _factoryContract,
-            "The msgsender must be the factory contract"
+            getState(tenant).owner == msg.sender, 
+            "You must be the owner of the Tenant to make this call"
         );
         _;
     }
 
-    function init(string memory _greeting) external {
-        _factoryContract = msg.sender;
-        greeting = _greeting;
+    function createInstance(string memory _greeting) external {
+        Tenant storage state = tenants[msg.sender];
+        state.greeting = _greeting;
+        state.owner = msg.sender;
     }
 
-    function greet() public view returns (string memory) {
-        return greeting;
+    function getState(address tenant) private view returns (Tenant storage) {
+        return tenants[tenant];
     }
 
-    function setGreeting(string memory _greeting) public {
-        console.log("Changing greeting from '%s' to '%s'", greeting, _greeting);
-        greeting = _greeting;
+    function greet(address tenant) public view returns (string memory) {
+        return getState(tenant).greeting;
+    }
+
+    function setGreeting(address tenant, string memory _greeting) public isOwner(tenant) {
+        Tenant storage state = getState(tenant);
+        state.greeting = _greeting;
     }
 }
