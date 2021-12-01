@@ -3,22 +3,17 @@ pragma solidity ^0.8.0;
 
 import "../hyperverse/IHyperverseModule.sol";
 import "./TribesState.sol";
-import "./@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./@openzeppelin/contracts/utils/Counters.sol";
 
-contract TribesFunctions is ERC721, IHyperverseModule {
-    using Counters for Counters.Counter;
-
+contract TribesFunctions is IHyperverseModule {
     TribesState tribesState;
     struct Tenant {
         mapping(address => bool) admins;
         address owner;
-        Counters.Counter _tokenIds;
     }
 
-    mapping(address => Tenant) tenants;
+    mapping(address => Tenant) public tenants;
 
-    constructor(address _tribesState) ERC721("Game Item", "GITM") {
+    constructor(address _tribesState) {
         metadata = ModuleMetadata(
             "TribesFunctions",
             Author(
@@ -77,18 +72,6 @@ contract TribesFunctions is ERC721, IHyperverseModule {
         getState(tenant).admins[newAdmin] = false;
     }
 
-    function mint(address tenant, address to) public {
-        Tenant storage state = getState(tenant);
-        require(
-            msg.sender == state.owner,
-            "Only the owner of this contract can mint."
-        );
-
-        state._tokenIds.increment();
-        uint256 newItemId = state._tokenIds.current();
-        _mint(to, newItemId);
-    }
-
     function addNewTribe(
         address tenant,
         bytes memory tribeName,
@@ -96,13 +79,5 @@ contract TribesFunctions is ERC721, IHyperverseModule {
         bytes memory description
     ) external isAdmin(tenant) {
         tribesState.addNewTribe(tenant, tribeName, ipfsHash, description);
-    }
-
-    function joinTribe(address tenant, uint256 tribeId) public {
-        require(
-            balanceOf(msg.sender) >= 1,
-            "The caller doesn't have enough NFTs!"
-        );
-        tribesState.joinTribeCaller(tenant, tribeId, msg.sender);
     }
 }

@@ -104,12 +104,12 @@ contract TribesState is IHyperverseModule {
     }
 
     // This is called directly by a user assuming there is no
-    // functionality build on top
+    // functionality built on top
     function joinTribe(address tenant, uint256 tribeId) public {
         joinTribeCaller(tenant, tribeId, msg.sender);
     }
 
-    function leaveTribe(address tenant) public canCallMe(tenant) {
+    function leaveTribe(address tenant) public {
         address member = msg.sender;
         Tenant storage state = getState(tenant);
         //extra layer - not sure if necessary
