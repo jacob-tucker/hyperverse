@@ -166,7 +166,7 @@ contract TribesState is IHyperverseModule {
     function getUserTribe(address tenant, address user)
         public
         view
-        returns (bytes memory)
+        returns (uint256)
     {
         Tenant storage state = getState(tenant);
 
@@ -176,8 +176,7 @@ contract TribesState is IHyperverseModule {
         );
 
         uint256 tribeId = state.participants[user];
-        TribeData storage tribeData = state.tribes[tribeId];
-        return tribeData.name;
+        return tribeId;
     }
 
     function getTribeData(address tenant, uint256 tribeId)
