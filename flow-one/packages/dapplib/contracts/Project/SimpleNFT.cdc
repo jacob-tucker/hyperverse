@@ -51,12 +51,11 @@ pub contract SimpleNFT {
         pub var metadata: {String: String}
     
         init(_ tenant: Address, _metadata: {String: String}) {
-            let state = SimpleNFT.getTenant(tenant: tenant)
-          
             self.id = self.uuid
             self.tenant = tenant
             self.metadata = _metadata
 
+            let state = SimpleNFT.getTenant(tenant: tenant)
             state.totalSupply = state.totalSupply + 1
         }
     }
@@ -75,7 +74,10 @@ pub contract SimpleNFT {
 
     pub resource Collection: CollectionPublic {
         pub var datas: @{Address: CollectionData}
-        pub fun getData(_ tenant: Address): &CollectionData { return &self.datas[tenant] as &CollectionData }
+        pub fun getData(_ tenant: Address): &CollectionData {
+            if self.datas[tenant] == nil { self.datas[tenant] <-! create CollectionData() }
+            return &self.datas[tenant] as &CollectionData 
+        }
 
         pub fun deposit(tenant: Address, token: @NFT) {
             let token <- token as! @NFT
@@ -120,6 +122,8 @@ pub contract SimpleNFT {
         }
     }
 
+    pub fun createEmptyCollection(): @Collection { return <- create Collection() }
+
     pub resource NFTMinter {
         access(contract) var tenants: {Address: Bool}
         access(contract) fun addTenant(_ tenant: Address) { self.tenants[tenant] = true }
@@ -131,6 +135,8 @@ pub contract SimpleNFT {
             self.tenants = {}
         }
     }
+
+    pub fun getNFTMinter(): @NFTMinter { return <- create NFTMinter() }
 
     init() {
         self.tenants <- {}
