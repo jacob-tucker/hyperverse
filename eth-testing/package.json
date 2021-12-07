@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "",
-  "scripts": {},
+  "scripts": {
+    "state" : "hardhat run test/state-test.js",
+    "admin" : "hardhat run test/admin-test.js",
+    "nft" : "hardhat run test/nft-test.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

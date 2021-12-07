@@ -11,8 +11,8 @@ contract TribesState is IHyperverseModule {
         address whoCanCallMe;
         mapping(uint256 => TribeData) tribes;
         mapping(address => uint256) participants;
-        //add an array of names? so we can join tribe by finding index on array?
         Counters.Counter tribeIds;
+        address owner;
     }
 
     struct TribeData {
@@ -47,27 +47,40 @@ contract TribesState is IHyperverseModule {
         return tenants[tenant];
     }
 
+    // If there's a msg.sender involved and we want calling contract to decide
     modifier canCallMe(address tenant) {
-        require(
-            getState(tenant).whoCanCallMe == address(0) ||
-                msg.sender == getState(tenant).whoCanCallMe,
-            "You cannot call me!"
-        );
+        require(msg.sender == getState(tenant).whoCanCallMe, "You cannot call me!");
         _;
     }
 
+    // If there's a msg.sender involved and we want a user to call directly
+    modifier noWhoCanCallMe(address tenant) {
+        require(getState(tenant).whoCanCallMe == address(0), "You have to use the Caller function");
+        _;
+    }
+
+    // Use this one if there is no msg.sender involved
+    // If a function is marked with `either`, that means they
+    // do not need to have duplicate functions
+    modifier either(address tenant) {
+        require(
+            getState(tenant).whoCanCallMe == address(0) || msg.sender == getState(tenant).whoCanCallMe, 
+            "You have to use the Caller function");
+        _;
+    }
+ 
     // whoCanCallMe should be the address of the TribesFunctions contracts
     // (or the next contract in the dependency tree)
     function restrictCaller(address whoCanCallMe) external {
         getState(msg.sender).whoCanCallMe = whoCanCallMe;
     }
 
-    function addNewTribe(
+    function addNewTribeCaller(
         address tenant,
         bytes memory tribeName,
         bytes memory ipfsHash,
         bytes memory description
-    ) external canCallMe(tenant) {
+    ) external either(tenant) {
         Tenant storage state = getState(tenant);
 
         state.tribeIds.increment();
@@ -82,7 +95,6 @@ contract TribesState is IHyperverseModule {
         emit NewTribeCreated(tribeName, ipfsHash, description);
     }
 
-    // This is called by a contract building on top of this module
     function joinTribeCaller(
         address tenant,
         uint256 tribeId,
@@ -103,16 +115,41 @@ contract TribesState is IHyperverseModule {
         emit JoinedTribe(tribeId, user);
     }
 
-    // This is called directly by a user assuming there is no
-    // functionality built on top
-    function joinTribe(address tenant, uint256 tribeId) public {
-        joinTribeCaller(tenant, tribeId, msg.sender);
+    function joinTribe(address tenant, uint256 tribeId) public noWhoCanCallMe(tenant) {
+        address user = msg.sender;
+        Tenant storage state = getState(tenant);
+        require(
+            state.participants[user] == 0,
+            "This member is already in a Tribe!"
+        );
+        require(state.tribeIds.current() >= tribeId, "Tribe does not exist");
+
+        state.participants[user] = tribeId;
+        TribeData storage tribeData = state.tribes[tribeId];
+        tribeData.members[user] = true;
+        tribeData.numOfMembers += 1;
+
+        emit JoinedTribe(tribeId, user);
     }
 
-    function leaveTribe(address tenant) public {
+    function leaveTribeCaller(address tenant, address member) public canCallMe(tenant) {
+        Tenant storage state = getState(tenant);
+        require(
+            state.participants[member] != 0,
+            "This member is not in a Tribe!"
+        );
+
+        TribeData storage tribeData = state.tribes[state.participants[member]];
+        state.participants[member] = 0;
+        tribeData.members[member] = false;
+        tribeData.numOfMembers -= 1;
+
+        emit LeftTribe(state.participants[member], member);
+    }
+
+    function leaveTribe(address tenant) public noWhoCanCallMe(tenant) {
         address member = msg.sender;
         Tenant storage state = getState(tenant);
-        //extra layer - not sure if necessary
         require(
             state.participants[member] != 0,
             "This member is not in a Tribe!"
@@ -129,7 +166,7 @@ contract TribesState is IHyperverseModule {
     function getUserTribe(address tenant, address user)
         public
         view
-        returns (bytes memory)
+        returns (uint256)
     {
         Tenant storage state = getState(tenant);
 
@@ -139,8 +176,7 @@ contract TribesState is IHyperverseModule {
         );
 
         uint256 tribeId = state.participants[user];
-        TribeData storage tribeData = state.tribes[tribeId];
-        return tribeData.name;
+        return tribeId;
     }
 
     function getTribeData(address tenant, uint256 tribeId)
