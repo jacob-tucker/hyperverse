@@ -10,16 +10,21 @@ transaction() {
         
         let auth = tenantOwner.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!
 
-        if recipient.borrow<&SimpleNFT.NFTMinter>(from: /storage/SimpleNFTMinter) == nil {
-            recipient.save(<- SimpleNFT.getNFTMinter(), to: /storage/SimpleNFTMinter)
+        if recipient.borrow<&SimpleNFT.Minter>(from: SimpleNFT.MinterStoragePath) == nil {
+            recipient.save(<- SimpleNFT.createMinter(), to: SimpleNFT.MinterStoragePath)
         }
-
-        let nftMinter = recipient.borrow<&SimpleNFT.NFTMinter>(from: /storage/SimpleNFTMinter)!
+        let minter = recipient.borrow<&SimpleNFT.Minter>(from: SimpleNFT.MinterStoragePath)!
         
-        SimpleNFT.getTenantAuth(auth: auth).permissionNFTMinter(nftMinter: nftMinter)
+        if tenantOwner.borrow<&SimpleNFT.Admin>(from: SimpleNFT.AdminStoragePath) == nil {
+            tenantOwner.save(<- SimpleNFT.createAdmin(auth: auth), to: SimpleNFT.AdminStoragePath)
+        }
+        let admin = tenantOwner.borrow<&SimpleNFT.Admin>(from: SimpleNFT.AdminStoragePath)!
+
+        admin.permissionMinter(minter: minter)
+
     }
 
     execute {
-        log("Gave a SimpleNFT.NFTMinter to the recipient's account.")
+        log("Gave a SimpleNFT.Minter to the recipient's account.")
     }
 }

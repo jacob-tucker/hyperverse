@@ -1,4 +1,6 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
+import Tribes from "../../../contracts/Project/Tribes.cdc"
 import FlowToken from "../../../contracts/Flow/FlowToken.cdc"
 import FungibleToken from "../../../contracts/Flow/FungibleToken.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
@@ -18,8 +20,14 @@ transaction() {
                         ?? panic("Could not borrow the Auth.")
         let authCapability = signer.getCapability<&HyperverseAuth.Auth>(HyperverseAuth.AuthPrivatePath)
 
-        signer.save(<- SimpleNFT.createEmptyCollection(), to: /storage/SimpleNFTCollection)
-        signer.link<&SimpleNFT.Collection{SimpleNFT.CollectionPublic}>(/public/SimpleNFTCollection, target: /storage/SimpleNFTCollection)
+        signer.save(<- SimpleNFT.createEmptyCollection(), to: SimpleNFT.CollectionStoragePath)
+        signer.link<&SimpleNFT.Collection{SimpleNFT.CollectionPublic}>(SimpleNFT.CollectionPublicPath, target: SimpleNFT.CollectionStoragePath)
+    
+        signer.save(<- SimpleToken.createEmptyVault(), to: SimpleToken.VaultStoragePath)
+        signer.link<&SimpleToken.Vault{SimpleToken.VaultPublic}>(SimpleToken.VaultPublicPath, target: SimpleToken.VaultStoragePath)
+    
+        signer.save(<- Tribes.createIdentity(), to: Tribes.IdentityStoragePath)
+        signer.link<&Tribes.Identity{Tribes.IdentityPublic}>(Tribes.IdentityPublicPath, target: Tribes.IdentityStoragePath)
     }
 
     execute {

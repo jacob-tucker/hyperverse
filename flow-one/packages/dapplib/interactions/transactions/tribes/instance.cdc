@@ -1,7 +1,7 @@
-import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
+import Tribes from "../../../contracts/Project/Tribes.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
-transaction(initialSupply: UFix64) {
+transaction() {
     let Auth: &HyperverseAuth.Auth
 
     prepare(signer: AuthAccount) {
@@ -10,7 +10,7 @@ transaction(initialSupply: UFix64) {
     }
 
     execute {
-        SimpleNFT.createTenant(auth: self.Auth)
-        log("Create a new instance of a SimpleNFT Tenant.")
+        Tribes.createTenant(auth: self.Auth)
+        log("Create a new instance of a Tribes Tenant.")
     }
 }

@@ -1,24 +1,30 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
+import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
-transaction(recipient: Address) {
+transaction() {
 
     let Tenant: Address
-    let AdminsSNFTPackage: &SimpleNFT.Bundle
-    let RecipientsSNFTPackage: &SimpleNFT.Bundle{SimpleNFT.PublicBundle}
     
-    prepare(tenantOwner: AuthAccount) {
+    prepare(tenantOwner: AuthAccount, recipient: AuthAccount) {
         self.Tenant = tenantOwner.address
-        self.AdminsSNFTPackage = tenantOwner.borrow<&SimpleNFT.Bundle>(from: SimpleNFT.BundleStoragePath)
-                                    ?? panic("Could not borrow the SimpleNFT.Bundle from the signer.")
+        
+        let auth = tenantOwner.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!
 
-        self.RecipientsSNFTPackage = getAccount(recipient).getCapability(SimpleNFT.BundlePublicPath)
-                                        .borrow<&SimpleNFT.Bundle{SimpleNFT.PublicBundle}>()
-                                        ?? panic("Could not borrow the public SimpleNFT.Bundle from the recipient.")
+        if recipient.borrow<&SimpleNFT.Minter>(from: SimpleNFT.MinterStoragePath) == nil {
+            recipient.save(<- SimpleNFT.createMinter(), to: SimpleNFT.MinterStoragePath)
+        }
+        let minter = recipient.borrow<&SimpleNFT.Minter>(from: SimpleNFT.MinterStoragePath)!
+        
+        if tenantOwner.borrow<&SimpleNFT.Admin>(from: SimpleNFT.AdminStoragePath) == nil {
+            tenantOwner.save(<- SimpleNFT.createAdmin(auth: auth), to: SimpleNFT.AdminStoragePath)
+        }
+        let admin = tenantOwner.borrow<&SimpleNFT.Admin>(from: SimpleNFT.AdminStoragePath)!
+
+        admin.permissionMinter(minter: minter)
+
     }
 
     execute {
-        
-        self.RecipientsSNFTPackage.depositMinter(NFTMinter: <- self.AdminsSNFTPackage.borrowAdmin(tenant: self.Tenant).createNFTMinter())
-        log("Gave a SimpleNFT.NFTMinter to the recipient's account.")
+        log("Gave a SimpleNFT.Minter to the recipient's account.")
     }
 }

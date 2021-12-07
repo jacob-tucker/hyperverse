@@ -16,7 +16,7 @@ transaction(recipient: Address, tenantOwner: Address, amount: UFix64) {
 
     execute {
         let vault <- self.SimpleTokenMinter.mintTokens(tenantOwner, amount: amount) 
-        self.RecipientVault.deposit(tenantOwner, from: <-vault)
+        self.RecipientVault.deposit(from: <-vault)
         log("Minted SimpleToken into the recipient's SimpleToken.Vault.")
     }
 }

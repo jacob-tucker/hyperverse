@@ -206,16 +206,14 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
   async function setupAllAccounts() {
     dappConfig.accounts.forEach(async account => {
       let setupTx = fcl.transaction`
-        
+      import SimpleToken from 0x01cf0e2f2f715450
         import SimpleNFT from 0x01cf0e2f2f715450
-        
-        import FlowToken from 0x0ae53cb6e3f42a79
-        import FungibleToken from 0xee82856bf20e2aa6
         import HyperverseAuth from 0x01cf0e2f2f715450
-        import IHyperverseComposable from 0x01cf0e2f2f715450
-
-        transaction() {
-
+        import Tribes from 0x01cf0e2f2f715450
+      
+      // Sets up all the Bundles from the 5 Smart Modules for an account.
+      transaction() {
+      
           prepare(signer: AuthAccount) {
               /* Auth */
               if signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath) == nil {
@@ -226,16 +224,22 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
               let auth = signer.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)
                               ?? panic("Could not borrow the Auth.")
               let authCapability = signer.getCapability<&HyperverseAuth.Auth>(HyperverseAuth.AuthPrivatePath)
-              assert(authCapability.borrow() != nil, message: "Auth cap is nil")
       
-              signer.save(<- SimpleNFT.createEmptyCollection(), to: /storage/SimpleNFTCollection)
-              signer.link<&SimpleNFT.Collection{SimpleNFT.CollectionPublic}>(/public/SimpleNFTCollection, target: /storage/SimpleNFTCollection)
-          }
+              signer.save(<- SimpleNFT.createEmptyCollection(), to: SimpleNFT.CollectionStoragePath)
+              signer.link<&SimpleNFT.Collection{SimpleNFT.CollectionPublic}>(SimpleNFT.CollectionPublicPath, target: SimpleNFT.CollectionStoragePath)
+          
+              signer.save(<- SimpleToken.createEmptyVault(), to: SimpleToken.VaultStoragePath)
+              signer.link<&SimpleToken.Vault{SimpleToken.VaultPublic}>(SimpleToken.VaultPublicPath, target: SimpleToken.VaultStoragePath)
+          
+              signer.save(<- Tribes.createIdentity(), to: Tribes.IdentityStoragePath)
+              signer.link<&Tribes.Identity{Tribes.IdentityPublic}>(Tribes.IdentityPublicPath, target: Tribes.IdentityStoragePath)
+            }
       
           execute {
               log("Signer setup their Auth and all their Bundles for the 7 Smart Modules.")
           }
-      }`;
+      }
+      `;
 
       let setupOptions = {
         decode: false,

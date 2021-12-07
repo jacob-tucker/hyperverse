@@ -1,4 +1,4 @@
-import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
+import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
 
 transaction(initialSupply: UFix64) {
@@ -10,7 +10,7 @@ transaction(initialSupply: UFix64) {
     }
 
     execute {
-        SimpleNFT.createTenant(auth: self.Auth)
-        log("Create a new instance of a SimpleNFT Tenant.")
+        SimpleToken.createTenant(auth: self.Auth, initialSupply: initialSupply)
+        log("Create a new instance of a SimpleToken Tenant.")
     }
 }

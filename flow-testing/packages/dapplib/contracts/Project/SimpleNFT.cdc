@@ -18,25 +18,24 @@ pub contract SimpleNFT {
         }
         return &self.tenants[tenant] as &Tenant
     }
-    pub fun getTenantAuth(auth: &HyperverseAuth.Auth): &Tenant {
-        return self.getTenant(tenant: auth.owner!.address)
-    }
     pub fun tenantExists(tenant: Address): Bool {
         return self.tenants[tenant] != nil
     }
 
-    pub resource Tenant: IHyperverseComposable.ITenant {
+    pub resource Tenant {
         pub var tenant: Address
-
         pub(set) var totalSupply: UInt64
-        pub fun permissionNFTMinter(nftMinter: &NFTMinter) {
-            nftMinter.addTenant(self.owner!.address)
-        }
-
+        
         init(_tenant: Address) {
             self.totalSupply = 0
             self.tenant = _tenant
         }
+    }
+
+    pub fun createTenant(auth: &HyperverseAuth.Auth) {
+        let tenant = auth.owner!.address
+        self.tenants[tenant] <-! create Tenant(_tenant: tenant)
+        emit TenantCreated(tenant: tenant)
     }
 
     /**************************************** FUNCTIONALITY ****************************************/
@@ -51,12 +50,11 @@ pub contract SimpleNFT {
         pub var metadata: {String: String}
     
         init(_ tenant: Address, _metadata: {String: String}) {
-            let state = SimpleNFT.getTenant(tenant: tenant)
-          
             self.id = self.uuid
             self.tenant = tenant
             self.metadata = _metadata
 
+            let state = SimpleNFT.getTenant(tenant: tenant)
             state.totalSupply = state.totalSupply + 1
         }
     }
@@ -68,14 +66,19 @@ pub contract SimpleNFT {
     }
 
     pub resource CollectionData {
-        access(contract) var ownedNFTs: @{UInt64: NFT}
+        pub(set) var ownedNFTs: @{UInt64: NFT}
         init() { self.ownedNFTs <- {} }
         destroy() {destroy self.ownedNFTs}
     }
 
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPublicPath: PublicPath
     pub resource Collection: CollectionPublic {
-        pub var datas: @{Address: CollectionData}
-        pub fun getData(_ tenant: Address): &CollectionData { return &self.datas[tenant] as &CollectionData }
+        access(contract) var datas: @{Address: CollectionData}
+        access(contract) fun getData(_ tenant: Address): &CollectionData {
+            if self.datas[tenant] == nil { self.datas[tenant] <-! create CollectionData() }
+            return &self.datas[tenant] as &CollectionData 
+        }
 
         pub fun deposit(tenant: Address, token: @NFT) {
             let token <- token as! @NFT
@@ -120,20 +123,39 @@ pub contract SimpleNFT {
         }
     }
 
-    pub resource NFTMinter {
+    pub fun createEmptyCollection(): @Collection { return <- create Collection() }
+
+    pub let MinterStoragePath: StoragePath
+    pub resource Minter {
         access(contract) var tenants: {Address: Bool}
         access(contract) fun addTenant(_ tenant: Address) { self.tenants[tenant] = true }
         pub fun mintNFT(tenant: Address, metadata: {String: String}): @NFT {
-            pre { self.tenants[tenant] == true: "You are not permissioned to mint NFTs." }
+            pre { self.tenants[tenant]!: "You are not permissioned to mint NFTs." }
             return <- create NFT(tenant, _metadata: metadata)
         }
-        init() {
-            self.tenants = {}
-        }
+        init() { self.tenants = {} }
     }
+
+    pub fun createMinter(): @Minter { return <- create Minter() }
+
+    pub let AdminStoragePath: StoragePath
+    pub resource Admin {
+        pub let tenant: Address
+        pub fun permissionMinter(minter: &Minter) { minter.addTenant(self.tenant) }
+        init(_tenant: Address) { self.tenant = _tenant}
+    }
+
+    pub fun createAdmin(auth: &HyperverseAuth.Auth): @Admin { return <- create Admin(_tenant: auth.owner!.address) }
+
+    pub fun getTotalSupply(tenant: Address): UInt64 { return self.getTenant(tenant: tenant).totalSupply }
 
     init() {
         self.tenants <- {}
+
+        self.CollectionStoragePath = /storage/SimpleNFTCollection
+        self.CollectionPublicPath = /public/SimpleNFTCollection
+        self.MinterStoragePath = /storage/SimpleNFTMinter
+        self.AdminStoragePath = /storage/SimpleNFTAdmin
 
         Registry.registerContract(
             proposer: self.account.borrow<&HyperverseAuth.Auth>(from: HyperverseAuth.AuthStoragePath)!, 

@@ -809,13 +809,10 @@ module.exports = class DappLib {
         let result = await Blockchain.post({
             config: DappLib.getConfig(),
             roles: {
-                proposer: data.tenantOwner
+                authorizers: [data.tenantOwner, data.recipient]
             }
         },
-            'simple_ft_give_minter',
-            {
-                recipient: { value: data.recipient, type: t.Address }
-            }
+            'simple_ft_give_minter'
         );
 
         return {
@@ -1068,8 +1065,8 @@ module.exports = class DappLib {
         },
             'simple_nft_transfer_nft',
             {
+                id: { value: parseInt(data.withdrawID), type: t.UInt64 },
                 recipient: { value: data.recipient, type: t.Address },
-                withdrawID: { value: parseInt(data.withdrawID), type: t.UInt64 },
                 tenantOwner: { value: data.tenantOwner, type: t.Address }
             }
         );

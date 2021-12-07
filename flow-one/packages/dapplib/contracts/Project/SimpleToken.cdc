@@ -42,7 +42,7 @@ pub contract SimpleToken {
     pub event TokensDeposited(tenant: Address, amount: UFix64, to: Address?)
 
     pub resource interface VaultPublic {
-        pub fun deposit(_ tenant: Address, from: @Vault)
+        pub fun deposit(from: @VaultTransferrable)
         pub fun balance(_ tenant: Address): UFix64
     }
 
@@ -60,31 +60,28 @@ pub contract SimpleToken {
             return &self.datas[tenant] as &VaultData 
         }
 
-        pub fun withdraw(_ tenant: Address, amount: UFix64): @Vault {
+        pub fun withdraw(_ tenant: Address, amount: UFix64): @VaultTransferrable {
             let data = self.getData(tenant)
             data.balance = data.balance - amount
             emit TokensWithdrawn(tenant: tenant, amount: amount, from: self.owner?.address)
-            return <-create Vault(tenant, _balance: amount)
+
+            return <- create VaultTransferrable(tenant, _balance: amount)
         }
 
-        pub fun deposit(_ tenant: Address, from: @Vault) {
-            let vault <- from as! @Vault
-            let data = self.getData(tenant)
-            data.balance = data.balance + vault.datas[tenant]!.balance
-            emit TokensDeposited(tenant: tenant, amount: vault.datas[tenant]!.balance, to: self.owner?.address)
+        pub fun deposit(from: @VaultTransferrable) {
+            let vault <- from as! @VaultTransferrable
+            let data = self.getData(vault.tenant)
+            data.balance = data.balance + vault.balance
+            emit TokensDeposited(tenant: vault.tenant, amount: vault.balance, to: self.owner?.address)
 
-            let tenantData = vault.getData(tenant)
-            tenantData.balance = 0.0
+            vault.clear()
             destroy vault
         }
 
-        pub fun balance(_ tenant: Address): UFix64 { return self.datas[tenant]!.balance }
+        pub fun balance(_ tenant: Address): UFix64 { return self.getData(tenant).balance }
 
-        init(_ tenant: Address, _balance: UFix64) { 
+        init() { 
             self.datas = {}
-            
-            let tenantData = self.getData(tenant)
-            tenantData.balance = _balance
         }
 
         destroy() {
@@ -95,18 +92,35 @@ pub contract SimpleToken {
         }
     }
 
+    pub resource VaultTransferrable {
+        pub var balance: UFix64 
+        pub let tenant: Address
+        access(contract) fun clear() {self.balance = 0.0}
+        init(_ tenant: Address, _balance: UFix64) {
+            self.balance = _balance
+            self.tenant = tenant
+        }
+        destroy() {
+            let state = SimpleToken.getTenant(self.tenant)
+            state.totalSupply = state.totalSupply - self.balance
+        }
+    }
+
+    pub fun createEmptyVault(): @Vault { return <- create Vault() }
+
     pub let MinterStoragePath: StoragePath
     pub resource Minter {
         access(contract) var tenants: {Address: Bool}
         access(contract) fun addTenant(_ tenant: Address) { self.tenants[tenant] = true }
-        pub fun mintTokens(_ tenant: Address, amount: UFix64): @Vault {
+        pub fun mintTokens(_ tenant: Address, amount: UFix64): @VaultTransferrable {
             pre {
                 amount > 0.0: "Amount minted must be greater than zero."
                 self.tenants[tenant]!: "You are not permissioned to do this"
             }
             let state = SimpleToken.getTenant(tenant)
             state.totalSupply = state.totalSupply + amount
-            return <-create Vault(tenant, _balance: amount)
+
+            return <- create VaultTransferrable(tenant, _balance: amount)
         }
         init() { self.tenants = {} }
     }
