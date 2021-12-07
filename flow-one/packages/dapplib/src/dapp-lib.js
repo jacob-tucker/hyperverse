@@ -335,7 +335,7 @@ module.exports = class DappLib {
         );
 
         return {
-            type: DappLib.DAPP_RESULT_OBJECT,
+            type: DappLib.DAPP_RESULT_ARRAY,
             label: 'All the Tribes',
             result: result.callData
         }
