@@ -4,7 +4,7 @@ import HyperverseAuth from "../Hyperverse/HyperverseAuth.cdc"
 import HNonFungibleToken from "../Hyperverse/HNonFungibleToken.cdc"
 import Registry from "../Hyperverse/Registry.cdc"
 
-pub contract SimpleNFT {
+pub contract SimpleNFT: HNonFungibleToken {
 
     /**************************************** TENANT ****************************************/
 
@@ -60,8 +60,8 @@ pub contract SimpleNFT {
     }
 
     pub resource interface CollectionPublic {
-        pub fun deposit(token: @NFT)
-        pub fun getIDs(tenant: Address): [UInt64]
+        pub fun deposit(token: @HNonFungibleToken.NFT)
+        pub fun getIDs(_ tenant: Address): [UInt64]
         // pub fun getMetadata(tenant: Address, id: UInt64): {String: String}
     }
 
@@ -73,14 +73,14 @@ pub contract SimpleNFT {
 
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
-    pub resource Collection: CollectionPublic {
+    pub resource Collection: HNonFungibleToken.Receiver, HNonFungibleToken.Provider, HNonFungibleToken.CollectionPublic, CollectionPublic {
         access(contract) var datas: @{Address: CollectionData}
         access(contract) fun getData(_ tenant: Address): &CollectionData {
             if self.datas[tenant] == nil { self.datas[tenant] <-! create CollectionData() }
             return &self.datas[tenant] as &CollectionData 
         }
 
-        pub fun deposit(token: @NFT) {
+        pub fun deposit(token: @HNonFungibleToken.NFT) {
             let token <- token as! @NFT
             let id: UInt64 = token.id
 
@@ -90,21 +90,21 @@ pub contract SimpleNFT {
             destroy oldToken
         }
 
-        pub fun withdraw(tenant: Address, withdrawID: UInt64): @NFT {
+        pub fun withdraw(_ tenant: Address, withdrawID: UInt64): @HNonFungibleToken.NFT {
             let data = self.getData(tenant)
             let token <- data.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
             emit Withdraw(tenant: tenant, id: token.id, from: self.owner?.address)
             return <-token
         }
 
-        pub fun getIDs(tenant: Address): [UInt64] {
+        pub fun getIDs(_ tenant: Address): [UInt64] {
             let data = self.getData(tenant)
             return data.ownedNFTs.keys
         }
 
-        pub fun borrowNFT(tenant: Address, id: UInt64): &NFT {
+        pub fun borrowNFT(_ tenant: Address, id: UInt64): &HNonFungibleToken.NFT {
             let data = self.getData(tenant)
-            return &data.ownedNFTs[id] as &NFT
+            return &data.ownedNFTs[id] as &HNonFungibleToken.NFT
         }
 
         // pub fun getMetadata(tenant: Address, id: UInt64): {String: String} {

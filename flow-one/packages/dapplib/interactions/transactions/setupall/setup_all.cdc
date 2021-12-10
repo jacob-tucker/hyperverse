@@ -1,6 +1,7 @@
 import SimpleNFT from "../../../contracts/Project/SimpleNFT.cdc"
 import SimpleToken from "../../../contracts/Project/SimpleToken.cdc"
 import Tribes from "../../../contracts/Project/Tribes.cdc"
+import Marketplace from "../../../contracts/Project/Marketplace.cdc"
 import FlowToken from "../../../contracts/Flow/FlowToken.cdc"
 import FungibleToken from "../../../contracts/Flow/FungibleToken.cdc"
 import HyperverseAuth from "../../../contracts/Hyperverse/HyperverseAuth.cdc"
@@ -28,6 +29,10 @@ transaction() {
     
         signer.save(<- Tribes.createIdentity(), to: Tribes.IdentityStoragePath)
         signer.link<&Tribes.Identity{Tribes.IdentityPublic}>(Tribes.IdentityPublicPath, target: Tribes.IdentityStoragePath)
+    
+        let ftVault = getAccount(signer.address).getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        signer.save(<- Marketplace.createSaleCollection(ftVault: ftVault), to: Marketplace.SaleCollectionStoragePath)
+        signer.link<&Marketplace.SaleCollection{Marketplace.SalePublic}>(Marketplace.SaleCollectionPublicPath, target: Marketplace.SaleCollectionStoragePath)
     }
 
     execute {

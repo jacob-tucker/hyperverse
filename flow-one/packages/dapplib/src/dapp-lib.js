@@ -377,7 +377,7 @@ module.exports = class DappLib {
                 proposer: data.signer
             }
         },
-            'nftmarketplace_get_package'
+            'marketplace_get_package'
         );
 
         return {
@@ -399,7 +399,7 @@ module.exports = class DappLib {
                 proposer: data.signer
             }
         },
-            'nftmarketplace_instance'
+            'marketplace_instance'
         );
 
         return {
@@ -408,6 +408,30 @@ module.exports = class DappLib {
             result: result.callData.transactionId
         }
 
+    }
+
+    /*
+      tenantOwner - the owner of the Tenant you want to interact with
+    */
+    static async MarketplaceAddCollection(data) {
+
+        let result = await Blockchain.post({
+            config: DappLib.getConfig(),
+            roles: {
+                proposer: data.signer
+            }
+        },
+            'marketplace_add_collection',
+            {
+                tenantOwner: { value: data.tenantOwner, type: t.Address }
+            }
+        );
+
+        return {
+            type: DappLib.DAPP_RESULT_TX_HASH,
+            label: 'Transaction Hash',
+            result: result.callData.transactionId
+        }
     }
 
     /*
@@ -423,7 +447,7 @@ module.exports = class DappLib {
                 proposer: data.signer
             }
         },
-            'nftmarketplace_unlist_sale',
+            'marketplace_unlist_sale',
             {
                 tenantOwner: { value: data.tenantOwner, type: t.Address },
                 id: { value: parseInt(data.id), type: t.UInt64 }
@@ -452,7 +476,7 @@ module.exports = class DappLib {
                 proposer: data.signer
             }
         },
-            'nftmarketplace_list_for_sale',
+            'marketplace_list_for_sale',
             {
                 tenantOwner: { value: data.tenantOwner, type: t.Address },
                 ids: DappLib.formatFlowArray(data.ids, t.UInt64),
@@ -481,7 +505,7 @@ module.exports = class DappLib {
                 proposer: data.signer
             }
         },
-            'nftmarketplace_purchase',
+            'marketplace_purchase',
             {
                 tenantOwner: { value: data.tenantOwner, type: t.Address },
                 id: { value: parseInt(data.id), type: t.UInt64 },
@@ -507,7 +531,7 @@ module.exports = class DappLib {
             roles: {
             }
         },
-            'nftmarketplace_get_ids',
+            'marketplace_get_ids',
             {
                 account: { value: data.account, type: t.Address },
                 tenantOwner: { value: data.tenantOwner, type: t.Address }
@@ -531,7 +555,7 @@ module.exports = class DappLib {
             roles: {
             }
         },
-            'nftmarketplace_get_client_tenants',
+            'marketplace_get_client_tenants',
             {
                 account: { value: data.account, type: t.Address }
             }

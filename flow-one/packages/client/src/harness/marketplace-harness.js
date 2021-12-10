@@ -54,6 +54,14 @@ export default class MarketplaceHarness extends LitElement {
             </account-widget>
         </action-card>
     
+        <action-card title="Marketplace - Add Collection" description="Add Collection that Matches"
+            action="MarketplaceAddCollection" method="post" fields="tenantOwner signer">
+            <account-widget field="tenantOwner" label="Tenant Owner">
+            </account-widget>
+            <account-widget field="signer" label="Signer">
+            </account-widget>
+        </action-card>
+    
         <action-card title="Marketplace - List for Sale" description="List NFTs for Sale" action="MarketplaceList"
             method="post" fields="signer tenantOwner price ids">
             <account-widget field="tenantOwner" label="Tenant Owner">

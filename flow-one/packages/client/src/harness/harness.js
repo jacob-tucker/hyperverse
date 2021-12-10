@@ -64,6 +64,13 @@ export default class HarnessPage extends LitElement {
         description: "Join tribes and become part of a group.",
         category: "Hyperverse",
         route: "/playground/harness/core-tribes",
+      },
+      {
+        name: "core-marketplace",
+        title: "Marketplace",
+        description: "Marketplace where you can choose which NFT to trade.",
+        category: "Hyperverse",
+        route: "/playground/harness/core-marketplace"
       }
     ];
   }

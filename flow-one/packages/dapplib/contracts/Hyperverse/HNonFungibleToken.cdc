@@ -88,9 +88,9 @@ pub contract interface HNonFungibleToken {
     //
     pub resource interface Provider {
         // withdraw removes an NFT from the collection and moves it to the caller
-        pub fun withdraw(withdrawID: UInt64): @NFT {
+        pub fun withdraw(_ tenant: Address, withdrawID: UInt64): @NFT {
             post {
-                result.id == withdrawID: "The ID of the withdrawn token must be the same as the requested ID"
+                result.uuid == withdrawID: "The ID of the withdrawn token must be the same as the requested ID"
             }
         }
     }
@@ -108,44 +108,26 @@ pub contract interface HNonFungibleToken {
     // publish for their collection
     pub resource interface CollectionPublic {
         pub fun deposit(token: @NFT)
-        pub fun getIDs(): [UInt64]
-        pub fun borrowNFT(id: UInt64): &NFT
+        pub fun getIDs(_ tenant: Address): [UInt64]
+        pub fun borrowNFT(_ tenant: Address, id: UInt64): &NFT
     }
 
     // Requirement for the the concrete resource type
     // to be declared in the implementing contract
     //
     pub resource Collection: Provider, Receiver, CollectionPublic {
-        pub let tenant: Address
-        // Dictionary to hold the NFTs in the Collection
-        pub var ownedNFTs: @{UInt64: NFT}
-
         // withdraw removes an NFT from the collection and moves it to the caller
-        pub fun withdraw(withdrawID: UInt64): @NFT
+        pub fun withdraw(_ tenant: Address, withdrawID: UInt64): @NFT
 
         // deposit takes a NFT and adds it to the collections dictionary
         // and adds the ID to the id array
-        pub fun deposit(token: @NFT) {
-            pre {
-                self.tenant == token.tenant:
-                    "Cannot deposit a token from another Tenant"
-            }
-        }
+        pub fun deposit(token: @NFT)
 
         // getIDs returns an array of the IDs that are in the collection
-        pub fun getIDs(): [UInt64]
+        pub fun getIDs(_ tenant: Address): [UInt64]
 
         // Returns a borrowed reference to an NFT in the collection
         // so that the caller can read data and call methods from it
-        pub fun borrowNFT(id: UInt64): &NFT {
-            pre {
-                self.ownedNFTs[id] != nil: "NFT does not exist in the collection!"
-            }
-        }
-    }
-
-    pub resource Bundle {
-        pub var collections: @{Address: Collection}
-        pub fun borrowCollection(tenant: Address): &Collection
+        pub fun borrowNFT(_ tenant: Address, id: UInt64): &NFT
     }
 }

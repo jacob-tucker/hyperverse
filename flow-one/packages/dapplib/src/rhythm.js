@@ -210,6 +210,9 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
         import SimpleNFT from 0x01cf0e2f2f715450
         import HyperverseAuth from 0x01cf0e2f2f715450
         import Tribes from 0x01cf0e2f2f715450
+        import Marketplace from 0x01cf0e2f2f715450
+        import FlowToken from 0x0ae53cb6e3f42a79
+        import FungibleToken from 0xee82856bf20e2aa6
       
       // Sets up all the Bundles from the 5 Smart Modules for an account.
       transaction() {
@@ -233,6 +236,10 @@ const dappConfigFile = path.join(__dirname, 'dapp-config.json');
           
               signer.save(<- Tribes.createIdentity(), to: Tribes.IdentityStoragePath)
               signer.link<&Tribes.Identity{Tribes.IdentityPublic}>(Tribes.IdentityPublicPath, target: Tribes.IdentityStoragePath)
+
+              let ftVault = getAccount(signer.address).getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+              signer.save(<- Marketplace.createSaleCollection(ftVault: ftVault), to: Marketplace.SaleCollectionStoragePath)
+              signer.link<&Marketplace.SaleCollection{Marketplace.SalePublic}>(Marketplace.SaleCollectionPublicPath, target: Marketplace.SaleCollectionStoragePath)
             }
       
           execute {
